@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Sound Booster</string>
+
+    <string name="title_activity_splash">SplashActivity</string>
+
+    <string name="save">save</string>
+    <string name="hint_name">name</string>
+    <string name="retry">Retry</string>
+    <string name="searching_for_party">Searching for party…</string>
+    <string name="message_connect_host">please connect to host</string>
+
+</resources>
