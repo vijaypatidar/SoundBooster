@@ -22,6 +22,7 @@
         <activity android:name=".activity.UserDetailActivity" />
         <activity
             android:name=".activity.SplashActivity"
+            android:theme="@style/AppThemeNoAction"
             android:configChanges="orientation|keyboardHidden|screenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

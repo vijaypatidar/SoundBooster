@@ -91,6 +91,13 @@ public class ClientHelper extends Thread {
                 }
             }
         }
+
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public void send(final Object msg) {

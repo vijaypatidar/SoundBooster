@@ -5,8 +5,7 @@
  */
 package com.vkpapps.soundbooster.connection;
 
-import android.os.Bundle;
-import android.os.Message;
+import android.util.Log;
 
 import com.vkpapps.soundbooster.handler.SignalHandler;
 
@@ -20,12 +19,15 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.vkpapps.soundbooster.connection.ClientHelper.TAG;
+
 public class Server extends Thread {
 
     static List<Socket> list = new ArrayList<>();
     private static Server server;
     private ServerSocket serverSocket;
     private SignalHandler signalHandler;
+    private boolean run = true;
 
     private Server() {
         try {
@@ -44,21 +46,14 @@ public class Server extends Thread {
 
     @Override
     public void run() {
-        while (!serverSocket.isClosed()) {
+        while (!serverSocket.isClosed() && run) {
             try {
                 System.out.println("waiting for new client...============================================== ");
                 Socket socket = serverSocket.accept();
                 ServerHelper serverHelper = new ServerHelper(socket, signalHandler);
                 serverHelper.start();
                 list.add(socket);
-                if (signalHandler != null) {
-                    Message message = new Message();
-                    message.what = SignalHandler.NEW_DEVICE_CONNECTED;
-                    Bundle bundle = new Bundle();
-                    bundle.putString("data", "New device add ");
-                    message.setData(bundle);
-                    signalHandler.sendMessage(message);
-                }
+
                 try {
                     sleep(5000);
                 } catch (InterruptedException e) {
@@ -99,5 +94,16 @@ public class Server extends Thread {
 
     public void setSignalHandler(SignalHandler signalHandler) {
         this.signalHandler = signalHandler;
+    }
+
+    public void stopServer() {
+        Log.d(TAG, "stopServer:================================================================== stop ");
+        run = false;
+        server = null;
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

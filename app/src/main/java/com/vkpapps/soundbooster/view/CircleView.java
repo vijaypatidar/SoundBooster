@@ -14,10 +14,9 @@ public class CircleView extends View {
     float[] circles = new float[5];
     int[] colors = new int[5];
     int cnt;
-    private String TAG = "";
     private Paint paint;
     private boolean init;
-    private float ch = .25f, rCh = .5f;
+    private float ch = .25f, rCh = 2f;
     private float x1, x2, y1, y2;
     private int radius;
     private OnCircleViewListener onCircleViewListener;
@@ -28,7 +27,7 @@ public class CircleView extends View {
 
         paint = new Paint();
         paint.setStyle(Paint.Style.FILL);
-        paint.setStrokeWidth(10);
+        paint.setStrokeWidth(8);
         paint.setStrokeJoin(Paint.Join.ROUND);
 
         colors[0] = Color.rgb(16, 99, 156);
@@ -44,6 +43,7 @@ public class CircleView extends View {
         canvas.drawColor(Color.rgb(240, 159, 29));
         int width = getWidth() / 15;
         if (!init) {
+            String TAG = "";
             Log.d(TAG, "CircleView: ================================================ " + width + " " + cnt);
             for (int i = 0; i < circles.length; i++) {
                 circles[i] = width * (i + 1);
@@ -61,10 +61,10 @@ public class CircleView extends View {
             circles[i] = circles[i] + ch;
         }
         paint.setColor(Color.WHITE);
-        canvas.drawCircle(x2, y2, 5, paint);
-        canvas.drawCircle(x1, y1, 5, paint);
+        canvas.drawCircle(x2, y2, 4, paint);
+        canvas.drawCircle(x1, y1, 4, paint);
         canvas.drawLine(x1, y1, x2, y2, paint);
-        x2 = x2 + rCh;
+        x2 = x2 - rCh;
         y2 = (float) Math.sqrt(radius * radius - Math.pow(x1 - x2, 2)) + y1;
         cnt++;
         if (cnt == width * 4) {
@@ -74,12 +74,13 @@ public class CircleView extends View {
 
         if (rCh < 0) y2 = y2 - (y2 - y1) * 2;
         if (x2 > radius + x1 || x2 < x1 - radius) {
-            rCh = rCh > 0 ? -.5f : .5f;
+            rCh = rCh * (-1);
             if (onCircleViewListener != null) onCircleViewListener.onRoundComplete();
         }
         if (x1 == x2) {
             if (onCircleViewListener != null) onCircleViewListener.onRoundComplete();
         }
+
         paint.setColor(Color.WHITE);
         invalidate();
     }

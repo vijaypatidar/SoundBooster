@@ -27,6 +27,8 @@ import com.vkpapps.soundbooster.model.LocalSong;
 import com.vkpapps.soundbooster.model.NewSongModel;
 import com.vkpapps.soundbooster.model.PlayThisSong;
 import com.vkpapps.soundbooster.model.SeekModel;
+import com.vkpapps.soundbooster.model.User;
+import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,12 +46,12 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private String host;
     private boolean isHost;
     private Server server;
+    private User user;
     private ClientHelper clientHelper;
     private SignalHandler signalHandler;
     private FileHandler myFileHandler;
     private MediaPlayerService mediaPlayerService;
     private String root;
-    private LocalMusicAdapter localMusicAdapter;
     private ArrayList<LocalSong> localSongArrayList;
 
     @Override
@@ -58,6 +60,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         setContentView(R.layout.activity_party);
 
         root = getDir("mySong", MODE_PRIVATE).getPath();
+        user = Utils.getUser(getDir("files", MODE_PRIVATE));
         mediaPlayerService = MediaPlayerService.getInstance();
 
         signalHandler = new SignalHandler(this);
@@ -72,7 +75,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
 
         localSongArrayList = new ArrayList<>();
-        localMusicAdapter = new LocalMusicAdapter(localSongArrayList, this);
+        LocalMusicAdapter localMusicAdapter = new LocalMusicAdapter(localSongArrayList, this);
         RecyclerView recyclerView = findViewById(R.id.songList);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -85,14 +88,15 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
+
     @Override
-    public void handleMessage(int what, String s) {
-        Toast.makeText(PartyActivity.this, s, Toast.LENGTH_SHORT).show();
+    public void handleNewClient(User user) {
+        Toast.makeText(this, user.getName() + " join party", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void handleConnectToHost() {
-
+        sendSignal(user);
     }
 
     @Override
@@ -109,7 +113,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
                 @Override
                 public void run() {
                     try {
-
                         Socket socket = FileServer.getServerSocket().accept();
                         ReceiveFile receiveFile = new ReceiveFile(socket, path);
                         receiveFile.start();
@@ -278,5 +281,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
         sendSignal(new NewSongModel(localSong.getName(), 8080));
         sendFile(localSong.getPath());
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (isHost) {
+            server.stopServer();
+        }
     }
 }

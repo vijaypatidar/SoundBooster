@@ -13,6 +13,7 @@ import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.NewSongModel;
 import com.vkpapps.soundbooster.model.PlayThisSong;
 import com.vkpapps.soundbooster.model.SeekModel;
+import com.vkpapps.soundbooster.model.User;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,6 +56,9 @@ public class ServerHelper extends Thread {
                     message.what = SignalHandler.SONG_PLAY_REQUEST;
                     bundle.putSerializable("data", (PlayThisSong) object);
                     Server.getInstance().send(object, socket);
+                } else if (object instanceof User) {
+                    message.what = SignalHandler.NEW_DEVICE_CONNECTED;
+                    bundle.putSerializable("data", (User) object);
                 }
                 signalHandler.sendMessage(message);
             } catch (IOException | ClassNotFoundException ex) {

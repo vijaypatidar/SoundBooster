@@ -16,6 +16,7 @@ import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.NewSongModel;
 import com.vkpapps.soundbooster.model.PlayThisSong;
 import com.vkpapps.soundbooster.model.SeekModel;
+import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.view.CircleView;
 
 import java.lang.reflect.InvocationTargetException;
@@ -64,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
     private void createHost() {
         intent.putExtra("isHost", true);
         startActivity(intent);
+        finish();
     }
 
     private void connectToHost() {
@@ -87,14 +89,15 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
     }
 
     @Override
-    public void handleMessage(int what, String s) {
+    public void handleNewClient(User user) {
+
     }
 
     @Override
     public void handleConnectToHost() {
         startActivity(intent);
         clientHelper.stopClientHelper();
-
+        finish();
     }
 
     @Override

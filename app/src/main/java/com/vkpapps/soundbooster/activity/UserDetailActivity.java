@@ -14,11 +14,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.User;
+import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 
 public class UserDetailActivity extends AppCompatActivity {
 
@@ -55,18 +53,10 @@ public class UserDetailActivity extends AppCompatActivity {
                 } else {
                     editTextName.setError("name required!");
                 }
-                try {
-                    File root = getDir("files", MODE_PRIVATE);
-                    FileOutputStream os = new FileOutputStream(new File(root, "user.txt"));
-                    ObjectOutputStream outputStream = new ObjectOutputStream(os);
-                    outputStream.writeObject(user);
-                    outputStream.flush();
-                    outputStream.close();
-                    os.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                File root = getDir("files", MODE_PRIVATE);
+                Utils.setUser(root, user);
                 startActivity(new Intent(UserDetailActivity.this, MainActivity.class));
+                finish();
             }
         });
 
@@ -79,6 +69,7 @@ public class UserDetailActivity extends AppCompatActivity {
             Bundle bundle = data.getExtras();
             Bitmap bitmap = (Bitmap) bundle.get("data");
             user.setBitmap(bitmap);
+            imageView.setImageBitmap(bitmap);
         }
     }
 }

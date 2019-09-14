@@ -39,19 +39,19 @@ public class LocalMusicAdapter extends RecyclerView.Adapter<LocalMusicAdapter.My
         LocalSong localSong = songArrayList.get(position);
         holder.setClickListener(position);
         holder.songTitle.setText(localSong.getName());
-        android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-        mmr.setDataSource(localSong.getPath());
+        try {
+            android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(localSong.getPath());
 
-        byte[] data = mmr.getEmbeddedPicture();
+            byte[] data = mmr.getEmbeddedPicture();
 
-        if (data != null) {
-            Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-            holder.imageView.setImageBitmap(bitmap); //associated cover art in bitmap
-        } else {
-            holder.imageView.setImageResource(R.mipmap.ic_launcher_round); //any default cover resourse folder
+            if (data != null) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                holder.imageView.setImageBitmap(bitmap); //associated cover art in bitmap
+            }
+        } catch (Exception ignored) {
+
         }
-//        String albumName = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
-        holder.imageView.setAdjustViewBounds(true);
     }
 
     @Override
@@ -74,12 +74,13 @@ public class LocalMusicAdapter extends RecyclerView.Adapter<LocalMusicAdapter.My
         }
 
         void setClickListener(final int position) {
-            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public boolean onLongClick(View view) {
+                public void onClick(View view) {
                     onItemClickListener.onLocalMusicSelect(position);
-                    return false;
                 }
+
+
             });
         }
     }

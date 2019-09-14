@@ -32,7 +32,7 @@
             tools:text="song name" />
 
         <TextView
-
+            android:id="@+id/playedBy"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:lines="1"

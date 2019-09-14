@@ -1,12 +1,21 @@
 package com.vkpapps.soundbooster.model;
 
 public class HostSong {
-    private String path;
+    private String path, name;
     private boolean available;
 
-    public HostSong(String path, boolean available) {
+    public HostSong(String path, String name, boolean available) {
         this.path = path;
+        this.name = name;
         this.available = available;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getPath() {

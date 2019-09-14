@@ -25,13 +25,14 @@ public class SplashActivity extends AppCompatActivity {
             @Override
             public void run() {
                 if (user.exists()) {
+
                     startActivity(new Intent(SplashActivity.this, MainActivity.class));
                 } else {
                     startActivity(new Intent(SplashActivity.this, UserDetailActivity.class));
                 }
                 finish();
             }
-        }, 0);
+        }, 1500);
 
     }
 }

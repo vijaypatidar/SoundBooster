@@ -10,6 +10,7 @@ import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.NewSongModel;
 import com.vkpapps.soundbooster.model.PlayThisSong;
 import com.vkpapps.soundbooster.model.SeekModel;
+import com.vkpapps.soundbooster.model.User;
 
 
 public class SignalHandler extends Handler {
@@ -35,7 +36,7 @@ public class SignalHandler extends Handler {
                 onMessageHandlerListener.handleConnectToHost();
                 break;
             case NEW_DEVICE_CONNECTED:
-                onMessageHandlerListener.handleMessage(what, (String) bundle.get("data"));
+                onMessageHandlerListener.handleNewClient((User) bundle.get("data"));
                 break;
             case NEW_SEEK_REQUEST:
                 onMessageHandlerListener.handleSeek((SeekModel) bundle.getSerializable("data"));
@@ -52,7 +53,7 @@ public class SignalHandler extends Handler {
     }
 
     public interface OnMessageHandlerListener {
-        void handleMessage(int what, String s);
+        void handleNewClient(User user);
 
         void handleConnectToHost();
 
