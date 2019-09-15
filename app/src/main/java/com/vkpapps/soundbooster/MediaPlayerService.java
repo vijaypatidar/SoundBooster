@@ -3,7 +3,6 @@ package com.vkpapps.soundbooster;
 import android.media.MediaPlayer;
 
 import java.io.IOException;
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -36,27 +35,25 @@ public class MediaPlayerService {
         }
     }
 
-    public void seek(final int seekTo, Date date) {
-//        final int to = seekTo * 1000;
-//        Timer timer = new Timer();
-//        timer.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                mediaPlayer.seekTo(to);
-//            }
-//        }, date);
-        mediaPlayer.seekTo(0);
-    }
-
-    public void play(long date) {
+    public void seek(final int seekTo, long date) {
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-                mediaPlayer.start();
+                mediaPlayer.seekTo(seekTo);
             }
         }, date - System.currentTimeMillis());
+    }
+
+    public void play(long date) {
+//        Timer timer = new Timer();
+//        timer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+        mediaPlayer.start();
+//            }
+//        }, date - System.currentTimeMillis());
 
     }
 

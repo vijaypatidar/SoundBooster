@@ -1,15 +1,22 @@
 package com.vkpapps.soundbooster.model;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public class SeekModel implements Serializable {
-    private Date date;
+    private long time;
     private int seekTo;
 
-    public SeekModel(int seekTo, Date date) {
+    public SeekModel(long time, int seekTo) {
+        this.time = time;
         this.seekTo = seekTo;
-        this.date = date;
+    }
+
+    public long getTime() {
+        return time;
+    }
+
+    public void setTime(long time) {
+        this.time = time;
     }
 
     public int getSeekTo() {
@@ -18,13 +25,5 @@ public class SeekModel implements Serializable {
 
     public void setSeekTo(int seekTo) {
         this.seekTo = seekTo;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
     }
 }

@@ -17,13 +17,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-
-        <activity android:name=".activity.PartyActivity" />
+        <activity
+            android:name=".activity.PartyActivity"
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".activity.UserDetailActivity" />
         <activity
             android:name=".activity.SplashActivity"
-            android:theme="@style/AppThemeNoAction"
-            android:configChanges="orientation|keyboardHidden|screenSize">
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@style/AppThemeNoAction">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

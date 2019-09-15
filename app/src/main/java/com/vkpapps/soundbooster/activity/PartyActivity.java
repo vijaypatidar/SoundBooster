@@ -1,20 +1,24 @@
 package com.vkpapps.soundbooster.activity;
 
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.tabs.TabLayout;
 import com.vkpapps.soundbooster.MediaPlayerService;
 import com.vkpapps.soundbooster.R;
+import com.vkpapps.soundbooster.adapter.MyFragmentPagerAdapter;
 import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.connection.ReceiveFile;
 import com.vkpapps.soundbooster.connection.SendFile;
 import com.vkpapps.soundbooster.connection.Server;
 import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.LocalSongFragment;
+import com.vkpapps.soundbooster.fragments.RequestFragment;
 import com.vkpapps.soundbooster.handler.FileHandler;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
@@ -41,7 +45,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     private String host;
     private HostSongFragment hostSongFragment;
-    private LocalSongFragment localSongFragment;
+    private RequestFragment requestFragment;
     private boolean isHost;
     private Server server;
     private User user;
@@ -58,20 +62,19 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         setContentView(R.layout.activity_party);
 
 
-        initUI();
         root = getDir("mySong", MODE_PRIVATE).getPath();
+        isHost = getIntent().getBooleanExtra("isHost", false);
+        host = getIntent().getStringExtra("host");
+        fileRequests = new ArrayList<>();
+
+        initUI();
         Utils.deleteFile(root);
         user = Utils.getUser(getDir("files", MODE_PRIVATE));
         mediaPlayerService = MediaPlayerService.getInstance();
-        fileRequests = new ArrayList<>();
 
-        localSongFragment = new LocalSongFragment(this, root);
-        hostSongFragment = new HostSongFragment(this, root);
 
         signalHandler = new SignalHandler(this);
         fileHandler = new FileHandler(this);
-        isHost = getIntent().getBooleanExtra("isHost", false);
-        host = getIntent().getStringExtra("host");
 
 
         if (isHost) {
@@ -80,24 +83,25 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         } else {
             setUpClient();
         }
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, localSongFragment).commit();
     }
 
     private void initUI() {
-        Button btnHosted = findViewById(R.id.btnHost);
-        btnHosted.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, hostSongFragment).commit();
-            }
-        });
-        Button btnLocal = findViewById(R.id.btnLocal);
-        btnLocal.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, localSongFragment).commit();
-            }
-        });
+        LocalSongFragment localSongFragment = new LocalSongFragment(this, root);
+        hostSongFragment = new HostSongFragment(this, root);
+
+        ArrayList<Fragment> fragments = new ArrayList<>();
+        fragments.add(hostSongFragment);
+        fragments.add(localSongFragment);
+
+        if (isHost) {
+            requestFragment = new RequestFragment(fileRequests);
+            fragments.add(requestFragment);
+        }
+
+        ViewPager viewPager = findViewById(R.id.view_pager);
+        viewPager.setAdapter(new MyFragmentPagerAdapter(getSupportFragmentManager(), PagerAdapter.POSITION_NONE, fragments));
+        TabLayout tabs = findViewById(R.id.tabs);
+        tabs.setupWithViewPager(viewPager);
     }
 
 
@@ -194,13 +198,14 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     public void onSelectLocalMusic(LocalSong localSong) {
         sendSignal(new Request(user.getUserId(), localSong.getName()), null);
         if (isHost) {
+            boolean performAction = fileRequests.isEmpty();
             Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
             for (Map.Entry<String, Socket> entry : entries) {
                 FileRequest fileRequest = new FileRequest(true, localSong.getName(), localSong.getPath(), entry.getValue());
                 fileRequests.add(fileRequest);
                 Toast.makeText(this, "id " + entry.getKey() + entry.getValue(), Toast.LENGTH_SHORT).show();
             }
-            if (fileRequests.size() == 1) performRequest();
+            if (performAction) performRequest();
         } else {
             FileRequest fileRequest = new FileRequest(true, localSong.getName(), localSong.getPath(), null);
             fileRequests.add(fileRequest);
@@ -253,7 +258,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     private void syncDevices(final SeekModel seekModel) {
-        mediaPlayerService.seek(seekModel.getSeekTo(), seekModel.getDate());
+        mediaPlayerService.seek(seekModel.getSeekTo(), seekModel.getTime());
     }
 
 
@@ -265,7 +270,10 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         try {
             hostSongFragment.onResume();
         } catch (Exception ignored) {
-
+        }
+        try {
+            requestFragment.onResume();
+        } catch (Exception ignored) {
         }
     }
 
@@ -291,7 +299,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void onMusicSelectToPlay(HostSong hostSong) {
-        PlayThisSong playThisSong = new PlayThisSong(hostSong.getName(), System.currentTimeMillis() + 5000);
+        PlayThisSong playThisSong = new PlayThisSong(hostSong.getName(), System.currentTimeMillis() + 2500);
         sendSignal(playThisSong, null);
         mediaPlayerService.load(root + File.separator + playThisSong.getName());
         mediaPlayerService.play(playThisSong.getAtTime());
