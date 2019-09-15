@@ -1,10 +1,8 @@
 package com.vkpapps.soundbooster.activity;
 
-import android.content.Context;
-import android.database.Cursor;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,32 +14,35 @@ import com.vkpapps.soundbooster.MediaPlayerService;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.LocalMusicAdapter;
 import com.vkpapps.soundbooster.connection.ClientHelper;
-import com.vkpapps.soundbooster.connection.FileHandler;
-import com.vkpapps.soundbooster.connection.FileServer;
 import com.vkpapps.soundbooster.connection.ReceiveFile;
 import com.vkpapps.soundbooster.connection.SendFile;
 import com.vkpapps.soundbooster.connection.Server;
+import com.vkpapps.soundbooster.handler.FileHandler;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
+import com.vkpapps.soundbooster.model.FileRequest;
+import com.vkpapps.soundbooster.model.InformClient;
 import com.vkpapps.soundbooster.model.LocalSong;
-import com.vkpapps.soundbooster.model.NewSongModel;
 import com.vkpapps.soundbooster.model.PlayThisSong;
+import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.SeekModel;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener, LocalMusicAdapter.OnItemClickListener {
+import static com.vkpapps.soundbooster.utils.Utils.getAllAudios;
+import static com.vkpapps.soundbooster.utils.Utils.getSocket;
+
+public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener,
+        LocalMusicAdapter.OnItemClickListener, FileHandler.OnFileHandlerListener {
 
     private String host;
     private boolean isHost;
@@ -49,10 +50,11 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private User user;
     private ClientHelper clientHelper;
     private SignalHandler signalHandler;
-    private FileHandler myFileHandler;
+    private FileHandler fileHandler;
     private MediaPlayerService mediaPlayerService;
     private String root;
     private ArrayList<LocalSong> localSongArrayList;
+    private ArrayList<FileRequest> fileRequests;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,13 +64,16 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         root = getDir("mySong", MODE_PRIVATE).getPath();
         user = Utils.getUser(getDir("files", MODE_PRIVATE));
         mediaPlayerService = MediaPlayerService.getInstance();
+        fileRequests = new ArrayList<>();
 
         signalHandler = new SignalHandler(this);
-
+        fileHandler = new FileHandler(this);
         isHost = getIntent().getBooleanExtra("isHost", false);
         host = getIntent().getStringExtra("host");
 
+
         if (isHost) {
+            Toast.makeText(this, "Host of party", Toast.LENGTH_SHORT).show();
             setUpServer();
         } else {
             setUpClient();
@@ -86,6 +91,16 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             File file = allAudios.get(i);
             localSongArrayList.add(new LocalSong(file.getPath(), file.getName()));
         }
+        localMusicAdapter.notifyDataSetChanged();
+
+
+        Button btnDo = findViewById(R.id.btnDo);
+        btnDo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                performRequest();
+            }
+        });
     }
 
 
@@ -96,7 +111,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void handleConnectToHost() {
-        sendSignal(user);
+        sendSignal(user, null);
     }
 
     @Override
@@ -106,45 +121,32 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     @Override
-    public void handelNewSong(final NewSongModel newSongModel) {
-        final String path = root + File.separator + newSongModel.getName();
+    public void handelFileRequest(Request request) {
+        Toast.makeText(this, "Handle req " + request.getName() + " id " + request.getUserId(), Toast.LENGTH_SHORT).show();
+        Socket socket = null;
+        boolean performAction = fileRequests.isEmpty();
         if (isHost) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Socket socket = FileServer.getServerSocket().accept();
-                        ReceiveFile receiveFile = new ReceiveFile(socket, path);
-                        receiveFile.start();
-                        //send signal to receive file
-                        Server.getInstance().send(newSongModel, null);
-                        FileServer fileServer = new FileServer(path);
-                        fileServer.start();
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-        } else {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-
-                    Socket socket = new Socket();
-                    try {
-                        socket.connect(new InetSocketAddress(host, 15425), 5000);
-                        ReceiveFile receiveFile = new ReceiveFile(socket, path);
-                        receiveFile.start();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }).start();
+            socket = Server.socketHashMap.get(request.getUserId());
         }
-        Toast.makeText(this, "Ready to receive file " + newSongModel.getName(), Toast.LENGTH_SHORT).show();
+        FileRequest fileRequest = new FileRequest(false, request.getName(), root + File.separator + request.getName(), socket);
+        fileRequests.add(fileRequest);
+        if (isHost) {
+            // forward to other clients except sender
+            Request newReq = new Request(user.getUserId(), request.getName());
+            sendSignal(newReq, socket);
+            Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
+            for (Map.Entry<String, Socket> entry : entries) {
+                if (!entry.getKey().equalsIgnoreCase(request.getUserId())) {
+                    fileRequest = new FileRequest(true, request.getName(), root + File.separator + request.getName(), entry.getValue());
+                    fileRequests.add(fileRequest);
+                    Toast.makeText(this, "for to id " + entry.getKey() + entry.getValue(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+
+        if (performAction) performRequest();
     }
+
 
     @Override
     public void handleControl(final Control control) {
@@ -173,10 +175,50 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     @Override
+    public void handleRequest(InformClient informClient) {
+        FileRequest fileRequest = fileRequests.get(0);
+        if (informClient.isReadyToReceive()) {
+            receiveFile(root + File.separator + fileRequest.getName());
+        } else {
+            sendFile(fileRequest.getPath());
+        }
+    }
+
+    @Override
     public void handleSongPlay(PlayThisSong playThisSong) {
         mediaPlayerService.load(root + File.separator + playThisSong.getName());
         mediaPlayerService.play(playThisSong.getAtTime());
         Toast.makeText(this, "Handle play song " + playThisSong.getAtTime().toString(), Toast.LENGTH_SHORT).show();
+    }
+
+
+    private void sendSignal(Object s, Socket socket) {
+        if (isHost) {
+            server.send(s, socket);
+        } else {
+            clientHelper.send(s);
+        }
+    }
+
+    @Override
+    public void onLocalMusicSelect(int position) {
+
+        LocalSong localSong = localSongArrayList.get(position);
+
+        sendSignal(new Request(user.getUserId(), localSong.getName()), null);
+        if (isHost) {
+            Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
+            for (Map.Entry<String, Socket> entry : entries) {
+                FileRequest fileRequest = new FileRequest(true, localSong.getName(), localSong.getPath(), entry.getValue());
+                fileRequests.add(fileRequest);
+                Toast.makeText(this, "id " + entry.getKey() + entry.getValue(), Toast.LENGTH_SHORT).show();
+            }
+            if (fileRequests.size() == 1) performRequest();
+        } else {
+            FileRequest fileRequest = new FileRequest(true, localSong.getName(), localSong.getPath(), null);
+            fileRequests.add(fileRequest);
+        }
+
     }
 
 
@@ -191,103 +233,66 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         clientHelper.start();
     }
 
-    private void sendSignal(Object s) {
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
         if (isHost) {
-            server.send(s, null);
+            server.stopServer();
         } else {
-            clientHelper.send(s);
+            clientHelper.stopClientHelper();
         }
     }
 
     private void sendFile(final String path) {
-        if (isHost) {
-            FileServer fileServer = new FileServer(path);
-            fileServer.start();
-        } else {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Socket socket = new Socket();
-                    try {
-                        socket.connect(new InetSocketAddress(host, 15425), 5000);
-                        SendFile sendFile = new SendFile(socket, path);
-                        sendFile.startSending();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Socket socket = getSocket(isHost, host);
+                SendFile sendFile = new SendFile(socket, path, fileHandler);
+                sendFile.startSending();
+            }
+        }).start();
+    }
+
+    private void receiveFile(final String path) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Socket socket = getSocket(isHost, host);
+                ReceiveFile receiveFile = new ReceiveFile(socket, path, fileHandler);
+                receiveFile.start();
+            }
+        }).start();
     }
 
     private void syncDevices(final SeekModel seekModel) {
         mediaPlayerService.seek(seekModel.getSeekTo(), seekModel.getDate());
     }
 
-    public List<File> getAllAudios(Context c) {
-        List<File> files = new ArrayList<>();
-        if (true) {
-            String[] projection = {MediaStore.Audio.AudioColumns.DATA, MediaStore.Audio.Media.DISPLAY_NAME};
-            Cursor cursor = c.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, null, null, null);
-            try {
-                assert cursor != null;
-                cursor.moveToFirst();
-                do {
-                    files.add((new File(cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)))));
-                } while (cursor.moveToNext());
 
-                cursor.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return files;
+    @Override
+    public void onFileRequestCompleted() {
+        Toast.makeText(this, "onFileRequestCompleted", Toast.LENGTH_SHORT).show();
+        fileRequests.remove(0);
+        performRequest();
     }
 
-    private Date getDelayForSync() {
-        Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int min = calendar.get(Calendar.MINUTE);
-        int sec = calendar.get(Calendar.SECOND);
-        sec = sec + 4;
-        if (sec >= 60) {
-            min++;
-            sec = sec - 60;
-            if (min >= 60) {
-                hour++;
-                min = min - 60;
-                if (hour >= 24) {
-                    hour = 0;
-                }
+    private void performRequest() {
+        if (!fileRequests.isEmpty() && isHost) {
+            FileRequest fileRequest = fileRequests.get(0);
+            Toast.makeText(this, "perform called " + fileRequest.isSend(), Toast.LENGTH_SHORT).show();
+            server.informClient(fileRequest.getSocket(), new InformClient(fileRequest.isSend()));
+            if (fileRequest.isSend()) {
+                sendFile(fileRequest.getPath());
+            } else {
+                receiveFile(root + File.separator + fileRequest.getName());
             }
+
         }
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        calendar.set(Calendar.MINUTE, min);
-        calendar.set(Calendar.SECOND, sec);
-        calendar.set(Calendar.MILLISECOND, 0);
-        return calendar.getTime();
     }
 
     @Override
-    public void onLocalMusicSelect(int position) {
+    public void onFileRequestFailed() {
 
-        Log.d("", "onLocalMusicSelect: ============================== " + localSongArrayList.get(position).getName());
-        LocalSong localSong = localSongArrayList.get(position);
-//            Date date = getDelayForSync();
-//            sendSignal(new PlayThisSong(allAudios.get(i).getName(), date));
-//            mediaPlayerService.load(allAudios.get(i).getPath());
-//            mediaPlayerService.play(date);
-        ///send signal and file
-
-        sendSignal(new NewSongModel(localSong.getName(), 8080));
-        sendFile(localSong.getPath());
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (isHost) {
-            server.stopServer();
-        }
     }
 }

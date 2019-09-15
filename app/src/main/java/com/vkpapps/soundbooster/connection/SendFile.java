@@ -2,28 +2,31 @@ package com.vkpapps.soundbooster.connection;
 
 import android.util.Log;
 
+import com.vkpapps.soundbooster.handler.FileHandler;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import static com.vkpapps.soundbooster.connection.ClientHelper.TAG;
 
 public class SendFile {
     private Socket socket;
     private String path;
+    private FileHandler fileHandler;
 
-    public SendFile(Socket socket, String path) {
+    public SendFile(Socket socket, String path, FileHandler fileHandler) {
         this.socket = socket;
         this.path = path;
+        this.fileHandler = fileHandler;
     }
 
     public void startSending() {
         try {
-            Log.d(TAG, "run: sending to client " + path);
+            Log.d(TAG, "run: sending to client ==================================================== " + path);
+
             byte[] bs = new byte[1024 * 3];
             FileInputStream fis = new FileInputStream(new File(path));
             OutputStream fos = socket.getOutputStream();
@@ -34,10 +37,10 @@ public class SendFile {
             fos.flush();
             fos.close();
             fis.close();
-            socket.close();
-            Log.d(TAG, "run: sent to client " + path);
+            fileHandler.sendEmptyMessage(FileHandler.REQUEST_COMPLETED);
+            Log.d(TAG, "run: sent to client ==================================================== " + path);
         } catch (IOException ex) {
-            Logger.getLogger(FileServer.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
         }
 
     }

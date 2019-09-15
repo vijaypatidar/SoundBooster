@@ -7,8 +7,9 @@ import android.os.Message;
 import androidx.annotation.NonNull;
 
 import com.vkpapps.soundbooster.model.Control;
-import com.vkpapps.soundbooster.model.NewSongModel;
+import com.vkpapps.soundbooster.model.InformClient;
 import com.vkpapps.soundbooster.model.PlayThisSong;
+import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.SeekModel;
 import com.vkpapps.soundbooster.model.User;
 
@@ -20,6 +21,7 @@ public class SignalHandler extends Handler {
     public static final int NEW_CONTROL_REQUEST = 4;
     public static final int SONG_PLAY_REQUEST = 5;
     public static final int CONNECT_TO_HOST = 6;
+    public static final int HANDLE_REQUEST = 7;
 
     private OnMessageHandlerListener onMessageHandlerListener;
 
@@ -42,13 +44,16 @@ public class SignalHandler extends Handler {
                 onMessageHandlerListener.handleSeek((SeekModel) bundle.getSerializable("data"));
                 break;
             case NEW_SONG_REQUEST:
-                onMessageHandlerListener.handelNewSong((NewSongModel) bundle.getSerializable("data"));
+                onMessageHandlerListener.handelFileRequest((Request) bundle.getSerializable("data"));
                 break;
             case NEW_CONTROL_REQUEST:
                 onMessageHandlerListener.handleControl((Control) bundle.getSerializable("data"));
                 break;
             case SONG_PLAY_REQUEST:
                 onMessageHandlerListener.handleSongPlay((PlayThisSong) bundle.getSerializable("data"));
+                break;
+            case HANDLE_REQUEST:
+                onMessageHandlerListener.handleRequest((InformClient) bundle.getSerializable("data"));
         }
     }
 
@@ -59,9 +64,11 @@ public class SignalHandler extends Handler {
 
         void handleSeek(SeekModel seekModel);
 
-        void handelNewSong(NewSongModel newSongModel);
+        void handelFileRequest(Request request);
 
         void handleControl(Control control);
+
+        void handleRequest(InformClient informClient);
 
         void handleSongPlay(PlayThisSong playThisSong);
     }

@@ -10,8 +10,8 @@ import android.os.Message;
 
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
-import com.vkpapps.soundbooster.model.NewSongModel;
 import com.vkpapps.soundbooster.model.PlayThisSong;
+import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.SeekModel;
 import com.vkpapps.soundbooster.model.User;
 
@@ -24,7 +24,7 @@ public class ServerHelper extends Thread {
     private Socket socket;
     private SignalHandler signalHandler;
 
-    public ServerHelper(Socket socket, SignalHandler signalHandler) {
+    ServerHelper(Socket socket, SignalHandler signalHandler) {
         this.socket = socket;
         this.signalHandler = signalHandler;
     }
@@ -34,8 +34,7 @@ public class ServerHelper extends Thread {
         while (socket.isConnected()) {
             try {
                 ObjectInputStream objectInputStream;
-                InputStream inputStream = null;
-                inputStream = socket.getInputStream();
+                InputStream inputStream = socket.getInputStream();
                 objectInputStream = new ObjectInputStream(inputStream);
                 Object object = objectInputStream.readObject();
                 Message message = new Message();
@@ -45,11 +44,12 @@ public class ServerHelper extends Thread {
                     message.what = SignalHandler.NEW_SEEK_REQUEST;
                     bundle.putSerializable("data", (SeekModel) object);
                     Server.getInstance().send(object, socket);
-                } else if (object instanceof NewSongModel) {
+                } else if (object instanceof Request) {
                     message.what = SignalHandler.NEW_SONG_REQUEST;
-                    bundle.putSerializable("data", (NewSongModel) object);
+                    bundle.putSerializable("data", (Request) object);
+                    Server.getInstance().send(object, socket);
                 } else if (object instanceof Control) {
-                    message.what = SignalHandler.NEW_SONG_REQUEST;
+                    message.what = SignalHandler.NEW_CONTROL_REQUEST;
                     bundle.putSerializable("data", (Control) object);
                     Server.getInstance().send(object, socket);
                 } else if (object instanceof PlayThisSong) {
@@ -57,13 +57,16 @@ public class ServerHelper extends Thread {
                     bundle.putSerializable("data", (PlayThisSong) object);
                     Server.getInstance().send(object, socket);
                 } else if (object instanceof User) {
+                    User user = (User) object;
                     message.what = SignalHandler.NEW_DEVICE_CONNECTED;
-                    bundle.putSerializable("data", (User) object);
+                    bundle.putSerializable("data", user);
+                    Server.list.add(socket);
+                    Server.socketHashMap.put(user.getUserId(), socket);
                 }
                 signalHandler.sendMessage(message);
-            } catch (IOException | ClassNotFoundException ex) {
+            } catch (IOException | ClassNotFoundException ignored) {
                 try {
-                    sleep(1500);
+                    sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

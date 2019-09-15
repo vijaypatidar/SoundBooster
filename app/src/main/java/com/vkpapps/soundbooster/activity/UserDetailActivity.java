@@ -49,7 +49,7 @@ public class UserDetailActivity extends AppCompatActivity {
                 String name = editTextName.getText().toString();
                 if (!name.isEmpty()) {
                     user.setName(name);
-                    user.setUserId(System.currentTimeMillis());
+                    user.setUserId(System.currentTimeMillis() + "");
                 } else {
                     editTextName.setError("name required!");
                 }
@@ -66,9 +66,9 @@ public class UserDetailActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 101) {
+            assert data != null;
             Bundle bundle = data.getExtras();
             Bitmap bitmap = (Bitmap) bundle.get("data");
-            user.setBitmap(bitmap);
             imageView.setImageBitmap(bitmap);
         }
     }

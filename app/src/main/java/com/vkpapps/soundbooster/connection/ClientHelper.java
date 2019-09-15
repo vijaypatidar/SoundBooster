@@ -11,8 +11,9 @@ import android.util.Log;
 
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
-import com.vkpapps.soundbooster.model.NewSongModel;
+import com.vkpapps.soundbooster.model.InformClient;
 import com.vkpapps.soundbooster.model.PlayThisSong;
+import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.SeekModel;
 
 import java.io.IOException;
@@ -58,8 +59,7 @@ public class ClientHelper extends Thread {
 
             try {
                 ObjectInputStream objectInputStream;
-                InputStream inputStream = null;
-                inputStream = socket.getInputStream();
+                InputStream inputStream = socket.getInputStream();
                 objectInputStream = new ObjectInputStream(inputStream);
                 Object object = objectInputStream.readObject();
                 Message message = new Message();
@@ -68,15 +68,18 @@ public class ClientHelper extends Thread {
                 if (object instanceof SeekModel) {
                     message.what = SignalHandler.NEW_SEEK_REQUEST;
                     bundle.putSerializable("data", (SeekModel) object);
-                } else if (object instanceof NewSongModel) {
+                } else if (object instanceof Request) {
                     message.what = SignalHandler.NEW_SONG_REQUEST;
-                    bundle.putSerializable("data", (NewSongModel) object);
+                    bundle.putSerializable("data", (Request) object);
                 } else if (object instanceof Control) {
-                    message.what = SignalHandler.NEW_SONG_REQUEST;
+                    message.what = SignalHandler.NEW_CONTROL_REQUEST;
                     bundle.putSerializable("data", (Control) object);
                 } else if (object instanceof PlayThisSong) {
                     message.what = SignalHandler.SONG_PLAY_REQUEST;
                     bundle.putSerializable("data", (PlayThisSong) object);
+                } else if (object instanceof InformClient) {
+                    message.what = SignalHandler.HANDLE_REQUEST;
+                    bundle.putSerializable("data", (InformClient) object);
                 }
 
                 message.setData(bundle);
@@ -85,7 +88,7 @@ public class ClientHelper extends Thread {
             } catch (IOException | ClassNotFoundException ex) {
 //                Logger.getLogger(ClientHelper.class.getName()).log(Level.SEVERE, null, ex);
                 try {
-                    sleep(1500);
+                    sleep(1000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -124,6 +127,11 @@ public class ClientHelper extends Thread {
 
     public void stopClientHelper() {
         run = false;
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }

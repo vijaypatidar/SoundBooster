@@ -4,8 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/dull_white"
+    android:orientation="vertical"
     tools:context=".activity.PartyActivity">
 
+    <Button
+        android:id="@+id/btnDo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="do" />
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/songList"
         android:layout_width="match_parent"

@@ -5,9 +5,8 @@
  */
 package com.vkpapps.soundbooster.connection;
 
-import android.util.Log;
-
 import com.vkpapps.soundbooster.handler.SignalHandler;
+import com.vkpapps.soundbooster.model.InformClient;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -15,15 +14,15 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.vkpapps.soundbooster.connection.ClientHelper.TAG;
-
 public class Server extends Thread {
 
     static List<Socket> list = new ArrayList<>();
+    public static HashMap<String, Socket> socketHashMap = new HashMap<>();
     private static Server server;
     private ServerSocket serverSocket;
     private SignalHandler signalHandler;
@@ -52,7 +51,6 @@ public class Server extends Thread {
                 Socket socket = serverSocket.accept();
                 ServerHelper serverHelper = new ServerHelper(socket, signalHandler);
                 serverHelper.start();
-                list.add(socket);
 
                 try {
                     sleep(5000);
@@ -82,10 +80,26 @@ public class Server extends Thread {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-
-
                     }
+                }
+            }
+        }).start();
+    }
 
+    public void informClient(final Socket socket, final InformClient informClient) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if (socket.isConnected()) {
+                    OutputStream outputStream;
+                    ObjectOutputStream objectOutputStream;
+                    try {
+                        outputStream = socket.getOutputStream();
+                        objectOutputStream = new ObjectOutputStream(outputStream);
+                        objectOutputStream.writeObject(informClient);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }).start();
@@ -97,7 +111,6 @@ public class Server extends Thread {
     }
 
     public void stopServer() {
-        Log.d(TAG, "stopServer:================================================================== stop ");
         run = false;
         server = null;
         try {

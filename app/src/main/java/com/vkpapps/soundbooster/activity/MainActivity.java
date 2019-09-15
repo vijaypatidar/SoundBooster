@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -13,8 +12,9 @@ import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.connection.WifiHelper;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
-import com.vkpapps.soundbooster.model.NewSongModel;
+import com.vkpapps.soundbooster.model.InformClient;
 import com.vkpapps.soundbooster.model.PlayThisSong;
+import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.SeekModel;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.view.CircleView;
@@ -72,7 +72,6 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
 
         if (WifiHelper.deviceList.size() > 0) {
             String host = WifiHelper.deviceList.get(0);
-            Toast.makeText(MainActivity.this, host, Toast.LENGTH_SHORT).show();
             intent.putExtra("isHost", false);
             intent.putExtra("host", host);
             clientHelper = new ClientHelper(host, signalHandler);
@@ -106,13 +105,18 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
     }
 
     @Override
-    public void handelNewSong(NewSongModel newSongModel) {
+    public void handelFileRequest(Request request) {
 
     }
+
 
     @Override
     public void handleControl(Control control) {
 
+    }
+
+    @Override
+    public void handleRequest(InformClient informClient) {
     }
 
     @Override
