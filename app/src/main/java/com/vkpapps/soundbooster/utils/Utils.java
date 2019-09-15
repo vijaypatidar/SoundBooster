@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 public class Utils {
     public static User getUser(File root) {
@@ -59,7 +60,8 @@ public class Utils {
         if (isHost) {
             try {
                 Log.d("patidar", "getSocket: ser ======================================== ");
-                ServerSocket serverSocket = new ServerSocket(15448);
+                ServerSocket serverSocket = null;
+                serverSocket = new ServerSocket(15448);
                 socket = serverSocket.accept();
                 Log.d("patidar", "getSocket: found  ======================================== ");
                 serverSocket.close();
@@ -78,6 +80,12 @@ public class Utils {
         return socket;
     }
 
+    public static void deleteFile(String path) {
+        for (File file : Objects.requireNonNull(new File(path).listFiles())) {
+            file.delete();
+        }
+
+    }
 
     public static List<File> getAllAudios(Context c) {
         List<File> files = new ArrayList<>();

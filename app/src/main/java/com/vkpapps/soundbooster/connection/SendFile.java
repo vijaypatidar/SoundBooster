@@ -26,7 +26,6 @@ public class SendFile {
     public void startSending() {
         try {
             Log.d(TAG, "run: sending to client ==================================================== " + path);
-
             byte[] bs = new byte[1024 * 3];
             FileInputStream fis = new FileInputStream(new File(path));
             OutputStream fos = socket.getOutputStream();
@@ -40,6 +39,7 @@ public class SendFile {
             fileHandler.sendEmptyMessage(FileHandler.REQUEST_COMPLETED);
             Log.d(TAG, "run: sent to client ==================================================== " + path);
         } catch (IOException ex) {
+            fileHandler.sendEmptyMessage(FileHandler.REQUEST_FAILED);
             ex.printStackTrace();
         }
 

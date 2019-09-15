@@ -87,11 +87,11 @@ public class ClientHelper extends Thread {
 
             } catch (IOException | ClassNotFoundException ex) {
 //                Logger.getLogger(ClientHelper.class.getName()).log(Level.SEVERE, null, ex);
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
         }
 

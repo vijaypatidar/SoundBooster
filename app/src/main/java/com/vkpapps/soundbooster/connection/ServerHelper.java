@@ -65,11 +65,11 @@ public class ServerHelper extends Thread {
                 }
                 signalHandler.sendMessage(message);
             } catch (IOException | ClassNotFoundException ignored) {
-                try {
-                    sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    sleep(1000);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
             }
 
         }

@@ -7,14 +7,34 @@
     android:orientation="vertical"
     tools:context=".activity.PartyActivity">
 
-    <Button
-        android:id="@+id/btnDo"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="do" />
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/songList"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnHost"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:layout_weight="1"
+            android:background="@color/colorAccent"
+            android:text="Hosted"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/btnLocal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:layout_weight="1"
+            android:background="@color/colorAccent"
+            android:text="Local"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/fragmentContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_margin="3dp" />
+        android:layout_height="match_parent" />
 </LinearLayout>

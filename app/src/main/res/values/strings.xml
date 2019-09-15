@@ -9,4 +9,7 @@
     <string name="searching_for_party">Searching for party…</string>
     <string name="message_connect_host">please connect to host</string>
 
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>

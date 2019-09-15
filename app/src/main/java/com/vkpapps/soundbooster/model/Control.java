@@ -1,7 +1,6 @@
 package com.vkpapps.soundbooster.model;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public class Control implements Serializable {
     public static final int PLAY = 1;
@@ -10,19 +9,19 @@ public class Control implements Serializable {
     public static final int NEXT = 4;
     public static final int PREVIOUS = 5;
     private int choice;
-    private Date date;
+    private long time;
 
-    public Control(int choice, Date date) {
+    public Control(int choice, long time) {
         this.choice = choice;
-        this.date = date;
+        this.time = time;
     }
 
-    public Date getDate() {
-        return date;
+    public long getTime() {
+        return time;
     }
 
-    public void setDate(Date date) {
-        this.date = date;
+    public void setTime(long time) {
+        this.time = time;
     }
 
     public int getChoice() {

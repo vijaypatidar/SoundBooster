@@ -38,17 +38,21 @@ public class HostMusicAdapter extends RecyclerView.Adapter<HostMusicAdapter.MyVi
     public void onBindViewHolder(@NonNull MyViewHolder holder, int position) {
         HostSong hostSong = songArrayList.get(position);
         holder.setClickListener(position);
-        holder.songTitle.setText(hostSong.getPath());
-        if (hostSong.isAvailable()) {
-            android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(hostSong.getPath());
+        holder.songTitle.setText(hostSong.getName());
+        try {
+            if (hostSong.isAvailable()) {
+                android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                mmr.setDataSource(hostSong.getPath());
 
-            byte[] data = mmr.getEmbeddedPicture();
+                byte[] data = mmr.getEmbeddedPicture();
 
-            if (data != null) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                holder.imageView.setImageBitmap(bitmap); //associated cover art in bitmap
+                if (data != null) {
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                    holder.imageView.setImageBitmap(bitmap); //associated cover art in bitmap
+                }
             }
+        } catch (Exception ignored) {
+
         }
 //        String albumName = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
         holder.imageView.setAdjustViewBounds(true);
@@ -76,11 +80,10 @@ public class HostMusicAdapter extends RecyclerView.Adapter<HostMusicAdapter.MyVi
         }
 
         void setClickListener(final int position) {
-            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public boolean onLongClick(View view) {
+                public void onClick(View view) {
                     onItemClickListener.onLocalMusicSelect(position);
-                    return false;
                 }
             });
         }

@@ -48,14 +48,15 @@ public class MediaPlayerService {
         mediaPlayer.seekTo(0);
     }
 
-    public void play(Date date) {
+    public void play(long date) {
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
+                Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
                 mediaPlayer.start();
             }
-        }, date);
+        }, date - System.currentTimeMillis());
 
     }
 

@@ -21,8 +21,8 @@ import java.util.logging.Logger;
 
 public class Server extends Thread {
 
-    static List<Socket> list = new ArrayList<>();
     public static HashMap<String, Socket> socketHashMap = new HashMap<>();
+    static List<Socket> list = new ArrayList<>();
     private static Server server;
     private ServerSocket serverSocket;
     private SignalHandler signalHandler;

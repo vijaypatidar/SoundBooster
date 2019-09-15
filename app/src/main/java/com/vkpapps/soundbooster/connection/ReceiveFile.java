@@ -40,10 +40,11 @@ public class ReceiveFile {
             in.close();
             socket.close();
             fileHandler.sendEmptyMessage(FileHandler.REQUEST_COMPLETED);
-
             Log.d(TAG, "run: received from client ==================================================== " + path);
         } catch (IOException e) {
+            fileHandler.sendEmptyMessage(FileHandler.REQUEST_FAILED);
             e.printStackTrace();
+
         }
     }
 }

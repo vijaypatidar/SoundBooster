@@ -6,21 +6,20 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.DefaultItemAnimator;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.MediaPlayerService;
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.adapter.LocalMusicAdapter;
 import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.connection.ReceiveFile;
 import com.vkpapps.soundbooster.connection.SendFile;
 import com.vkpapps.soundbooster.connection.Server;
+import com.vkpapps.soundbooster.fragments.HostSongFragment;
+import com.vkpapps.soundbooster.fragments.LocalSongFragment;
 import com.vkpapps.soundbooster.handler.FileHandler;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.FileRequest;
+import com.vkpapps.soundbooster.model.HostSong;
 import com.vkpapps.soundbooster.model.InformClient;
 import com.vkpapps.soundbooster.model.LocalSong;
 import com.vkpapps.soundbooster.model.PlayThisSong;
@@ -32,19 +31,17 @@ import com.vkpapps.soundbooster.utils.Utils;
 import java.io.File;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import static com.vkpapps.soundbooster.utils.Utils.getAllAudios;
 import static com.vkpapps.soundbooster.utils.Utils.getSocket;
 
 public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener,
-        LocalMusicAdapter.OnItemClickListener, FileHandler.OnFileHandlerListener {
+        FileHandler.OnFileHandlerListener, LocalSongFragment.OnLocalSongFragmentListener, HostSongFragment.OnHostSongFragmentListener {
 
     private String host;
+    private HostSongFragment hostSongFragment;
+    private LocalSongFragment localSongFragment;
     private boolean isHost;
     private Server server;
     private User user;
@@ -53,7 +50,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private FileHandler fileHandler;
     private MediaPlayerService mediaPlayerService;
     private String root;
-    private ArrayList<LocalSong> localSongArrayList;
     private ArrayList<FileRequest> fileRequests;
 
     @Override
@@ -61,10 +57,16 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_party);
 
+
+        initUI();
         root = getDir("mySong", MODE_PRIVATE).getPath();
+        Utils.deleteFile(root);
         user = Utils.getUser(getDir("files", MODE_PRIVATE));
         mediaPlayerService = MediaPlayerService.getInstance();
         fileRequests = new ArrayList<>();
+
+        localSongFragment = new LocalSongFragment(this, root);
+        hostSongFragment = new HostSongFragment(this, root);
 
         signalHandler = new SignalHandler(this);
         fileHandler = new FileHandler(this);
@@ -78,27 +80,22 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         } else {
             setUpClient();
         }
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, localSongFragment).commit();
+    }
 
-        localSongArrayList = new ArrayList<>();
-        LocalMusicAdapter localMusicAdapter = new LocalMusicAdapter(localSongArrayList, this);
-        RecyclerView recyclerView = findViewById(R.id.songList);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(localMusicAdapter);
-
-        final List<File> allAudios = getAllAudios(this);
-        for (int i = 0; i < allAudios.size(); i++) {
-            File file = allAudios.get(i);
-            localSongArrayList.add(new LocalSong(file.getPath(), file.getName()));
-        }
-        localMusicAdapter.notifyDataSetChanged();
-
-
-        Button btnDo = findViewById(R.id.btnDo);
-        btnDo.setOnClickListener(new View.OnClickListener() {
+    private void initUI() {
+        Button btnHosted = findViewById(R.id.btnHost);
+        btnHosted.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                performRequest();
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, hostSongFragment).commit();
+            }
+        });
+        Button btnLocal = findViewById(R.id.btnLocal);
+        btnLocal.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainer, localSongFragment).commit();
             }
         });
     }
@@ -150,27 +147,20 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void handleControl(final Control control) {
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                switch (control.getChoice()) {
-                    case Control.PLAY:
-                        MediaPlayerService.getInstance().play(control.getDate());
-                        break;
-                    case Control.PAUSE:
-                        MediaPlayerService.getInstance().stop();
-                        break;
-                    case Control.NEXT:
-                        MediaPlayerService.getInstance().next();
-                        break;
-                    case Control.PREVIOUS:
-                        MediaPlayerService.getInstance().prev();
-                        break;
-                }
-            }
-        }, control.getDate());
-
+        switch (control.getChoice()) {
+            case Control.PLAY:
+                MediaPlayerService.getInstance().play(control.getTime());
+                break;
+            case Control.PAUSE:
+                MediaPlayerService.getInstance().stop();
+                break;
+            case Control.NEXT:
+                MediaPlayerService.getInstance().next();
+                break;
+            case Control.PREVIOUS:
+                MediaPlayerService.getInstance().prev();
+                break;
+        }
         Toast.makeText(this, "Handle control", Toast.LENGTH_SHORT).show();
     }
 
@@ -188,7 +178,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     public void handleSongPlay(PlayThisSong playThisSong) {
         mediaPlayerService.load(root + File.separator + playThisSong.getName());
         mediaPlayerService.play(playThisSong.getAtTime());
-        Toast.makeText(this, "Handle play song " + playThisSong.getAtTime().toString(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Handle play song " + playThisSong.getAtTime(), Toast.LENGTH_SHORT).show();
     }
 
 
@@ -201,10 +191,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     @Override
-    public void onLocalMusicSelect(int position) {
-
-        LocalSong localSong = localSongArrayList.get(position);
-
+    public void onSelectLocalMusic(LocalSong localSong) {
         sendSignal(new Request(user.getUserId(), localSong.getName()), null);
         if (isHost) {
             Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
@@ -272,15 +259,19 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void onFileRequestCompleted() {
-        Toast.makeText(this, "onFileRequestCompleted", Toast.LENGTH_SHORT).show();
         fileRequests.remove(0);
         performRequest();
+
+        try {
+            hostSongFragment.onResume();
+        } catch (Exception ignored) {
+
+        }
     }
 
     private void performRequest() {
         if (!fileRequests.isEmpty() && isHost) {
             FileRequest fileRequest = fileRequests.get(0);
-            Toast.makeText(this, "perform called " + fileRequest.isSend(), Toast.LENGTH_SHORT).show();
             server.informClient(fileRequest.getSocket(), new InformClient(fileRequest.isSend()));
             if (fileRequest.isSend()) {
                 sendFile(fileRequest.getPath());
@@ -293,6 +284,17 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void onFileRequestFailed() {
+        Toast.makeText(this, "error while preparing...", Toast.LENGTH_SHORT).show();
+        fileRequests.remove(0);
+        performRequest();
+    }
 
+    @Override
+    public void onMusicSelectToPlay(HostSong hostSong) {
+        PlayThisSong playThisSong = new PlayThisSong(hostSong.getName(), System.currentTimeMillis() + 5000);
+        sendSignal(playThisSong, null);
+        mediaPlayerService.load(root + File.separator + playThisSong.getName());
+        mediaPlayerService.play(playThisSong.getAtTime());
+        Toast.makeText(this, "play " + hostSong.getName(), Toast.LENGTH_SHORT).show();
     }
 }

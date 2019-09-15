@@ -1,13 +1,12 @@
 package com.vkpapps.soundbooster.model;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public class PlayThisSong implements Serializable {
     private String name;
-    private Date atTime;
+    private long atTime;
 
-    public PlayThisSong(String name, Date atTime) {
+    public PlayThisSong(String name, long atTime) {
         this.name = name;
         this.atTime = atTime;
     }
@@ -21,11 +20,11 @@ public class PlayThisSong implements Serializable {
         this.name = name;
     }
 
-    public Date getAtTime() {
+    public long getAtTime() {
         return atTime;
     }
 
-    public void setAtTime(Date atTime) {
+    public void setAtTime(long atTime) {
         this.atTime = atTime;
     }
 }
