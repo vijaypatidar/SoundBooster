@@ -67,4 +67,8 @@ public class MediaPlayerService {
 
     public void prev() {
     }
+
+    public MediaPlayer getMediaPlayer() {
+        return mediaPlayer;
+    }
 }

@@ -280,6 +280,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private void performRequest() {
         if (!fileRequests.isEmpty() && isHost) {
             FileRequest fileRequest = fileRequests.get(0);
+            Toast.makeText(this, "" + fileRequest.getSocket().isConnected(), Toast.LENGTH_SHORT).show();
             server.informClient(fileRequest.getSocket(), new InformClient(fileRequest.isSend()));
             if (fileRequest.isSend()) {
                 sendFile(fileRequest.getPath());

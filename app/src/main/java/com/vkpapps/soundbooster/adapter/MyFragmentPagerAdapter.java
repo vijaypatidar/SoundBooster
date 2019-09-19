@@ -34,9 +34,11 @@ public class MyFragmentPagerAdapter extends FragmentPagerAdapter {
             case 0:
                 return "Host Music";
             case 1:
+                return "Music Player";
+            case 2:
                 return "Local Music";
             default:
-                return "Pending Request";
+                return "Pending Requests";
         }
     }
 }
