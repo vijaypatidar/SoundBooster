@@ -1,9 +1,13 @@
 package com.vkpapps.soundbooster.activity;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
@@ -67,7 +71,11 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         host = getIntent().getStringExtra("host");
         fileRequests = new ArrayList<>();
 
-        initUI();
+        if (checkStoragePermission()) {
+            initUI();
+        } else {
+            askStoragePermission();
+        }
         Utils.deleteFile(root);
         user = Utils.getUser(getDir("files", MODE_PRIVATE));
         mediaPlayerService = MediaPlayerService.getInstance();
@@ -305,5 +313,23 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         mediaPlayerService.load(root + File.separator + playThisSong.getName());
         mediaPlayerService.play(playThisSong.getAtTime());
         Toast.makeText(this, "play " + hostSong.getName(), Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean checkStoragePermission() {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void askStoragePermission() {
+        ActivityCompat.requestPermissions(this, new String[]{
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+        }, 101);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 101 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            recreate();
+        }
     }
 }
