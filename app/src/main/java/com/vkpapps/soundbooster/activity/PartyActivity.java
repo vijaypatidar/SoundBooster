@@ -1,12 +1,14 @@
 package com.vkpapps.soundbooster.activity;
 
 import android.Manifest;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.View;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,7 +20,8 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
-import com.vkpapps.soundbooster.MediaPlayerService;
+import com.vkpapps.soundbooster.MusicPlayerActivity;
+import com.vkpapps.soundbooster.MusicPlayerService;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.MyFragmentPagerAdapter;
 import com.vkpapps.soundbooster.connection.ClientHelper;
@@ -47,7 +50,7 @@ import java.util.Set;
 
 import static com.vkpapps.soundbooster.utils.Utils.getSocket;
 
-public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener, View.OnClickListener,
+public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener,
         FileHandler.OnFileHandlerListener, LocalSongFragment.OnLocalSongFragmentListener, HostSongFragment.OnHostSongFragmentListener {
     private String host;
 
@@ -62,10 +65,23 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private String root;
     private ArrayList<FileRequest> fileRequests;
     private ArrayList<String> hostSong = new ArrayList<>();
+    private MusicPlayerService musicSrv;
+    private final ServiceConnection musicConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
+            //get service
+            musicSrv = binder.getService();
+            //pass list
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
     private TextView songTitle;
-    private ImageView songPic;
-    private int currentIndex = 0;
-    private MediaPlayerService mediaPlayerService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,7 +93,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         isHost = getIntent().getBooleanExtra("isHost", false);
         host = getIntent().getStringExtra("host");
         fileRequests = new ArrayList<>();
-        mediaPlayerService = MediaPlayerService.getInstance(root + File.separator);
         if (checkStoragePermission()) {
             initUI();
         } else {
@@ -99,6 +114,18 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
+    private Intent playIntent;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (playIntent == null) {
+            playIntent = new Intent(this, MusicPlayerService.class);
+            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
+            startService(playIntent);
+        }
+    }
+
     private void initUI() {
         LocalSongFragment localSongFragment = new LocalSongFragment(this, root);
         hostSongFragment = new HostSongFragment(this, root, hostSong);
@@ -117,80 +144,14 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
 
-        songPic = findViewById(R.id.songPic);
         songTitle = findViewById(R.id.songTitle);
-
-        SeekBar seekBar = findViewById(R.id.seekBar);
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        songTitle.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                Control control = new Control(Control.SEEK, 0, mediaPlayerService.calculateSeek(i));
-                sendSignal(control, null);
-                handleControl(control);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
+            public void onClick(View view) {
+                startActivity(new Intent(PartyActivity.this, MusicPlayerActivity.class));
             }
         });
-
-
-        ImageView btnPrev = findViewById(R.id.btnPrev);
-        ImageView btnNext = findViewById(R.id.btnNext);
-        ImageView btnPlay = findViewById(R.id.btnPlay);
-        Button btnSync = findViewById(R.id.btnSync);
-
-        btnPlay.setOnClickListener(this);
-        btnNext.setOnClickListener(this);
-        btnPrev.setOnClickListener(this);
-        btnSync.setOnClickListener(this);
-
     }
-
-    @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.btnPlay:
-                if (hostSong.size() > currentIndex) {
-                    Control control = new Control(Control.PLAY, 0, hostSong.get(currentIndex));
-                    sendSignal(control, null);
-                    handleControl(control);
-                } else {
-                    Toast.makeText(PartyActivity.this, "No host song play", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.btnSync:
-                if (mediaPlayerService.isPlaying()) {
-                    Control control = new Control(Control.SEEK, 0, mediaPlayerService.getCurrentPosition());
-                    sendSignal(control, null);
-                    handleControl(control);
-                }
-                break;
-            case R.id.btnPrev:
-                if (hostSong.size() > 0 && currentIndex > 0) {
-                    Control control = new Control(Control.PLAY, 0, hostSong.get(--currentIndex));
-                    sendSignal(control, null);
-                    handleControl(control);
-                }
-                break;
-            case R.id.btnNext:
-                if (hostSong.size() > currentIndex - 1) {
-                    Control control = new Control(Control.PLAY, 0, hostSong.get(++currentIndex));
-                    sendSignal(control, null);
-                    handleControl(control);
-                } else {
-                    Toast.makeText(PartyActivity.this, "end of queue", Toast.LENGTH_SHORT).show();
-                }
-                break;
-        }
-    }
-
 
     @Override
     public void handleNewClient(User user) {
@@ -232,8 +193,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void handleControl(final Control control) {
-        mediaPlayerService.processControlRequest(control);
-        mediaPlayerService.loadPic(root + File.separator + control.getName(), songPic);
+        musicSrv.processControlRequest(control);
         songTitle.setText(control.getName());
     }
 
@@ -258,6 +218,8 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void onSelectLocalMusic(LocalSong localSong) {
+        //TODO remove handle control from here
+        handleControl(new Control(Control.PLAY, 0, localSong.getPath()));
         sendSignal(new Request(user.getUserId(), localSong.getName()), null);
         if (isHost) {
             boolean performAction = fileRequests.isEmpty();
@@ -378,4 +340,8 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
 }
