@@ -2,9 +2,6 @@ package com.vkpapps.soundbooster.activity;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaMetadataRetriever;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -50,10 +47,10 @@ import java.util.Set;
 
 import static com.vkpapps.soundbooster.utils.Utils.getSocket;
 
-public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener,
+public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener, View.OnClickListener,
         FileHandler.OnFileHandlerListener, LocalSongFragment.OnLocalSongFragmentListener, HostSongFragment.OnHostSongFragmentListener {
-
     private String host;
+
     private HostSongFragment hostSongFragment;
     private RequestFragment requestFragment;
     private boolean isHost;
@@ -120,13 +117,10 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
 
-        ImageView btnPrev = findViewById(R.id.btnPrev);
-        ImageView btnNext = findViewById(R.id.btnNext);
-        ImageView btnPlay = findViewById(R.id.btnPlay);
         songPic = findViewById(R.id.songPic);
         songTitle = findViewById(R.id.songTitle);
-        SeekBar seekBar = findViewById(R.id.seekBar);
 
+        SeekBar seekBar = findViewById(R.id.seekBar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -146,9 +140,23 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             }
         });
 
-        btnPlay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+
+        ImageView btnPrev = findViewById(R.id.btnPrev);
+        ImageView btnNext = findViewById(R.id.btnNext);
+        ImageView btnPlay = findViewById(R.id.btnPlay);
+        Button btnSync = findViewById(R.id.btnSync);
+
+        btnPlay.setOnClickListener(this);
+        btnNext.setOnClickListener(this);
+        btnPrev.setOnClickListener(this);
+        btnSync.setOnClickListener(this);
+
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.btnPlay:
                 if (hostSong.size() > currentIndex) {
                     Control control = new Control(Control.PLAY, 0, hostSong.get(currentIndex));
                     sendSignal(control, null);
@@ -156,11 +164,22 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
                 } else {
                     Toast.makeText(PartyActivity.this, "No host song play", Toast.LENGTH_SHORT).show();
                 }
-            }
-        });
-        btnNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+                break;
+            case R.id.btnSync:
+                if (mediaPlayerService.isPlaying()) {
+                    Control control = new Control(Control.SEEK, 0, mediaPlayerService.getCurrentPosition());
+                    sendSignal(control, null);
+                    handleControl(control);
+                }
+                break;
+            case R.id.btnPrev:
+                if (hostSong.size() > 0 && currentIndex > 0) {
+                    Control control = new Control(Control.PLAY, 0, hostSong.get(--currentIndex));
+                    sendSignal(control, null);
+                    handleControl(control);
+                }
+                break;
+            case R.id.btnNext:
                 if (hostSong.size() > currentIndex - 1) {
                     Control control = new Control(Control.PLAY, 0, hostSong.get(++currentIndex));
                     sendSignal(control, null);
@@ -168,30 +187,8 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
                 } else {
                     Toast.makeText(PartyActivity.this, "end of queue", Toast.LENGTH_SHORT).show();
                 }
-            }
-        });
-        btnPrev.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (hostSong.size() > 0 && currentIndex > 0) {
-                    Control control = new Control(Control.PLAY, 0, hostSong.get(--currentIndex));
-                    sendSignal(control, null);
-                    handleControl(control);
-                }
-
-            }
-        });
-
-        Button btnSync = findViewById(R.id.btnSync);
-        btnSync.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Control control = new Control(Control.SEEK, 0, mediaPlayerService.getCurrentPosition());
-                sendSignal(control, null);
-                handleControl(control);
-            }
-        });
-
+                break;
+        }
     }
 
 
@@ -236,7 +233,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     @Override
     public void handleControl(final Control control) {
         mediaPlayerService.processControlRequest(control);
-        loadPic(root + File.separator + control.getName());
+        mediaPlayerService.loadPic(root + File.separator + control.getName(), songPic);
         songTitle.setText(control.getName());
     }
 
@@ -274,7 +271,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             FileRequest fileRequest = new FileRequest(true, localSong.getName(), localSong.getPath(), null);
             fileRequests.add(fileRequest);
         }
-
     }
 
 
@@ -346,7 +342,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             } else {
                 receiveFile(root + File.separator + fileRequest.getName());
             }
-
         }
     }
 
@@ -383,20 +378,4 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
-    private void loadPic(String path) {
-        try {
-            android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(path);
-
-            byte[] data = mmr.getEmbeddedPicture();
-
-            if (data != null) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                songPic.setImageBitmap(bitmap); //associated cover art in bitmap
-            }
-        } catch (Exception ignored) {
-
-        }
-
-    }
 }

@@ -1,6 +1,10 @@
 package com.vkpapps.soundbooster;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.widget.ImageView;
 
 import com.vkpapps.soundbooster.model.Control;
 
@@ -43,6 +47,22 @@ public class MediaPlayerService {
         return total * percentage / 100;
     }
 
+    public void loadPic(String path, ImageView songPic) {
+        try {
+            android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(path);
+
+            byte[] data = mmr.getEmbeddedPicture();
+
+            if (data != null) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                songPic.setImageBitmap(bitmap); //associated cover art in bitmap
+            }
+        } catch (Exception ignored) {
+
+        }
+
+    }
 
     public int getCurrentPosition() {
         return mediaPlayer.getCurrentPosition();
@@ -61,5 +81,9 @@ public class MediaPlayerService {
                 mediaPlayer.seekTo(control.getValue());
                 break;
         }
+    }
+
+    public boolean isPlaying() {
+        return mediaPlayer.isPlaying();
     }
 }
