@@ -5,10 +5,9 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
-import android.media.MediaPlayer;
-import android.media.TimedText;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -54,7 +53,6 @@ import static com.vkpapps.soundbooster.utils.Utils.getSocket;
 public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener,
         FileHandler.OnFileHandlerListener, LocalSongFragment.OnLocalSongFragmentListener, HostSongFragment.OnHostSongFragmentListener {
 
-    private MediaPlayer mediaPlayer;
     private String host;
     private HostSongFragment hostSongFragment;
     private RequestFragment requestFragment;
@@ -64,14 +62,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private ClientHelper clientHelper;
     private SignalHandler signalHandler;
     private FileHandler fileHandler;
-    private MediaPlayerService mediaPlayerService;
     private String root;
     private ArrayList<FileRequest> fileRequests;
     private ArrayList<String> hostSong = new ArrayList<>();
     private TextView songTitle;
-    private ImageView btnPlay, btnNext, btnPrev, songPic;
-    private SeekBar seekBar;
+    private ImageView songPic;
     private int currentIndex = 0;
+    private MediaPlayerService mediaPlayerService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,9 +80,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         isHost = getIntent().getBooleanExtra("isHost", false);
         host = getIntent().getStringExtra("host");
         fileRequests = new ArrayList<>();
-        mediaPlayerService = MediaPlayerService.getInstance();
-        mediaPlayer = mediaPlayerService.getMediaPlayer();
-
+        mediaPlayerService = MediaPlayerService.getInstance(root + File.separator);
         if (checkStoragePermission()) {
             initUI();
         } else {
@@ -125,12 +120,12 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
 
-        btnPrev = findViewById(R.id.btnPrev);
-        btnNext = findViewById(R.id.btnNext);
-        btnPlay = findViewById(R.id.btnPlay);
+        ImageView btnPrev = findViewById(R.id.btnPrev);
+        ImageView btnNext = findViewById(R.id.btnNext);
+        ImageView btnPlay = findViewById(R.id.btnPlay);
         songPic = findViewById(R.id.songPic);
         songTitle = findViewById(R.id.songTitle);
-        seekBar = findViewById(R.id.seekBar);
+        SeekBar seekBar = findViewById(R.id.seekBar);
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -166,7 +161,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         btnNext.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (hostSong.size() > currentIndex-1) {
+                if (hostSong.size() > currentIndex - 1) {
                     Control control = new Control(Control.PLAY, 0, hostSong.get(++currentIndex));
                     sendSignal(control, null);
                     handleControl(control);
@@ -184,6 +179,16 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
                     handleControl(control);
                 }
 
+            }
+        });
+
+        Button btnSync = findViewById(R.id.btnSync);
+        btnSync.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Control control = new Control(Control.SEEK, 0, mediaPlayerService.getCurrentPosition());
+                sendSignal(control, null);
+                handleControl(control);
             }
         });
 
@@ -220,7 +225,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
                 if (!entry.getKey().equalsIgnoreCase(request.getUserId())) {
                     fileRequest = new FileRequest(true, request.getName(), root + File.separator + request.getName(), entry.getValue());
                     fileRequests.add(fileRequest);
-                    Toast.makeText(this, "for to id " + entry.getKey() + entry.getValue(), Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -231,20 +235,9 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void handleControl(final Control control) {
-        switch (control.getChoice()) {
-            case Control.PLAY:
-                mediaPlayerService.load(root+File.separator+control.getName());
-                mediaPlayerService.play(control.getTime());
-                break;
-            case Control.PAUSE:
-                mediaPlayerService.stop();
-                break;
-            case Control.SEEK:
-                mediaPlayerService.seek(control.getValue(),control.getTime());
-                break;
-        }
-        loadPic(root+File.separator+control.getName());
-        Toast.makeText(this, "Handle control", Toast.LENGTH_SHORT).show();
+        mediaPlayerService.processControlRequest(control);
+        loadPic(root + File.separator + control.getName());
+        songTitle.setText(control.getName());
     }
 
     @Override
@@ -275,7 +268,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             for (Map.Entry<String, Socket> entry : entries) {
                 FileRequest fileRequest = new FileRequest(true, localSong.getName(), localSong.getPath(), entry.getValue());
                 fileRequests.add(fileRequest);
-                Toast.makeText(this, "id " + entry.getKey() + entry.getValue(), Toast.LENGTH_SHORT).show();
             }
             if (performAction) performRequest();
         } else {
@@ -369,8 +361,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     public void onMusicSelectToPlay(HostSong hostSong) {
         Control control = new Control(Control.PLAY, 0, hostSong.getName());
         sendSignal(control, null);
-        mediaPlayerService.load(root + File.separator + hostSong.getName());
-        mediaPlayerService.play(0);
+        handleControl(control);
         Toast.makeText(this, "play " + hostSong.getName(), Toast.LENGTH_SHORT).show();
     }
 
@@ -392,7 +383,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
-    private void loadPic(String path){
+    private void loadPic(String path) {
         try {
             android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             mmr.setDataSource(path);

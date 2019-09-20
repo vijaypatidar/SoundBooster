@@ -2,28 +2,27 @@ package com.vkpapps.soundbooster;
 
 import android.media.MediaPlayer;
 
+import com.vkpapps.soundbooster.model.Control;
+
 import java.io.IOException;
 
 public class MediaPlayerService {
-    private static final MediaPlayerService ourInstance = new MediaPlayerService();
+    private static MediaPlayerService ourInstance = null;
     private MediaPlayer mediaPlayer = new MediaPlayer();
+    private String root;
 
-    private MediaPlayerService() {
+    private MediaPlayerService(String root) {
+        this.root = root;
     }
 
-    public static MediaPlayerService getInstance() {
+    public static MediaPlayerService getInstance(String root) {
+        if (ourInstance == null) {
+            ourInstance = new MediaPlayerService(root);
+        }
         return ourInstance;
     }
 
-    public void reset() {
-        mediaPlayer.reset();
-    }
-
-    public void release() {
-        mediaPlayer.release();
-    }
-
-    public void load(String index) {
+    private void load(String index) {
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(index);
@@ -38,34 +37,29 @@ public class MediaPlayerService {
         mediaPlayer.seekTo(seekTo);
     }
 
-    public void play(long date) {
-//        Timer timer = new Timer();
-//        timer.schedule(new TimerTask() {
-//            @Override
-//            public void run() {
-//                Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
-        mediaPlayer.start();
-//            }
-//        }, date - System.currentTimeMillis());
 
-    }
-
-    public void stop() {
-        mediaPlayer.stop();
-    }
-
-    public void next() {
-
-    }
-
-    public int calculateSeek(int percentage){
+    public int calculateSeek(int percentage) {
         int total = mediaPlayer.getDuration();
-        return total*percentage/100;
-    }
-    public void prev() {
+        return total * percentage / 100;
     }
 
-    public MediaPlayer getMediaPlayer() {
-        return mediaPlayer;
+
+    public int getCurrentPosition() {
+        return mediaPlayer.getCurrentPosition();
+    }
+
+    public void processControlRequest(Control control) {
+        switch (control.getChoice()) {
+            case Control.PLAY:
+                if (control.getName() != null) load(root + control.getName());
+                mediaPlayer.start();
+                break;
+            case Control.PAUSE:
+                mediaPlayer.pause();
+                break;
+            case Control.SEEK:
+                mediaPlayer.seekTo(control.getValue());
+                break;
+        }
     }
 }

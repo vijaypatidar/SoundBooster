@@ -22,11 +22,13 @@
             android:value="ca-app-pub-4043007075380826~2360517416" />
         <activity
             android:name=".activity.PartyActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".activity.UserDetailActivity" />
         <activity
             android:name=".activity.SplashActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
+            android:screenOrientation="portrait"
             android:theme="@style/AppThemeNoAction">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,6 +38,7 @@
         </activity>
         <activity
             android:name=".activity.MainActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/AppThemeNoAction" />
     </application>
 
