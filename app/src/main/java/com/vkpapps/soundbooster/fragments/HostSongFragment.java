@@ -24,10 +24,12 @@ public class HostSongFragment extends Fragment implements HostMusicAdapter.OnIte
     private OnHostSongFragmentListener onHostSongFragmentListener;
     private String root;
     private HostMusicAdapter hostMusicAdapter;
+    private ArrayList<String> hostSongList;
 
-    public HostSongFragment(OnHostSongFragmentListener onHostSongFragmentListener, String root) {
+    public HostSongFragment(OnHostSongFragmentListener onHostSongFragmentListener, String root, ArrayList<String> hostSongList) {
         this.onHostSongFragmentListener = onHostSongFragmentListener;
         this.root = root;
+        this.hostSongList = hostSongList;
     }
 
     @Override
@@ -59,8 +61,10 @@ public class HostSongFragment extends Fragment implements HostMusicAdapter.OnIte
         File[] allAudios = new File(root).listFiles();
         assert allAudios != null;
         hostSongs.clear();
+        hostSongList.clear();
         for (File file : allAudios) {
             hostSongs.add(new HostSong(file.getPath(), file.getName(), true));
+            hostSongList.add(file.getName());
         }
         hostMusicAdapter.notifyDataSetChanged();
     }

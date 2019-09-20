@@ -8,7 +8,6 @@ import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.LocalSongFragment;
-import com.vkpapps.soundbooster.fragments.MusicPlayerFragment;
 
 import java.util.ArrayList;
 
@@ -36,8 +35,6 @@ public class MyFragmentPagerAdapter extends FragmentPagerAdapter {
     public CharSequence getPageTitle(int position) {
         if (fragments.get(position) instanceof HostSongFragment) {
             return "Host Music";
-        } else if (fragments.get(position) instanceof MusicPlayerFragment) {
-            return "Music Player";
         } else if (fragments.get(position) instanceof LocalSongFragment) {
             return "Local Music";
         } else {

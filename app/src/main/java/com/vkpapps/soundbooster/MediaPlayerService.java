@@ -3,8 +3,6 @@ package com.vkpapps.soundbooster;
 import android.media.MediaPlayer;
 
 import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MediaPlayerService {
     private static final MediaPlayerService ourInstance = new MediaPlayerService();
@@ -35,14 +33,9 @@ public class MediaPlayerService {
         }
     }
 
+
     public void seek(final int seekTo, long date) {
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                mediaPlayer.seekTo(seekTo);
-            }
-        }, date - System.currentTimeMillis());
+        mediaPlayer.seekTo(seekTo);
     }
 
     public void play(long date) {
@@ -65,6 +58,10 @@ public class MediaPlayerService {
 
     }
 
+    public int calculateSeek(int percentage){
+        int total = mediaPlayer.getDuration();
+        return total*percentage/100;
+    }
     public void prev() {
     }
 

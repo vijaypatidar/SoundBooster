@@ -13,9 +13,7 @@ import com.vkpapps.soundbooster.connection.WifiHelper;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.InformClient;
-import com.vkpapps.soundbooster.model.PlayThisSong;
 import com.vkpapps.soundbooster.model.Request;
-import com.vkpapps.soundbooster.model.SeekModel;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.view.CircleView;
 
@@ -99,10 +97,6 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
         finish();
     }
 
-    @Override
-    public void handleSeek(SeekModel seekModel) {
-
-    }
 
     @Override
     public void handelFileRequest(Request request) {
@@ -119,8 +113,4 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
     public void handleRequest(InformClient informClient) {
     }
 
-    @Override
-    public void handleSongPlay(PlayThisSong playThisSong) {
-
-    }
 }

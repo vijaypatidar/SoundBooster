@@ -12,9 +12,7 @@ import android.util.Log;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.InformClient;
-import com.vkpapps.soundbooster.model.PlayThisSong;
 import com.vkpapps.soundbooster.model.Request;
-import com.vkpapps.soundbooster.model.SeekModel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,18 +63,12 @@ public class ClientHelper extends Thread {
                 Message message = new Message();
                 Bundle bundle = new Bundle();
 
-                if (object instanceof SeekModel) {
-                    message.what = SignalHandler.NEW_SEEK_REQUEST;
-                    bundle.putSerializable("data", (SeekModel) object);
-                } else if (object instanceof Request) {
+                if (object instanceof Request) {
                     message.what = SignalHandler.NEW_SONG_REQUEST;
                     bundle.putSerializable("data", (Request) object);
                 } else if (object instanceof Control) {
                     message.what = SignalHandler.NEW_CONTROL_REQUEST;
                     bundle.putSerializable("data", (Control) object);
-                } else if (object instanceof PlayThisSong) {
-                    message.what = SignalHandler.SONG_PLAY_REQUEST;
-                    bundle.putSerializable("data", (PlayThisSong) object);
                 } else if (object instanceof InformClient) {
                     message.what = SignalHandler.HANDLE_REQUEST;
                     bundle.putSerializable("data", (InformClient) object);

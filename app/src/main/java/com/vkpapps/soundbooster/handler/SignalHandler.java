@@ -8,15 +8,12 @@ import androidx.annotation.NonNull;
 
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.InformClient;
-import com.vkpapps.soundbooster.model.PlayThisSong;
 import com.vkpapps.soundbooster.model.Request;
-import com.vkpapps.soundbooster.model.SeekModel;
 import com.vkpapps.soundbooster.model.User;
 
 
 public class SignalHandler extends Handler {
     public static final int NEW_DEVICE_CONNECTED = 1;
-    public static final int NEW_SEEK_REQUEST = 2;
     public static final int NEW_SONG_REQUEST = 3;
     public static final int NEW_CONTROL_REQUEST = 4;
     public static final int SONG_PLAY_REQUEST = 5;
@@ -40,17 +37,11 @@ public class SignalHandler extends Handler {
             case NEW_DEVICE_CONNECTED:
                 onMessageHandlerListener.handleNewClient((User) bundle.get("data"));
                 break;
-            case NEW_SEEK_REQUEST:
-                onMessageHandlerListener.handleSeek((SeekModel) bundle.getSerializable("data"));
-                break;
             case NEW_SONG_REQUEST:
                 onMessageHandlerListener.handelFileRequest((Request) bundle.getSerializable("data"));
                 break;
             case NEW_CONTROL_REQUEST:
                 onMessageHandlerListener.handleControl((Control) bundle.getSerializable("data"));
-                break;
-            case SONG_PLAY_REQUEST:
-                onMessageHandlerListener.handleSongPlay((PlayThisSong) bundle.getSerializable("data"));
                 break;
             case HANDLE_REQUEST:
                 onMessageHandlerListener.handleRequest((InformClient) bundle.getSerializable("data"));
@@ -62,14 +53,11 @@ public class SignalHandler extends Handler {
 
         void handleConnectToHost();
 
-        void handleSeek(SeekModel seekModel);
-
         void handelFileRequest(Request request);
 
         void handleControl(Control control);
 
         void handleRequest(InformClient informClient);
 
-        void handleSongPlay(PlayThisSong playThisSong);
     }
 }

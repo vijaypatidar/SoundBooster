@@ -10,9 +10,7 @@ import android.os.Message;
 
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
-import com.vkpapps.soundbooster.model.PlayThisSong;
 import com.vkpapps.soundbooster.model.Request;
-import com.vkpapps.soundbooster.model.SeekModel;
 import com.vkpapps.soundbooster.model.User;
 
 import java.io.IOException;
@@ -40,21 +38,13 @@ public class ServerHelper extends Thread {
                 Message message = new Message();
                 Bundle bundle = new Bundle();
                 message.setData(bundle);
-                if (object instanceof SeekModel) {
-                    message.what = SignalHandler.NEW_SEEK_REQUEST;
-                    bundle.putSerializable("data", (SeekModel) object);
-                    Server.getInstance().send(object, socket);
-                } else if (object instanceof Request) {
+                if (object instanceof Request) {
                     message.what = SignalHandler.NEW_SONG_REQUEST;
                     bundle.putSerializable("data", (Request) object);
                     Server.getInstance().send(object, socket);
                 } else if (object instanceof Control) {
                     message.what = SignalHandler.NEW_CONTROL_REQUEST;
                     bundle.putSerializable("data", (Control) object);
-                    Server.getInstance().send(object, socket);
-                } else if (object instanceof PlayThisSong) {
-                    message.what = SignalHandler.SONG_PLAY_REQUEST;
-                    bundle.putSerializable("data", (PlayThisSong) object);
                     Server.getInstance().send(object, socket);
                 } else if (object instanceof User) {
                     User user = (User) object;
