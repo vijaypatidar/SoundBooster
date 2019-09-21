@@ -9,7 +9,7 @@ public class FileHandler extends Handler {
 
     public final static int REQUEST_COMPLETED = 2;
     public final static int REQUEST_FAILED = 3;
-    private OnFileHandlerListener onFileHandlerListener;
+    private final OnFileHandlerListener onFileHandlerListener;
 
     public FileHandler(OnFileHandlerListener onFileHandlerListener) {
         this.onFileHandlerListener = onFileHandlerListener;

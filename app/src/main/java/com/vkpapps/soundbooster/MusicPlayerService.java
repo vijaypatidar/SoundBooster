@@ -23,10 +23,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
     private static final MediaPlayer MEDIA_PLAYER = new MediaPlayer();
     private final IBinder musicBind = new MusicPlayerService.MusicBinder();
+    private final String TAG = "vijay";
     private String title;
-
-    String TAG = "vijay";
-
 
     @Override
     public void onCreate() {
@@ -110,14 +108,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     public void moveBy(int i) {
     }
 
-
-    public class MusicBinder extends Binder {
-        public MusicPlayerService getService() {
-            return MusicPlayerService.this;
-        }
-
-    }
-
     private void play(String path) {
         MEDIA_PLAYER.reset();
         try {
@@ -145,5 +135,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         } catch (Exception ignored) {
         }
         return null;
+    }
+
+    public class MusicBinder extends Binder {
+        public MusicPlayerService getService() {
+            return MusicPlayerService.this;
+        }
+
     }
 }

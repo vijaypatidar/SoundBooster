@@ -60,7 +60,7 @@ public class Utils {
         if (isHost) {
             try {
                 Log.d("patidar", "getSocket: ser ======================================== ");
-                ServerSocket serverSocket = null;
+                ServerSocket serverSocket;
                 serverSocket = new ServerSocket(15448);
                 socket = serverSocket.accept();
                 Log.d("patidar", "getSocket: found  ======================================== ");

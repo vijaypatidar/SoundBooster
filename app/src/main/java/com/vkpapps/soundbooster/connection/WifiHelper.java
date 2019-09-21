@@ -8,7 +8,7 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 
 public class WifiHelper {
-    public static ArrayList<String> deviceList = new ArrayList<>();
+    public static final ArrayList<String> deviceList = new ArrayList<>();
 
     public static void getDeviceList() {
         new Thread(new Runnable() {

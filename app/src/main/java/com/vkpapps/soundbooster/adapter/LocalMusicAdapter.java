@@ -19,8 +19,8 @@ import java.util.ArrayList;
 
 public class LocalMusicAdapter extends RecyclerView.Adapter<LocalMusicAdapter.MyViewHolder> {
 
-    private ArrayList<LocalSong> songArrayList;
-    private OnItemClickListener onItemClickListener;
+    private final ArrayList<LocalSong> songArrayList;
+    private final OnItemClickListener onItemClickListener;
 
     public LocalMusicAdapter(ArrayList<LocalSong> songArrayList, OnItemClickListener onItemClickListener) {
         this.songArrayList = songArrayList;
@@ -64,10 +64,10 @@ public class LocalMusicAdapter extends RecyclerView.Adapter<LocalMusicAdapter.My
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder {
-        private ImageView imageView;
-        private TextView songTitle;
+        private final ImageView imageView;
+        private final TextView songTitle;
 
-        public MyViewHolder(@NonNull View itemView) {
+        MyViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.songPic);
             songTitle = itemView.findViewById(R.id.songTitle);

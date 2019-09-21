@@ -15,7 +15,7 @@ import java.util.ArrayList;
 
 public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHolder> {
 
-    private ArrayList<FileRequest> requests;
+    private final ArrayList<FileRequest> requests;
 
     public RequestAdapter(ArrayList<FileRequest> requests) {
         this.requests = requests;
@@ -42,8 +42,8 @@ public class RequestAdapter extends RecyclerView.Adapter<RequestAdapter.MyViewHo
 
 
     class MyViewHolder extends RecyclerView.ViewHolder {
-        private TextView songTitle;
-        private TextView byName;
+        private final TextView songTitle;
+        private final TextView byName;
 
         MyViewHolder(@NonNull View itemView) {
             super(itemView);

@@ -19,8 +19,8 @@ import java.util.ArrayList;
 
 public class HostMusicAdapter extends RecyclerView.Adapter<HostMusicAdapter.MyViewHolder> {
 
-    private ArrayList<HostSong> songArrayList;
-    private OnItemClickListener onItemClickListener;
+    private final ArrayList<HostSong> songArrayList;
+    private final OnItemClickListener onItemClickListener;
 
     public HostMusicAdapter(ArrayList<HostSong> songArrayList, OnItemClickListener onItemClickListener) {
         this.songArrayList = songArrayList;
@@ -68,15 +68,14 @@ public class HostMusicAdapter extends RecyclerView.Adapter<HostMusicAdapter.MyVi
     }
 
     class MyViewHolder extends RecyclerView.ViewHolder {
-        private ImageView imageView;
-        private TextView songTitle;
-        private TextView playedBy;
+        private final ImageView imageView;
+        private final TextView songTitle;
 
-        public MyViewHolder(@NonNull View itemView) {
+        MyViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.songPic);
             songTitle = itemView.findViewById(R.id.songTitle);
-            playedBy = itemView.findViewById(R.id.playedBy);
+            TextView playedBy = itemView.findViewById(R.id.playedBy);
         }
 
         void setClickListener(final int position) {

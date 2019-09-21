@@ -20,9 +20,7 @@ import com.vkpapps.soundbooster.model.Control;
 
 public class MusicPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private TextView songTitle;
     private ImageView songPic;
-    private SeekBar seekBar;
 
     private MusicPlayerService musicSrv;
     private final ServiceConnection musicConnection = new ServiceConnection() {
@@ -55,7 +53,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
     private void initUI() {
         songPic = findViewById(R.id.songPic);
-        songTitle = findViewById(R.id.songTitle);
+        TextView songTitle = findViewById(R.id.songTitle);
         ImageView btnPrev = findViewById(R.id.btnPrev);
         ImageView btnNext = findViewById(R.id.btnNext);
         ImageView btnPlay = findViewById(R.id.btnPlay);
@@ -66,7 +64,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         btnPrev.setOnClickListener(this);
         btnSync.setOnClickListener(this);
 
-        seekBar = findViewById(R.id.seekBar);
+        SeekBar seekBar = findViewById(R.id.seekBar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
@@ -115,8 +113,4 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
 }

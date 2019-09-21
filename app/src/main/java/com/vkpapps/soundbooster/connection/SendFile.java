@@ -13,9 +13,9 @@ import java.net.Socket;
 import static com.vkpapps.soundbooster.connection.ClientHelper.TAG;
 
 public class SendFile {
-    private Socket socket;
-    private String path;
-    private FileHandler fileHandler;
+    private final Socket socket;
+    private final String path;
+    private final FileHandler fileHandler;
 
     public SendFile(Socket socket, String path, FileHandler fileHandler) {
         this.socket = socket;

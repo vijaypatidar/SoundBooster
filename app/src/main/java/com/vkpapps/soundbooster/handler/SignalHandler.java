@@ -16,11 +16,10 @@ public class SignalHandler extends Handler {
     public static final int NEW_DEVICE_CONNECTED = 1;
     public static final int NEW_SONG_REQUEST = 3;
     public static final int NEW_CONTROL_REQUEST = 4;
-    public static final int SONG_PLAY_REQUEST = 5;
     public static final int CONNECT_TO_HOST = 6;
     public static final int HANDLE_REQUEST = 7;
 
-    private OnMessageHandlerListener onMessageHandlerListener;
+    private final OnMessageHandlerListener onMessageHandlerListener;
 
     public SignalHandler(OnMessageHandlerListener onMessageHandlerListener) {
         this.onMessageHandlerListener = onMessageHandlerListener;

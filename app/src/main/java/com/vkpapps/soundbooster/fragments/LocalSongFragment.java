@@ -27,8 +27,8 @@ import static com.vkpapps.soundbooster.utils.Utils.getAllAudios;
 public class LocalSongFragment extends Fragment implements LocalMusicAdapter.OnItemClickListener {
 
     private ArrayList<LocalSong> localSongArrayList;
-    private OnLocalSongFragmentListener onLocalSongFragmentListener;
-    private String root;
+    private final OnLocalSongFragmentListener onLocalSongFragmentListener;
+    private final String root;
 
     public LocalSongFragment(OnLocalSongFragmentListener onLocalSongFragmentListener, String root) {
         this.onLocalSongFragmentListener = onLocalSongFragmentListener;

@@ -12,7 +12,7 @@ import com.vkpapps.soundbooster.fragments.LocalSongFragment;
 import java.util.ArrayList;
 
 public class MyFragmentPagerAdapter extends FragmentPagerAdapter {
-    private ArrayList<Fragment> fragments;
+    private final ArrayList<Fragment> fragments;
 
     public MyFragmentPagerAdapter(@NonNull FragmentManager fm, int behavior, ArrayList<Fragment> fragments) {
         super(fm, behavior);

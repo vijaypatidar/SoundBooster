@@ -20,7 +20,7 @@ import java.util.ArrayList;
 public class RequestFragment extends Fragment {
 
     private RequestAdapter requestAdapter;
-    private ArrayList<FileRequest> requestArrayList;
+    private final ArrayList<FileRequest> requestArrayList;
 
     public RequestFragment(ArrayList<FileRequest> requestArrayList) {
         this.requestArrayList = requestArrayList;
@@ -43,7 +43,7 @@ public class RequestFragment extends Fragment {
         super.onResume();
         try {
             requestAdapter.notifyDataSetChanged();
-        } catch (Exception e) {
+        } catch (Exception ignored) {
 
         }
     }

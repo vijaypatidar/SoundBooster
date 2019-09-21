@@ -17,6 +17,7 @@ import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
+import java.util.Objects;
 
 public class UserDetailActivity extends AppCompatActivity {
 
@@ -68,7 +69,7 @@ public class UserDetailActivity extends AppCompatActivity {
         if (requestCode == 101) {
             assert data != null;
             Bundle bundle = data.getExtras();
-            Bitmap bitmap = (Bitmap) bundle.get("data");
+            Bitmap bitmap = (Bitmap) Objects.requireNonNull(bundle).get("data");
             imageView.setImageBitmap(bitmap);
         }
     }

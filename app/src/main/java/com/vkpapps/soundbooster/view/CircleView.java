@@ -11,10 +11,10 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 public class CircleView extends View {
-    float[] circles = new float[5];
-    int[] colors = new int[5];
-    int cnt;
-    private Paint paint;
+    private final float[] circles = new float[5];
+    private final int[] colors = new int[5];
+    private final Paint paint;
+    private int cnt;
     private boolean init;
     private float ch = .25f, rCh = 2f;
     private float x1, x2, y1, y2;

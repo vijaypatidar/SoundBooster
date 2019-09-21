@@ -18,9 +18,9 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 
-public class ServerHelper extends Thread {
-    private Socket socket;
-    private SignalHandler signalHandler;
+class ServerHelper extends Thread {
+    private final Socket socket;
+    private final SignalHandler signalHandler;
 
     ServerHelper(Socket socket, SignalHandler signalHandler) {
         this.socket = socket;

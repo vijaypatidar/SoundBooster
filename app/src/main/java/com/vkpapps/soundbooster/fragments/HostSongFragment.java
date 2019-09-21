@@ -21,10 +21,10 @@ public class HostSongFragment extends Fragment implements HostMusicAdapter.OnIte
 
 
     private ArrayList<HostSong> hostSongs;
-    private OnHostSongFragmentListener onHostSongFragmentListener;
-    private String root;
+    private final OnHostSongFragmentListener onHostSongFragmentListener;
+    private final String root;
     private HostMusicAdapter hostMusicAdapter;
-    private ArrayList<String> hostSongList;
+    private final ArrayList<String> hostSongList;
 
     public HostSongFragment(OnHostSongFragmentListener onHostSongFragmentListener, String root, ArrayList<String> hostSongList) {
         this.onHostSongFragmentListener = onHostSongFragmentListener;

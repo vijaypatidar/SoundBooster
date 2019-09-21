@@ -29,8 +29,8 @@ public class ClientHelper extends Thread {
 
     static final String TAG = "vijay";
     private Socket socket;
-    private String host;
-    private SignalHandler signalHandler;
+    private final String host;
+    private final SignalHandler signalHandler;
     private boolean run = true;
 
     public ClientHelper(String host, SignalHandler signalHandler) {

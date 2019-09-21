@@ -65,7 +65,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private FileHandler fileHandler;
     private String root;
     private ArrayList<FileRequest> fileRequests;
-    private ArrayList<String> hostSong = new ArrayList<>();
+    private final ArrayList<String> hostSong = new ArrayList<>();
     private MusicPlayerService musicSrv;
     private final ServiceConnection musicConnection = new ServiceConnection() {
 
@@ -83,6 +83,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     };
     private TextView songTitle;
+    private Intent playIntent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,8 +115,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             setUpClient();
         }
     }
-
-    private Intent playIntent;
 
     @Override
     protected void onStart() {
@@ -351,8 +350,4 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
 }

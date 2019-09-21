@@ -14,9 +14,9 @@ import static com.vkpapps.soundbooster.connection.ClientHelper.TAG;
 
 
 public class ReceiveFile {
-    private Socket socket;
-    private String path;
-    private FileHandler fileHandler;
+    private final Socket socket;
+    private final String path;
+    private final FileHandler fileHandler;
 
     public ReceiveFile(Socket socket, String path, FileHandler fileHandler) {
         this.socket = socket;
