@@ -1,11 +1,10 @@
 package com.vkpapps.soundbooster;
 
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
@@ -16,7 +15,6 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.vkpapps.soundbooster.model.Control;
 
@@ -34,6 +32,9 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
             MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
             //get service
             musicSrv = binder.getService();
+            Bitmap bitmap = musicSrv.getBitmapOfCurrentSong();
+            if (bitmap != null)
+                songPic.setImageBitmap(bitmap);
         }
 
         @Override
@@ -49,10 +50,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         setContentView(R.layout.activity_music_player);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        String root = getDir("mySong", MODE_PRIVATE).getPath();
         initUI();
-
     }
 
     private void initUI() {
@@ -106,12 +104,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
-    private BroadcastReceiver mySeekReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            seekBar.setProgress(intent.getIntExtra("VALUE", 0));
-        }
-    };
 
     @Override
     protected void onStart() {
@@ -120,13 +112,11 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
             playIntent = new Intent(this, MusicPlayerService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
-            LocalBroadcastManager.getInstance(this).registerReceiver(mySeekReceiver, new IntentFilter(MusicPlayerService.ACTION_SEEK));
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mySeekReceiver);
     }
 }

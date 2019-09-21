@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -151,6 +152,16 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
                 startActivity(new Intent(PartyActivity.this, MusicPlayerActivity.class));
             }
         });
+
+        ImageView btnPlay = findViewById(R.id.btnPlay);
+        btnPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Control control = new Control(Control.PLAY, 0, null);
+                sendSignal(control, null);
+                handleControl(control);
+            }
+        });
     }
 
     @Override
@@ -194,7 +205,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     @Override
     public void handleControl(final Control control) {
         musicSrv.processControlRequest(control);
-
         songTitle.setText(musicSrv.getCurrentTitle());
     }
 
@@ -324,12 +334,12 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     private boolean checkStoragePermission() {
-        return ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
     private void askStoragePermission() {
         ActivityCompat.requestPermissions(this, new String[]{
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                Manifest.permission.READ_EXTERNAL_STORAGE
         }, 101);
     }
 

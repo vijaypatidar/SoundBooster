@@ -11,23 +11,32 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
-import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.vkpapps.soundbooster.model.Control;
 
 import java.io.File;
 import java.io.IOException;
 
-public class MusicPlayerService extends Service implements
-        MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener,
-        MediaPlayer.OnCompletionListener {
+public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
+
     private static final MediaPlayer MEDIA_PLAYER = new MediaPlayer();
     private final IBinder musicBind = new MusicPlayerService.MusicBinder();
-    String TAG = "vijay";
     private String title;
+
+    String TAG = "vijay";
+
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        MEDIA_PLAYER.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        MEDIA_PLAYER.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        MEDIA_PLAYER.setOnPreparedListener(this);
+        MEDIA_PLAYER.setOnCompletionListener(this);
+        MEDIA_PLAYER.setOnErrorListener(this);
+    }
 
     @Nullable
     @Override
@@ -41,8 +50,6 @@ public class MusicPlayerService extends Service implements
         MEDIA_PLAYER.release();
         return false;
     }
-
-    public static final String ACTION_SEEK = "com.vkpapps.soundbooster.action.HANDLE_SEEK";
 
     @Override
     public void onDestroy() {
@@ -68,9 +75,9 @@ public class MusicPlayerService extends Service implements
 
     }
 
-    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
 
     public void processControlRequest(Control control) {
+        Log.d(TAG, "processControlRequest:  ================================ control " + control.toString());
         switch (control.getChoice()) {
             case Control.SEEK:
                 MEDIA_PLAYER.seekTo(control.getValue());
@@ -80,7 +87,11 @@ public class MusicPlayerService extends Service implements
                 break;
             case Control.PLAY:
                 if (control.getName() == null) {
-                    MEDIA_PLAYER.start();
+                    if (MEDIA_PLAYER.isPlaying()) {
+                        MEDIA_PLAYER.pause();
+                    } else {
+                        MEDIA_PLAYER.start();
+                    }
                 } else {
                     play(control.getName());
                 }
@@ -99,41 +110,12 @@ public class MusicPlayerService extends Service implements
     public void moveBy(int i) {
     }
 
-    Intent seekIntent = new Intent(ACTION_SEEK);
-    Thread thread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            while (true) {
-                if (MEDIA_PLAYER.isPlaying()) {
-                    int progress = MEDIA_PLAYER.getCurrentPosition() * 100 / MEDIA_PLAYER.getDuration();
-                    seekIntent.putExtra("VALUE", progress);
-                    manager.sendBroadcast(seekIntent);
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    });
-
 
     public class MusicBinder extends Binder {
         public MusicPlayerService getService() {
             return MusicPlayerService.this;
         }
-    }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        MEDIA_PLAYER.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-        MEDIA_PLAYER.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        MEDIA_PLAYER.setOnPreparedListener(this);
-        MEDIA_PLAYER.setOnCompletionListener(this);
-        MEDIA_PLAYER.setOnErrorListener(this);
-        thread.start();
     }
 
     private void play(String path) {
@@ -152,18 +134,16 @@ public class MusicPlayerService extends Service implements
         return new File(title).getName();
     }
 
-    public void loadEmbbedPic(ImageView songPic) {
+    public Bitmap getBitmapOfCurrentSong() {
         try {
             android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             mmr.setDataSource(title);
-
             byte[] data = mmr.getEmbeddedPicture();
-
             if (data != null) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                songPic.setImageBitmap(bitmap); //associated cover art in bitmap
+                return BitmapFactory.decodeByteArray(data, 0, data.length);
             }
         } catch (Exception ignored) {
         }
+        return null;
     }
 }
