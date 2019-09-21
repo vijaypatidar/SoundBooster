@@ -121,7 +121,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     }
 
     public String getCurrentTitle() {
-        return new File(title).getName();
+        File file = new File(title);
+        if (file.exists()) {
+            return file.getName();
+        } else {
+            return null;
+        }
     }
 
     public Bitmap getBitmapOfCurrentSong() {

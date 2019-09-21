@@ -21,7 +21,7 @@ import com.vkpapps.soundbooster.model.Control;
 public class MusicPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
     private ImageView songPic;
-
+    private TextView songTitle;
     private MusicPlayerService musicSrv;
     private final ServiceConnection musicConnection = new ServiceConnection() {
 
@@ -33,6 +33,8 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
             Bitmap bitmap = musicSrv.getBitmapOfCurrentSong();
             if (bitmap != null)
                 songPic.setImageBitmap(bitmap);
+            songTitle.setText(musicSrv.getCurrentTitle());
+
         }
 
         @Override
@@ -53,7 +55,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
     private void initUI() {
         songPic = findViewById(R.id.songPic);
-        TextView songTitle = findViewById(R.id.songTitle);
+        songTitle = findViewById(R.id.songTitle);
         ImageView btnPrev = findViewById(R.id.btnPrev);
         ImageView btnNext = findViewById(R.id.btnNext);
         ImageView btnPlay = findViewById(R.id.btnPlay);
