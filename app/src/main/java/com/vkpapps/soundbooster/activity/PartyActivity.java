@@ -21,7 +21,6 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
-import com.vkpapps.soundbooster.MusicPlayerActivity;
 import com.vkpapps.soundbooster.MusicPlayerService;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.MyFragmentPagerAdapter;
