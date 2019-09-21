@@ -13,6 +13,7 @@ import android.os.PowerManager;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.vkpapps.soundbooster.model.Control;
 
@@ -21,20 +22,17 @@ import java.io.IOException;
 
 public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
 
+    //actions
+    public static final String ACTION_PLAY = "PLAY";
+    public static final String ACTION_PAUSE = "PAUSE";
+    public static final String ACTION_UPDATE_PROGRESS = "UPDATE_PROGRESS";
+    private final Intent actionIntent = new Intent();
     private static final MediaPlayer MEDIA_PLAYER = new MediaPlayer();
     private final IBinder musicBind = new MusicPlayerService.MusicBinder();
     private final String TAG = "vijay";
     private String title;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        MEDIA_PLAYER.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-        MEDIA_PLAYER.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        MEDIA_PLAYER.setOnPreparedListener(this);
-        MEDIA_PLAYER.setOnCompletionListener(this);
-        MEDIA_PLAYER.setOnErrorListener(this);
-    }
+    private final Intent progressIntent = new Intent(ACTION_UPDATE_PROGRESS);
+    private LocalBroadcastManager localBroadcastManager;
 
     @Nullable
     @Override
@@ -73,6 +71,38 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
     }
 
+    Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    long totalDuration = MEDIA_PLAYER.getDuration();
+                    long currentDuration = MEDIA_PLAYER.getCurrentPosition();
+                    int per = (int) (currentDuration * 100 / totalDuration);
+                    progressIntent.putExtra("progress", per);
+                    localBroadcastManager.sendBroadcast(progressIntent);
+                } catch (ArithmeticException ignored) {
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    });
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        MEDIA_PLAYER.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        MEDIA_PLAYER.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        MEDIA_PLAYER.setOnPreparedListener(this);
+        MEDIA_PLAYER.setOnCompletionListener(this);
+        MEDIA_PLAYER.setOnErrorListener(this);
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
+        thread.start();
+    }
 
     public void processControlRequest(Control control) {
         Log.d(TAG, "processControlRequest:  ================================ control " + control.toString());
@@ -84,41 +114,36 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
                 MEDIA_PLAYER.pause();
                 break;
             case Control.PLAY:
-                if (control.getName() == null) {
-                    if (MEDIA_PLAYER.isPlaying()) {
-                        MEDIA_PLAYER.pause();
-                    } else {
-                        MEDIA_PLAYER.start();
-                    }
+                if (MEDIA_PLAYER.isPlaying()) {
+                    pause();
                 } else {
-                    play(control.getName());
+                    start(control);
                 }
                 break;
         }
+    }
+
+    private void start(Control control) {
+        actionIntent.setAction(ACTION_PLAY);
+        localBroadcastManager.sendBroadcast(actionIntent);
+        if (control.getName() != null) {
+            MEDIA_PLAYER.reset();
+            try {
+                MEDIA_PLAYER.setDataSource(control.getName());
+                MEDIA_PLAYER.prepare();
+                MEDIA_PLAYER.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            title = control.getName();
+        }
+        MEDIA_PLAYER.start();
     }
 
     public int getCalculatedSeek(int per) {
         return MEDIA_PLAYER.getDuration() * per / 100;
     }
 
-    public int getCurrentPosition() {
-        return MEDIA_PLAYER.getCurrentPosition();
-    }
-
-    public void moveBy(int i) {
-    }
-
-    private void play(String path) {
-        MEDIA_PLAYER.reset();
-        try {
-            MEDIA_PLAYER.setDataSource(path);
-            MEDIA_PLAYER.prepare();
-            MEDIA_PLAYER.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        title = path;
-    }
 
     public String getCurrentTitle() {
         File file = new File(title);
@@ -142,15 +167,30 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         return null;
     }
 
-    public MediaPlayer getMediaPlayer() {
-        return MEDIA_PLAYER
-                ;
+    public int getCurrentPosition() {
+        return MEDIA_PLAYER.getCurrentPosition();
+    }
+
+    public void moveBy(int i) {
+    }
+
+    private void pause() {
+        actionIntent.setAction(ACTION_PAUSE);
+        localBroadcastManager.sendBroadcast(actionIntent);
+        MEDIA_PLAYER.pause();
     }
 
     public class MusicBinder extends Binder {
         public MusicPlayerService getService() {
             return MusicPlayerService.this;
         }
-
     }
 }
+
+
+
+
+
+
+
+

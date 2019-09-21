@@ -60,6 +60,6 @@
             android:layout_height="35dp"
             android:layout_gravity="center"
             android:layout_margin="15dp"
-            android:src="@android:drawable/ic_media_play" />
+            android:src="@drawable/ic_action_play" />
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

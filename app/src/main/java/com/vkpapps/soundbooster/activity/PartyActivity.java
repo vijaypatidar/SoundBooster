@@ -1,9 +1,11 @@
 package com.vkpapps.soundbooster.activity;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -17,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
@@ -66,14 +69,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private ArrayList<FileRequest> fileRequests;
     private final ArrayList<String> hostSong = new ArrayList<>();
     private MusicPlayerService musicSrv;
+    private TextView songTitle;
     private final ServiceConnection musicConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
-            //get service
             musicSrv = binder.getService();
-            //pass list
         }
 
         @Override
@@ -81,39 +83,8 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
         }
     };
-    private TextView songTitle;
     private Intent playIntent;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_party);
-
-
-        root = getDir("mySong", MODE_PRIVATE).getPath();
-        isHost = getIntent().getBooleanExtra("isHost", false);
-        host = getIntent().getStringExtra("host");
-        fileRequests = new ArrayList<>();
-        if (checkStoragePermission()) {
-            initUI();
-        } else {
-            askStoragePermission();
-        }
-        Utils.deleteFile(root);
-        user = Utils.getUser(getDir("files", MODE_PRIVATE));
-
-
-        signalHandler = new SignalHandler(this);
-        fileHandler = new FileHandler(this);
-
-
-        if (isHost) {
-            Toast.makeText(this, "Host of party", Toast.LENGTH_SHORT).show();
-            setUpServer();
-        } else {
-            setUpClient();
-        }
-    }
+    private ImageView btnPlay;
 
     @Override
     protected void onStart() {
@@ -125,42 +96,22 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
-    private void initUI() {
-        LocalSongFragment localSongFragment = new LocalSongFragment(this, root);
-        hostSongFragment = new HostSongFragment(this, root, hostSong);
-
-        ArrayList<Fragment> fragments = new ArrayList<>();
-        fragments.add(hostSongFragment);
-        fragments.add(localSongFragment);
-
-        if (isHost) {
-            requestFragment = new RequestFragment(fileRequests);
-            fragments.add(requestFragment);
+    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null) {
+                switch (action) {
+                    case MusicPlayerService.ACTION_PLAY:
+                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_pause));
+                        break;
+                    case MusicPlayerService.ACTION_PAUSE:
+                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_play));
+                        break;
+                }
+            }
         }
-
-        ViewPager viewPager = findViewById(R.id.view_pager);
-        viewPager.setAdapter(new MyFragmentPagerAdapter(getSupportFragmentManager(), PagerAdapter.POSITION_NONE, fragments));
-        TabLayout tabs = findViewById(R.id.tabs);
-        tabs.setupWithViewPager(viewPager);
-
-        songTitle = findViewById(R.id.songTitle);
-        songTitle.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                startActivity(new Intent(PartyActivity.this, MusicPlayerActivity.class));
-            }
-        });
-
-        ImageView btnPlay = findViewById(R.id.btnPlay);
-        btnPlay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Control control = new Control(Control.PLAY, 0, null);
-                sendSignal(control, null);
-                handleControl(control);
-            }
-        });
-    }
+    };
 
     @Override
     public void handleNewClient(User user) {
@@ -349,4 +300,80 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_party);
+
+
+        root = getDir("mySong", MODE_PRIVATE).getPath();
+        isHost = getIntent().getBooleanExtra("isHost", false);
+        host = getIntent().getStringExtra("host");
+        fileRequests = new ArrayList<>();
+        if (checkStoragePermission()) {
+            initUI();
+        } else {
+            askStoragePermission();
+        }
+        Utils.deleteFile(root);
+        user = Utils.getUser(getDir("files", MODE_PRIVATE));
+
+
+        signalHandler = new SignalHandler(this);
+        fileHandler = new FileHandler(this);
+
+
+        if (isHost) {
+            Toast.makeText(this, "Host of party", Toast.LENGTH_SHORT).show();
+            setUpServer();
+        } else {
+            setUpClient();
+        }
+
+        registerMusicReceiver();
+    }
+
+    private void initUI() {
+        LocalSongFragment localSongFragment = new LocalSongFragment(this, root);
+        hostSongFragment = new HostSongFragment(this, root, hostSong);
+
+        ArrayList<Fragment> fragments = new ArrayList<>();
+        fragments.add(hostSongFragment);
+        fragments.add(localSongFragment);
+
+        if (isHost) {
+            requestFragment = new RequestFragment(fileRequests);
+            fragments.add(requestFragment);
+        }
+
+        ViewPager viewPager = findViewById(R.id.view_pager);
+        viewPager.setAdapter(new MyFragmentPagerAdapter(getSupportFragmentManager(), PagerAdapter.POSITION_NONE, fragments));
+        TabLayout tabs = findViewById(R.id.tabs);
+        tabs.setupWithViewPager(viewPager);
+
+        songTitle = findViewById(R.id.songTitle);
+        songTitle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(PartyActivity.this, MusicPlayerActivity.class));
+            }
+        });
+
+        btnPlay = findViewById(R.id.btnPlay);
+        btnPlay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Control control = new Control(Control.PLAY, 0, null);
+                sendSignal(control, null);
+                handleControl(control);
+            }
+        });
+    }
+
+    private void registerMusicReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MusicPlayerService.ACTION_PLAY);
+        intentFilter.addAction(MusicPlayerService.ACTION_PAUSE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
+    }
 }

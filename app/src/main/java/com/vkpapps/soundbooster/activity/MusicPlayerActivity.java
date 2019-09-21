@@ -1,14 +1,13 @@
 package com.vkpapps.soundbooster.activity;
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaPlayer;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.view.View;
 import android.widget.ImageButton;
@@ -17,10 +16,12 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.vkpapps.soundbooster.MusicPlayerService;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.Control;
+import com.vkpapps.soundbooster.utils.Utils;
 
 public class MusicPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -31,51 +32,41 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     private MusicPlayerService musicSrv;
     private Intent playIntent;
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_music_player);
-        initUI();
-    }
-
     private final ServiceConnection musicConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
-            //get service
             musicSrv = binder.getService();
             Bitmap bitmap = musicSrv.getBitmapOfCurrentSong();
-            if (bitmap != null)
+            if (bitmap != null) {
                 songPic.setImageBitmap(bitmap);
+            }
             songTitle.setText(musicSrv.getCurrentTitle());
-
-            final MediaPlayer mediaPlayer = musicSrv.getMediaPlayer();
-            final Handler handler = new Handler();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (mediaPlayer.isPlaying()) {
-                        try {
-                            long totalDuration = mediaPlayer.getDuration();
-                            long currentDuration = mediaPlayer.getCurrentPosition();
-                            int per = (int) (currentDuration * 100 / totalDuration);
-                            seekBar.setProgress(per);
-                        } catch (ArithmeticException ignored) {
-                        }
-                        btnPlay.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_action_pause));
-                    } else {
-                        btnPlay.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ic_action_play));
-                    }
-                    handler.postDelayed(this, 1000);
-                }
-            });
-
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
 
+        }
+    };
+    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null) {
+                switch (action) {
+                    case MusicPlayerService.ACTION_PLAY:
+                        btnPlay.setImageBitmap(Utils.getBitmap(MusicPlayerActivity.this, R.drawable.ic_action_pause));
+                        break;
+                    case MusicPlayerService.ACTION_PAUSE:
+                        btnPlay.setImageBitmap(Utils.getBitmap(MusicPlayerActivity.this, R.drawable.ic_action_play));
+                        break;
+                    case MusicPlayerService.ACTION_UPDATE_PROGRESS:
+                        seekBar.setProgress(intent.getIntExtra("progress", 0));
+                        break;
+                }
+            }
         }
     };
 
@@ -109,6 +100,19 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_music_player);
+        initUI();
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MusicPlayerService.ACTION_PLAY);
+        intentFilter.addAction(MusicPlayerService.ACTION_PAUSE);
+        intentFilter.addAction(MusicPlayerService.ACTION_UPDATE_PROGRESS);
+        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
+    }
+
     private void initUI() {
         songPic = findViewById(R.id.songPic);
         songTitle = findViewById(R.id.songTitle);
@@ -140,5 +144,12 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(myBroadcastReceiver);
+        unbindService(musicConnection);
     }
 }
