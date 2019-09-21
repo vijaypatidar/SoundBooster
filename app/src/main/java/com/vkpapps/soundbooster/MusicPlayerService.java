@@ -2,14 +2,19 @@ package com.vkpapps.soundbooster;
 
 import android.app.Service;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.widget.ImageView;
 
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.vkpapps.soundbooster.model.Control;
 
@@ -37,15 +42,7 @@ public class MusicPlayerService extends Service implements
         return false;
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        MEDIA_PLAYER.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
-        MEDIA_PLAYER.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        MEDIA_PLAYER.setOnPreparedListener(this);
-        MEDIA_PLAYER.setOnCompletionListener(this);
-        MEDIA_PLAYER.setOnErrorListener(this);
-    }
+    public static final String ACTION_SEEK = "com.vkpapps.soundbooster.action.HANDLE_SEEK";
 
     @Override
     public void onDestroy() {
@@ -71,17 +68,7 @@ public class MusicPlayerService extends Service implements
 
     }
 
-    private void play(String path) {
-        MEDIA_PLAYER.reset();
-        try {
-            MEDIA_PLAYER.setDataSource(path);
-            MEDIA_PLAYER.prepare();
-            MEDIA_PLAYER.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        title = new File(path).getName();
-    }
+    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(this);
 
     public void processControlRequest(Control control) {
         switch (control.getChoice()) {
@@ -112,14 +99,71 @@ public class MusicPlayerService extends Service implements
     public void moveBy(int i) {
     }
 
-    public String getCurrentTitle() {
-        return title;
-    }
+    Intent seekIntent = new Intent(ACTION_SEEK);
+    Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            while (true) {
+                if (MEDIA_PLAYER.isPlaying()) {
+                    int progress = MEDIA_PLAYER.getCurrentPosition() * 100 / MEDIA_PLAYER.getDuration();
+                    seekIntent.putExtra("VALUE", progress);
+                    manager.sendBroadcast(seekIntent);
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    });
 
 
     public class MusicBinder extends Binder {
         public MusicPlayerService getService() {
             return MusicPlayerService.this;
+        }
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        MEDIA_PLAYER.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        MEDIA_PLAYER.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        MEDIA_PLAYER.setOnPreparedListener(this);
+        MEDIA_PLAYER.setOnCompletionListener(this);
+        MEDIA_PLAYER.setOnErrorListener(this);
+        thread.start();
+    }
+
+    private void play(String path) {
+        MEDIA_PLAYER.reset();
+        try {
+            MEDIA_PLAYER.setDataSource(path);
+            MEDIA_PLAYER.prepare();
+            MEDIA_PLAYER.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        title = path;
+    }
+
+    public String getCurrentTitle() {
+        return new File(title).getName();
+    }
+
+    public void loadEmbbedPic(ImageView songPic) {
+        try {
+            android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(title);
+
+            byte[] data = mmr.getEmbeddedPicture();
+
+            if (data != null) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                songPic.setImageBitmap(bitmap); //associated cover art in bitmap
+            }
+        } catch (Exception ignored) {
         }
     }
 }

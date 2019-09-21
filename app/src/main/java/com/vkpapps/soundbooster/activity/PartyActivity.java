@@ -194,7 +194,8 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     @Override
     public void handleControl(final Control control) {
         musicSrv.processControlRequest(control);
-        songTitle.setText(control.getName());
+
+        songTitle.setText(musicSrv.getCurrentTitle());
     }
 
     @Override

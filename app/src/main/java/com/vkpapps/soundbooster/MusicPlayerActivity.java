@@ -16,9 +16,8 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.vkpapps.soundbooster.model.Control;
 
 public class MusicPlayerActivity extends AppCompatActivity implements View.OnClickListener {
@@ -43,12 +42,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     };
     private Intent playIntent;
-    private BroadcastReceiver myReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            seekBar.setProgress(intent.getIntExtra("progress", 0));
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,16 +53,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         String root = getDir("mySong", MODE_PRIVATE).getPath();
         initUI();
 
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
-        registerReceiver(myReceiver, new IntentFilter("ACTION_HANDLE_SEEK"));
     }
 
     private void initUI() {
@@ -123,6 +106,13 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
+    private BroadcastReceiver mySeekReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            seekBar.setProgress(intent.getIntExtra("VALUE", 0));
+        }
+    };
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -130,12 +120,13 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
             playIntent = new Intent(this, MusicPlayerService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
+            LocalBroadcastManager.getInstance(this).registerReceiver(mySeekReceiver, new IntentFilter(MusicPlayerService.ACTION_SEEK));
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(myReceiver);
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mySeekReceiver);
     }
 }
