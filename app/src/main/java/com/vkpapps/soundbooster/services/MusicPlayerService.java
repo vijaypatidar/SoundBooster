@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster;
+package com.vkpapps.soundbooster.services;
 
 import android.app.Service;
 import android.content.Intent;
@@ -33,6 +33,27 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     private String title;
     private final Intent progressIntent = new Intent(ACTION_UPDATE_PROGRESS);
     private LocalBroadcastManager localBroadcastManager;
+    Thread thread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    long totalDuration = MEDIA_PLAYER.getDuration();
+                    long currentDuration = MEDIA_PLAYER.getCurrentPosition();
+                    int per = (int) (currentDuration * 100 / totalDuration);
+                    progressIntent.putExtra("progress", per);
+                    localBroadcastManager.sendBroadcast(progressIntent);
+                } catch (ArithmeticException ignored) {
+                }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    });
+    private String root;
 
     @Nullable
     @Override
@@ -71,27 +92,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
     }
 
-    Thread thread = new Thread(new Runnable() {
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    long totalDuration = MEDIA_PLAYER.getDuration();
-                    long currentDuration = MEDIA_PLAYER.getCurrentPosition();
-                    int per = (int) (currentDuration * 100 / totalDuration);
-                    progressIntent.putExtra("progress", per);
-                    localBroadcastManager.sendBroadcast(progressIntent);
-                } catch (ArithmeticException ignored) {
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    });
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -101,6 +101,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         MEDIA_PLAYER.setOnCompletionListener(this);
         MEDIA_PLAYER.setOnErrorListener(this);
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
+        root = getDir("mySong", MODE_PRIVATE).getPath() + File.separator;
         thread.start();
     }
 
@@ -111,33 +112,12 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
                 MEDIA_PLAYER.seekTo(control.getValue());
                 break;
             case Control.PAUSE:
-                MEDIA_PLAYER.pause();
+                pause();
                 break;
             case Control.PLAY:
-                if (MEDIA_PLAYER.isPlaying()) {
-                    pause();
-                } else {
-                    start(control);
-                }
+                start(control);
                 break;
         }
-    }
-
-    private void start(Control control) {
-        actionIntent.setAction(ACTION_PLAY);
-        localBroadcastManager.sendBroadcast(actionIntent);
-        if (control.getName() != null) {
-            MEDIA_PLAYER.reset();
-            try {
-                MEDIA_PLAYER.setDataSource(control.getName());
-                MEDIA_PLAYER.prepare();
-                MEDIA_PLAYER.start();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            title = control.getName();
-        }
-        MEDIA_PLAYER.start();
     }
 
     public int getCalculatedSeek(int per) {
@@ -171,16 +151,35 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         return MEDIA_PLAYER.getCurrentPosition();
     }
 
-    public void moveBy(int i) {
-    }
-
     private void pause() {
         actionIntent.setAction(ACTION_PAUSE);
         localBroadcastManager.sendBroadcast(actionIntent);
         MEDIA_PLAYER.pause();
     }
 
+    private void start(Control control) {
+        actionIntent.setAction(ACTION_PLAY);
+        localBroadcastManager.sendBroadcast(actionIntent);
+        if (control.getName() != null) {
+            MEDIA_PLAYER.reset();
+            try {
+                MEDIA_PLAYER.setDataSource(root + control.getName());
+                MEDIA_PLAYER.prepare();
+                MEDIA_PLAYER.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            title = root + control.getName();
+        }
+        MEDIA_PLAYER.start();
+    }
+
+    public boolean isPlaying() {
+        return MEDIA_PLAYER.isPlaying();
+    }
+
     public class MusicBinder extends Binder {
+
         public MusicPlayerService getService() {
             return MusicPlayerService.this;
         }

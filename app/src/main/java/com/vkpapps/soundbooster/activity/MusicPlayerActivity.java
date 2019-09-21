@@ -18,9 +18,9 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.vkpapps.soundbooster.MusicPlayerService;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.Control;
+import com.vkpapps.soundbooster.services.MusicPlayerService;
 import com.vkpapps.soundbooster.utils.Utils;
 
 public class MusicPlayerActivity extends AppCompatActivity implements View.OnClickListener {
@@ -74,17 +74,15 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnPlay:
-                musicSrv.processControlRequest(new Control(Control.PLAY, 0, null));
+                musicSrv.processControlRequest(new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, 0, null));
                 break;
             case R.id.btnSync:
                 Control control = new Control(Control.SEEK, 0, musicSrv.getCurrentPosition());
                 musicSrv.processControlRequest(control);
                 break;
             case R.id.btnPrev:
-                musicSrv.moveBy(-1);
                 break;
             case R.id.btnNext:
-                musicSrv.moveBy(1);
                 break;
         }
     }

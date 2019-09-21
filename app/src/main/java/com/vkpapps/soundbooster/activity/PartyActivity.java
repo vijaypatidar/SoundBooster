@@ -24,7 +24,6 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
-import com.vkpapps.soundbooster.MusicPlayerService;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.MyFragmentPagerAdapter;
 import com.vkpapps.soundbooster.connection.ClientHelper;
@@ -43,6 +42,7 @@ import com.vkpapps.soundbooster.model.InformClient;
 import com.vkpapps.soundbooster.model.LocalSong;
 import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.User;
+import com.vkpapps.soundbooster.services.MusicPlayerService;
 import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
@@ -70,22 +70,8 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private final ArrayList<String> hostSong = new ArrayList<>();
     private MusicPlayerService musicSrv;
     private TextView songTitle;
-    private final ServiceConnection musicConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
-            musicSrv = binder.getService();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-
-        }
-    };
     private Intent playIntent;
     private ImageView btnPlay;
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -96,28 +82,11 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
-    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action != null) {
-                switch (action) {
-                    case MusicPlayerService.ACTION_PLAY:
-                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_pause));
-                        break;
-                    case MusicPlayerService.ACTION_PAUSE:
-                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_play));
-                        break;
-                }
-            }
-        }
-    };
 
     @Override
     public void handleNewClient(User user) {
         Toast.makeText(this, user.getName() + " join party", Toast.LENGTH_SHORT).show();
     }
-
     @Override
     public void handleConnectToHost() {
         sendSignal(user, null);
@@ -179,7 +148,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     @Override
     public void onSelectLocalMusic(LocalSong localSong) {
         //TODO remove handle control from here
-        handleControl(new Control(Control.PLAY, 0, localSong.getPath()));
         sendSignal(new Request(user.getUserId(), localSong.getName()), null);
         if (isHost) {
             boolean performAction = fileRequests.isEmpty();
@@ -195,49 +163,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
-
-    private void setUpServer() {
-        server = Server.getInstance();
-        server.setSignalHandler(signalHandler);
-        server.start();
-    }
-
-    private void setUpClient() {
-        clientHelper = new ClientHelper(host, signalHandler);
-        clientHelper.start();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (isHost) {
-            server.stopServer();
-        } else {
-            clientHelper.stopClientHelper();
-        }
-    }
-
-    private void sendFile(final String path) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Socket socket = getSocket(isHost, host);
-                SendFile sendFile = new SendFile(socket, path, fileHandler);
-                sendFile.startSending();
-            }
-        }).start();
-    }
-
-    private void receiveFile(final String path) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Socket socket = getSocket(isHost, host);
-                ReceiveFile receiveFile = new ReceiveFile(socket, path, fileHandler);
-                receiveFile.start();
-            }
-        }).start();
-    }
 
 
     @Override
@@ -282,46 +207,56 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         Toast.makeText(this, "play " + hostSong.getName(), Toast.LENGTH_SHORT).show();
     }
 
-    private boolean checkStoragePermission() {
-        return ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
-    }
+    private final ServiceConnection musicConnection = new ServiceConnection() {
 
-    private void askStoragePermission() {
-        ActivityCompat.requestPermissions(this, new String[]{
-                Manifest.permission.READ_EXTERNAL_STORAGE
-        }, 101);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 101 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            recreate();
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
+            musicSrv = binder.getService();
         }
-    }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null) {
+                switch (action) {
+                    case MusicPlayerService.ACTION_PLAY:
+                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_pause));
+                        break;
+                    case MusicPlayerService.ACTION_PAUSE:
+                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_play));
+                        break;
+                }
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_party);
 
-
         root = getDir("mySong", MODE_PRIVATE).getPath();
         isHost = getIntent().getBooleanExtra("isHost", false);
         host = getIntent().getStringExtra("host");
         fileRequests = new ArrayList<>();
+
         if (checkStoragePermission()) {
             initUI();
         } else {
             askStoragePermission();
         }
-        Utils.deleteFile(root);
-        user = Utils.getUser(getDir("files", MODE_PRIVATE));
 
+        user = Utils.getUser(getDir("files", MODE_PRIVATE));
 
         signalHandler = new SignalHandler(this);
         fileHandler = new FileHandler(this);
-
 
         if (isHost) {
             Toast.makeText(this, "Host of party", Toast.LENGTH_SHORT).show();
@@ -331,6 +266,25 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
 
         registerMusicReceiver();
+    }
+
+    private void registerMusicReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MusicPlayerService.ACTION_PLAY);
+        intentFilter.addAction(MusicPlayerService.ACTION_PAUSE);
+        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (isHost) {
+            server.stopServer();
+        } else {
+            clientHelper.stopClientHelper();
+        }
+
+        Utils.deleteFile(root);
     }
 
     private void initUI() {
@@ -363,17 +317,61 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Control control = new Control(Control.PLAY, 0, null);
+                Control control = new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, 0, null);
                 sendSignal(control, null);
                 handleControl(control);
             }
         });
     }
 
-    private void registerMusicReceiver() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(MusicPlayerService.ACTION_PLAY);
-        intentFilter.addAction(MusicPlayerService.ACTION_PAUSE);
-        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
+    private boolean checkStoragePermission() {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private void askStoragePermission() {
+        ActivityCompat.requestPermissions(this, new String[]{
+                Manifest.permission.READ_EXTERNAL_STORAGE
+        }, 101);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 101 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            recreate();
+        }
+    }
+
+    private void sendFile(final String path) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Socket socket = getSocket(isHost, host);
+                SendFile sendFile = new SendFile(socket, path, fileHandler);
+                sendFile.startSending();
+            }
+        }).start();
+    }
+
+    private void receiveFile(final String path) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Socket socket = getSocket(isHost, host);
+                ReceiveFile receiveFile = new ReceiveFile(socket, path, fileHandler);
+                receiveFile.start();
+            }
+        }).start();
+    }
+
+    private void setUpServer() {
+        server = Server.getInstance();
+        server.setSignalHandler(signalHandler);
+        server.start();
+    }
+
+    private void setUpClient() {
+        clientHelper = new ClientHelper(host, signalHandler);
+        clientHelper.start();
     }
 }
