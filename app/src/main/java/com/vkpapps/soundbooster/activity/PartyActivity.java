@@ -40,7 +40,6 @@ import com.vkpapps.soundbooster.services.FileService;
 import com.vkpapps.soundbooster.services.MusicPlayerService;
 import com.vkpapps.soundbooster.utils.Utils;
 
-import java.io.File;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Map;
@@ -58,6 +57,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private User user;
     private ClientHelper clientHelper;
     private SignalHandler signalHandler;
+    private HostSongFragment hostSongFragment;
     private String root;
     private final ArrayList<String> hostSong = new ArrayList<>();
     private MusicPlayerService musicSrv;
@@ -86,12 +86,32 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         sendSignal(user, null);
     }
 
-
-    @Override
-    public void handelFileRequest(Request request) {
-        Toast.makeText(this, "Handle req " + request.getName() + " id " + request.getUserId(), Toast.LENGTH_SHORT).show();
-        //TODO
-    }
+    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null) {
+                switch (action) {
+                    case MusicPlayerService.ACTION_PLAY:
+                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_pause));
+                        break;
+                    case MusicPlayerService.ACTION_PAUSE:
+                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_play));
+                        break;
+                    case FileService.FILE_SENT_SUCCESS:
+                    case FileService.FILE_RECEIVED_SUCCESS:
+                        hostSongFragment.refreshList();
+                        break;
+                    case FileService.FILE_SENDING_FAILED:
+                        Toast.makeText(context, "sending failed", Toast.LENGTH_SHORT).show();
+                        break;
+                    case FileService.FILE_RECEIVING_FAILED:
+                        Toast.makeText(context, "receiving failed", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }
+    };
 
 
     @Override
@@ -101,13 +121,18 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     @Override
-    public void handleRequest(InformClient informClient) {
-        if (informClient.isReadyToReceive()) {
-            Intent intent = FileService.getReceiveIntent(this, informClient.getFile(), root + File.separator + informClient.getFile(), null);
-            startService(intent);
-        } else {
-            Intent intent = FileService.getSendIntent(this, informClient.getFile(), root + File.separator + informClient.getFile(), null);
-            startService(intent);
+    public void handelFileRequest(Request request) {
+        Intent intent = FileService.getReceiveIntent(this, request.getName(), request.getUserId());
+        startService(intent);
+        Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
+        long id = Long.parseLong(request.getUserId());
+        for (Map.Entry<String, Socket> entry : entries) {
+            long tid = Long.parseLong(entry.getKey());
+            if (id == tid) {
+                Log.d("vijay", "handle: ============= " + entry.getKey() + "   id ============ " + request.getUserId());
+                Intent sendIntent = FileService.getSendIntent(this, request.getName(), entry.getKey());
+                startService(sendIntent);
+            }
         }
     }
 
@@ -121,19 +146,15 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     @Override
-    public void onSelectLocalMusic(LocalSong localSong) {
-        if (isHost) {
-            Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
-            for (Map.Entry<String, Socket> entry : entries) {
-                Log.d("vijay", "onSelectLocalMusic: ============= " + entry.getKey() + "   id ============ " + entry.getValue());
-                Intent intent = FileService.getSendIntent(this, localSong.getName(), localSong.getPath(), entry.getKey());
-                startService(intent);
-            }
+    public void handleRequest(InformClient informClient) {
+        Intent intent;
+        if (informClient.isReadyToReceive()) {
+            intent = FileService.getReceiveIntent(this, informClient.getFileName(), null);
         } else {
-            //todo
-            Request request = new Request(user.getUserId(), localSong.getName());
-            sendSignal(request, null);
+            intent = FileService.getSendIntent(this, informClient.getFileName(), null);
         }
+        intent.putExtra(FileService.EXTRA_HOST_ADDRESS, host);
+        startService(intent);
     }
 
 
@@ -158,22 +179,20 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
         }
     };
-    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action != null) {
-                switch (action) {
-                    case MusicPlayerService.ACTION_PLAY:
-                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_pause));
-                        break;
-                    case MusicPlayerService.ACTION_PAUSE:
-                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_play));
-                        break;
-                }
+
+    @Override
+    public void onSelectLocalMusic(LocalSong localSong) {
+        if (isHost) {
+            Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
+            for (Map.Entry<String, Socket> entry : entries) {
+                Intent intent = FileService.getSendIntent(this, localSong.getName(), entry.getKey());
+                startService(intent);
             }
+        } else {
+            Request request = new Request(user.getUserId(), localSong.getName());
+            sendSignal(request, null);
         }
-    };
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -208,6 +227,10 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(MusicPlayerService.ACTION_PLAY);
         intentFilter.addAction(MusicPlayerService.ACTION_PAUSE);
+        intentFilter.addAction(FileService.FILE_RECEIVED_SUCCESS);
+        intentFilter.addAction(FileService.FILE_RECEIVING_FAILED);
+        intentFilter.addAction(FileService.FILE_SENDING_FAILED);
+        intentFilter.addAction(FileService.FILE_SENT_SUCCESS);
         LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
     }
 
@@ -219,12 +242,11 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         } else {
             clientHelper.stopClientHelper();
         }
-        Utils.deleteFile(root);
     }
 
     private void initUI() {
         LocalSongFragment localSongFragment = new LocalSongFragment(this, root);
-        HostSongFragment hostSongFragment = new HostSongFragment(this, root, hostSong);
+        hostSongFragment = new HostSongFragment(this, root, hostSong);
 
         ArrayList<Fragment> fragments = new ArrayList<>();
         fragments.add(hostSongFragment);

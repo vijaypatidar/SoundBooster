@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.vkpapps.soundbooster.connection.Server;
 import com.vkpapps.soundbooster.model.InformClient;
 import com.vkpapps.soundbooster.utils.Utils;
@@ -18,62 +20,71 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 public class FileService extends IntentService {
-    // TODO: Rename parameters
     public static final String EXTRA_FILE_NAME = "com.vkpapps.soundbooster.extra.FILE_NAME";
-    public static final String EXTRA_FILE_PATH = "com.vkpapps.soundbooster.extra.FILE_PATH";
     public static final String EXTRA_CLIENT_ID = "com.vkpapps.soundbooster.extra.CLIENT_ID";
     public static final String EXTRA_HOST_ADDRESS = "com.vkpapps.soundbooster.extra.HOST_ADDRESS";
+
     private static final String ACTION_SEND = "com.vkpapps.soundbooster.action.SEND_FILE";
     private static final String ACTION_RECEIVE = "com.vkpapps.soundbooster.action.RECEIVE_FILE";
-    private String TAG = "FileService";
+
+    //for broadcast uses
+    public static final String FILE_SENT_SUCCESS = "com.vkpapps.soundbooster.FILE_SENT";
+    public static final String FILE_SENDING_FAILED = "com.vkpapps.soundbooster.FILE_SENDING_FAILED";
+    public static final String FILE_RECEIVED_SUCCESS = "com.vkpapps.soundbooster.FILE_RECEIVED";
+    public static final String FILE_RECEIVING_FAILED = "com.vkpapps.soundbooster.FILE_RECEIVING_FAILED";
+
+    private File root;
+    private String TAG = "vijay";
+
 
     public FileService() {
         super("FileService");
     }
 
-    public static Intent getSendIntent(Context context, String file_name, String file_path, String client_id) {
+    public static Intent getSendIntent(Context context, String file_name, String client_id) {
         Intent intent = new Intent(context, FileService.class);
         intent.setAction(FileService.ACTION_SEND);
-        intent.putExtra(FileService.EXTRA_FILE_PATH, file_path);
         intent.putExtra(FileService.EXTRA_FILE_NAME, file_name);
         intent.putExtra(FileService.EXTRA_CLIENT_ID, client_id);
         return intent;
     }
 
-    public static Intent getReceiveIntent(Context context, String file_name, String file_path, String client_id) {
+    public static Intent getReceiveIntent(Context context, String file_name, String client_id) {
         Intent intent = new Intent(context, FileService.class);
         intent.setAction(FileService.ACTION_RECEIVE);
-        intent.putExtra(FileService.EXTRA_FILE_PATH, file_path);
         intent.putExtra(FileService.EXTRA_FILE_NAME, file_name);
         intent.putExtra(FileService.EXTRA_CLIENT_ID, client_id);
         return intent;
     }
 
     @Override
+    public void onCreate() {
+        super.onCreate();
+        root = getDir("mySong", MODE_PRIVATE);
+    }
+
+    @Override
     protected void onHandleIntent(Intent intent) {
-        Log.d(TAG, "onHandleIntent: ============================================== called");
         if (intent != null) {
             final String action = intent.getAction();
             final String FILE_NAME = intent.getStringExtra(EXTRA_FILE_NAME);
-            final String FILE_PATH = intent.getStringExtra(EXTRA_FILE_PATH);
             final String CLIENT_ID = intent.getStringExtra(EXTRA_CLIENT_ID);
             final String HOST_ADDRESS = intent.getStringExtra(EXTRA_HOST_ADDRESS);
             if (ACTION_SEND.equals(action)) {
                 makeClientReady(CLIENT_ID, FILE_NAME, true);
-                handleActionSend(FILE_PATH, CLIENT_ID, HOST_ADDRESS);
+                handleActionSend(FILE_NAME, CLIENT_ID, HOST_ADDRESS);
             } else if (ACTION_RECEIVE.equals(action)) {
                 makeClientReady(CLIENT_ID, FILE_NAME, false);
-                handleActionReceive(FILE_PATH, CLIENT_ID, HOST_ADDRESS);
+                handleActionReceive(FILE_NAME, CLIENT_ID, HOST_ADDRESS);
             }
         }
     }
 
-    private void handleActionReceive(String file_path, String client_id, String host_address) {
-        Log.d(TAG, "handleActionReceive: ======================================= " + host_address + ' ' + client_id);
+    private void handleActionReceive(String file_name, String client_id, String host_address) {
         try {
             Socket socket = Utils.getSocket(client_id != null, host_address);
             InputStream in = socket.getInputStream();
-            OutputStream out = new FileOutputStream(file_path);
+            OutputStream out = new FileOutputStream(new File(root, file_name));
             byte[] bytes = new byte[3 * 1024];
             int count;
             while ((count = in.read(bytes)) > 0) {
@@ -83,18 +94,17 @@ public class FileService extends IntentService {
             out.close();
             in.close();
             socket.close();
-            //todo send success broadcast
+            sendBroadcastFileReceived(file_name);
         } catch (IOException e) {
-            //todo send error broadcast
+            sendBroadcastFileReceivingFailed(file_name);
             e.printStackTrace();
         }
     }
 
-    private void handleActionSend(String file_path, String client_id, String host_address) {
-        Log.d(TAG, "handleActionSend: =============================== " + host_address + "  id " + client_id);
+    private void handleActionSend(String file_name, String client_id, String host_address) {
         try {
             Socket socket = Utils.getSocket(client_id != null, host_address);
-            InputStream inputStream = new FileInputStream(new File(file_path));
+            InputStream inputStream = new FileInputStream(new File(root, file_name));
             OutputStream outputStream = socket.getOutputStream();
             byte[] bytes = new byte[3 * 1024];
             int count;
@@ -105,16 +115,42 @@ public class FileService extends IntentService {
             outputStream.close();
             inputStream.close();
             socket.close();
-            //todo send success broadcast
+            sendBroadcastFileSent(file_name);
         } catch (IOException e) {
-            //todo send error broadcast
+            sendBroadcastFileSendingFailed(file_name);
             e.printStackTrace();
         }
     }
 
-    private void makeClientReady(String client_id, String file, boolean readyToReceive) {
+    private void sendBroadcastFileSent(String fileName) {
+        Log.d(TAG, "sendBroadcastFileSent: ================== " + fileName);
+        Intent intent = new Intent(FILE_SENT_SUCCESS);
+        intent.putExtra(EXTRA_FILE_NAME, fileName);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void sendBroadcastFileSendingFailed(String fileName) {
+        Log.d(TAG, "sendBroadcastFileSendingFailed: ================= " + fileName);
+        Intent intent = new Intent(FILE_SENDING_FAILED);
+        intent.putExtra(EXTRA_FILE_NAME, fileName);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void sendBroadcastFileReceived(String fileName) {
+        Intent intent = new Intent(FILE_RECEIVED_SUCCESS);
+        intent.putExtra(EXTRA_FILE_NAME, fileName);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void sendBroadcastFileReceivingFailed(String fileName) {
+        Intent intent = new Intent(FILE_RECEIVING_FAILED);
+        intent.putExtra(EXTRA_FILE_NAME, fileName);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void makeClientReady(String client_id, String file_name, boolean readyToReceive) {
         if (client_id != null) {
-            InformClient informClient = new InformClient(readyToReceive, file);
+            InformClient informClient = new InformClient(readyToReceive, file_name);
             Socket socket = Server.socketHashMap.get(client_id);
             Server.getInstance().informClient(socket, informClient);
         }

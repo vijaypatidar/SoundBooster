@@ -29,6 +29,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
     private final Intent actionIntent = new Intent();
     private static final MediaPlayer MEDIA_PLAYER = new MediaPlayer();
+
     private final IBinder musicBind = new MusicPlayerService.MusicBinder();
     private final String TAG = "vijay";
     private String title;

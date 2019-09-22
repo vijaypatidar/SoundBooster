@@ -79,7 +79,7 @@ public class Utils {
     }
 
     public static Socket getSocket(boolean isHost, String host) throws IOException {
-        Log.d("patidar", "getSocket: ======================================== ");
+        Log.d("vijay", "getSocket: ======================================== isHost = " + isHost + " host " + host);
         Socket socket;
         if (isHost) {
             try (ServerSocket serverSocket = new ServerSocket(15448)) {
@@ -93,10 +93,15 @@ public class Utils {
         return socket;
     }
 
-    public static void deleteFile(String path) {
-        for (File file : Objects.requireNonNull(new File(path).listFiles())) {
-            file.delete();
-        }
+    public static void deleteFile(final String path) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (File file : Objects.requireNonNull(new File(path).listFiles())) {
+                    file.delete();
+                }
+            }
+        }).start();
     }
 
     public static List<File> getAllAudios(Context c) {

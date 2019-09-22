@@ -4,11 +4,11 @@ import java.io.Serializable;
 
 public class InformClient implements Serializable {
     private boolean readyToReceive;
-    private String file;
+    private String fileName;
 
-    public InformClient(boolean readyToReceive, String file) {
+    public InformClient(boolean readyToReceive, String fileName) {
         this.readyToReceive = readyToReceive;
-        this.file = file;
+        this.fileName = fileName;
     }
 
     public boolean isReadyToReceive() {
@@ -19,11 +19,11 @@ public class InformClient implements Serializable {
         this.readyToReceive = readyToReceive;
     }
 
-    public String getFile() {
-        return file;
+    public String getFileName() {
+        return fileName;
     }
 
-    public void setFile(String file) {
-        this.file = file;
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 }

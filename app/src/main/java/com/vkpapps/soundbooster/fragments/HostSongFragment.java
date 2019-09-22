@@ -43,6 +43,7 @@ public class HostSongFragment extends Fragment implements HostMusicAdapter.OnIte
         recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(hostMusicAdapter);
+        refreshList();
         return view;
     }
 
@@ -51,22 +52,19 @@ public class HostSongFragment extends Fragment implements HostMusicAdapter.OnIte
         onHostSongFragmentListener.onMusicSelectToPlay(hostSongs.get(position));
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        refreshList();
-    }
-
-    private void refreshList() {
-        File[] allAudios = new File(root).listFiles();
-        assert allAudios != null;
-        hostSongs.clear();
-        hostSongList.clear();
-        for (File file : allAudios) {
-            hostSongs.add(new HostSong(file.getPath(), file.getName(), true));
-            hostSongList.add(file.getName());
+    public void refreshList() {
+        try {
+            File[] allAudios = new File(root).listFiles();
+            assert allAudios != null;
+            hostSongs.clear();
+            hostSongList.clear();
+            for (File file : allAudios) {
+                hostSongs.add(new HostSong(file.getPath(), file.getName(), true));
+                hostSongList.add(file.getName());
+            }
+            hostMusicAdapter.notifyDataSetChanged();
+        } catch (Exception ignored) {
         }
-        hostMusicAdapter.notifyDataSetChanged();
     }
 
     public interface OnHostSongFragmentListener {
