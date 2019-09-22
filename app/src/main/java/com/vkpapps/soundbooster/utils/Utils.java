@@ -79,29 +79,18 @@ public class Utils {
             return null;
         }
     }
-    public static Socket getSocket(boolean isHost, String host) {
-        Socket socket = null;
 
-
+    public static Socket getSocket(boolean isHost, String host) throws IOException {
+        Log.d("patidar", "getSocket: ======================================== ");
+        Socket socket;
         if (isHost) {
-            try {
-                Log.d("patidar", "getSocket: ser ======================================== ");
-                ServerSocket serverSocket;
-                serverSocket = new ServerSocket(15448);
+            try (ServerSocket serverSocket = new ServerSocket(15448)) {
+                serverSocket.setSoTimeout(5000);
                 socket = serverSocket.accept();
-                Log.d("patidar", "getSocket: found  ======================================== ");
-                serverSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         } else {
-            try {
-                Log.d("patidar", "getSocket: con ======================================== ");
-                socket = new Socket();
-                socket.connect(new InetSocketAddress(host, 15448), 5000);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(host, 15448), 5000);
         }
         return socket;
     }
@@ -110,7 +99,6 @@ public class Utils {
         for (File file : Objects.requireNonNull(new File(path).listFiles())) {
             file.delete();
         }
-
     }
 
     public static List<File> getAllAudios(Context c) {

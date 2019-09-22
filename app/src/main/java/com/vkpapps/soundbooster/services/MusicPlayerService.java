@@ -26,6 +26,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     public static final String ACTION_PLAY = "PLAY";
     public static final String ACTION_PAUSE = "PAUSE";
     public static final String ACTION_UPDATE_PROGRESS = "UPDATE_PROGRESS";
+
     private final Intent actionIntent = new Intent();
     private static final MediaPlayer MEDIA_PLAYER = new MediaPlayer();
     private final IBinder musicBind = new MusicPlayerService.MusicBinder();

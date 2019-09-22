@@ -17,6 +17,9 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         <service
+            android:name=".services.FileService"
+            android:exported="false"></service>
+        <service
             android:name=".services.MusicPlayerService"
             android:exported="false" />
 
