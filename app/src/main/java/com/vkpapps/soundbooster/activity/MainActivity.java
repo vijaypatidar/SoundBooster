@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
 
 
     @Override
-    public void handelFileRequest(Request request) {
+    public void handelClientFileRequest(Request request) {
 
     }
 

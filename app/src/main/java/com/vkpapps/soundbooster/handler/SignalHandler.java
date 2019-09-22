@@ -37,7 +37,7 @@ public class SignalHandler extends Handler {
                 onMessageHandlerListener.handleNewClient((User) bundle.get("data"));
                 break;
             case NEW_SONG_REQUEST:
-                onMessageHandlerListener.handelFileRequest((Request) bundle.getSerializable("data"));
+                onMessageHandlerListener.handelClientFileRequest((Request) bundle.getSerializable("data"));
                 break;
             case NEW_CONTROL_REQUEST:
                 onMessageHandlerListener.handleControl((Control) bundle.getSerializable("data"));
@@ -52,7 +52,7 @@ public class SignalHandler extends Handler {
 
         void handleConnectToHost();
 
-        void handelFileRequest(Request request);
+        void handelClientFileRequest(Request request);
 
         void handleControl(Control control);
 

@@ -181,7 +181,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     }
 
     public class MusicBinder extends Binder {
-
         public MusicPlayerService getService() {
             return MusicPlayerService.this;
         }

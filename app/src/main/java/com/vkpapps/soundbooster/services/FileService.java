@@ -3,7 +3,6 @@ package com.vkpapps.soundbooster.services;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -123,14 +122,12 @@ public class FileService extends IntentService {
     }
 
     private void sendBroadcastFileSent(String fileName) {
-        Log.d(TAG, "sendBroadcastFileSent: ================== " + fileName);
         Intent intent = new Intent(FILE_SENT_SUCCESS);
         intent.putExtra(EXTRA_FILE_NAME, fileName);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void sendBroadcastFileSendingFailed(String fileName) {
-        Log.d(TAG, "sendBroadcastFileSendingFailed: ================= " + fileName);
         Intent intent = new Intent(FILE_SENDING_FAILED);
         intent.putExtra(EXTRA_FILE_NAME, fileName);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);

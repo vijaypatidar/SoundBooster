@@ -9,7 +9,6 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -62,17 +61,12 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private final ArrayList<String> hostSong = new ArrayList<>();
     private MusicPlayerService musicSrv;
     private TextView songTitle;
-    private Intent playIntent;
     private ImageView btnPlay;
 
     @Override
     protected void onStart() {
         super.onStart();
-        if (playIntent == null) {
-            playIntent = new Intent(this, MusicPlayerService.class);
-            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            startService(playIntent);
-        }
+        doBindService();
     }
 
 
@@ -121,15 +115,14 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     @Override
-    public void handelFileRequest(Request request) {
+    public void handelClientFileRequest(Request request) {
         Intent intent = FileService.getReceiveIntent(this, request.getName(), request.getUserId());
         startService(intent);
         Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
         long id = Long.parseLong(request.getUserId());
         for (Map.Entry<String, Socket> entry : entries) {
             long tid = Long.parseLong(entry.getKey());
-            if (id == tid) {
-                Log.d("vijay", "handle: ============= " + entry.getKey() + "   id ============ " + request.getUserId());
+            if (id != tid) {
                 Intent sendIntent = FileService.getSendIntent(this, request.getName(), entry.getKey());
                 startService(sendIntent);
             }
@@ -167,7 +160,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     private final ServiceConnection musicConnection = new ServiceConnection() {
-
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
@@ -295,5 +287,10 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private void setUpClient() {
         clientHelper = new ClientHelper(host, signalHandler);
         clientHelper.start();
+    }
+
+    private void doBindService() {
+        if (musicSrv == null)
+            bindService(new Intent(this, MusicPlayerService.class), musicConnection, BIND_AUTO_CREATE);
     }
 }
