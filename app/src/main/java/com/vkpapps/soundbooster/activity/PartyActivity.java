@@ -21,6 +21,9 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.tabs.TabLayout;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.MyFragmentPagerAdapter;
@@ -58,6 +61,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private SignalHandler signalHandler;
     private HostSongFragment hostSongFragment;
     private String root;
+    private AdView mAdView;
     private final ArrayList<String> hostSong = new ArrayList<>();
     private MusicPlayerService musicSrv;
     private TextView songTitle;
@@ -141,7 +145,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         Control control = new Control(Control.PLAY, 0, hostSong.getName());
         sendSignal(control, null);
         handleControl(control);
-        Toast.makeText(this, "play " + hostSong.getName(), Toast.LENGTH_SHORT).show();
     }
 
 
@@ -158,6 +161,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             sendSignal(request, null);
         }
     }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -225,6 +229,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_party);
 
+        MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
         root = getDir("mySong", MODE_PRIVATE).getPath();
         isHost = getIntent().getBooleanExtra("isHost", false);
         host = getIntent().getStringExtra("host");
@@ -269,7 +274,9 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             public void onClick(View view) {
                 Intent intent = new Intent(PartyActivity.this, MusicPlayerActivity.class);
                 intent.putExtra("isHost", isHost);
-                startActivity(intent);
+                if (!songTitle.getText().toString().isEmpty()) {
+                    startActivity(intent);
+                }
             }
         });
 
@@ -282,6 +289,15 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
                 handleControl(control);
             }
         });
+
+        mAdView = findViewById(R.id.adView);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
     }
 
     private void registerMusicReceiver() {

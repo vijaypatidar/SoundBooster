@@ -18,7 +18,7 @@
         tools:ignore="GoogleAppIndexingWarning">
         <service
             android:name=".services.FileService"
-            android:exported="false"></service>
+            android:exported="false" />
         <service
             android:name=".services.MusicPlayerService"
             android:exported="false" />

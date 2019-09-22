@@ -34,7 +34,7 @@ public class MyFragmentPagerAdapter extends FragmentPagerAdapter {
     @Override
     public CharSequence getPageTitle(int position) {
         if (fragments.get(position) instanceof HostSongFragment) {
-            return "Host Music";
+            return "Ready to play";
         } else if (fragments.get(position) instanceof LocalSongFragment) {
             return "Local Music";
         } else {

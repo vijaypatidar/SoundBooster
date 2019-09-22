@@ -18,6 +18,9 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.connection.Server;
 import com.vkpapps.soundbooster.model.Control;
@@ -32,44 +35,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     private TextView songTitle;
     private MusicPlayerService musicSrv;
     private boolean isHost;
-
-    private final ServiceConnection musicConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
-            musicSrv = binder.getService();
-            Bitmap bitmap = musicSrv.getBitmapOfCurrentSong();
-            if (bitmap != null) {
-                songPic.setImageBitmap(bitmap);
-            }
-            songTitle.setText(musicSrv.getCurrentTitle());
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-
-        }
-    };
-    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action != null) {
-                switch (action) {
-                    case MusicPlayerService.ACTION_PLAY:
-                        btnPlay.setImageBitmap(Utils.getBitmap(MusicPlayerActivity.this, R.drawable.ic_action_pause));
-                        break;
-                    case MusicPlayerService.ACTION_PAUSE:
-                        btnPlay.setImageBitmap(Utils.getBitmap(MusicPlayerActivity.this, R.drawable.ic_action_play));
-                        break;
-                    case MusicPlayerService.ACTION_UPDATE_PROGRESS:
-                        seekBar.setProgress(intent.getIntExtra("progress", 0));
-                        break;
-                }
-            }
-        }
-    };
 
     @Override
     public void onClick(View view) {
@@ -101,10 +66,64 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
     }
 
+    private final ServiceConnection musicConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
+            musicSrv = binder.getService();
+            loadPic();
+            songTitle.setText(musicSrv.getCurrentTitle());
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null) {
+                switch (action) {
+                    case MusicPlayerService.ACTION_PLAY:
+                        songTitle.setText(musicSrv.getCurrentTitle());
+                        loadPic();
+                        btnPlay.setImageBitmap(Utils.getBitmap(MusicPlayerActivity.this, R.drawable.ic_action_pause));
+                        break;
+                    case MusicPlayerService.ACTION_PAUSE:
+                        btnPlay.setImageBitmap(Utils.getBitmap(MusicPlayerActivity.this, R.drawable.ic_action_play));
+                        break;
+                    case MusicPlayerService.ACTION_UPDATE_PROGRESS:
+                        seekBar.setProgress(intent.getIntExtra("progress", 0));
+                        break;
+                }
+            }
+        }
+    };
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(myBroadcastReceiver);
+        unbindService(musicConnection);
+    }
+
+    private void sendControl(Control control) {
+        if (isHost) {
+            Server.getInstance().send(control, null);
+        } else {
+            PartyActivity.clientHelper.send(control);
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music_player);
+
+        MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
 
         Intent intent = getIntent();
         isHost = intent.getBooleanExtra("isHost", false);
@@ -152,20 +171,15 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
             }
         });
+        AdView mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(myBroadcastReceiver);
-        unbindService(musicConnection);
-    }
-
-    private void sendControl(Control control) {
-        if (isHost) {
-            Server.getInstance().send(control, null);
-        } else {
-            PartyActivity.clientHelper.send(control);
+    private void loadPic() {
+        Bitmap bitmap = musicSrv.getBitmapOfCurrentSong();
+        if (bitmap != null) {
+            songPic.setImageBitmap(bitmap);
         }
     }
 }

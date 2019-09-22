@@ -111,7 +111,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         Log.d(TAG, "processControlRequest:  ================================ control " + control.toString());
         switch (control.getChoice()) {
             case Control.SEEK:
-                MEDIA_PLAYER.seekTo(control.getValue());
+                seekTo(control);
                 break;
             case Control.PAUSE:
                 pause();
@@ -159,8 +159,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         MEDIA_PLAYER.pause();
     }
 
-    private void seekTo(Control control) {
-
+    private void seekTo(final Control control) {
+        MEDIA_PLAYER.seekTo(control.getValue());
     }
 
     private void start(Control control) {
