@@ -24,8 +24,6 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -119,27 +117,5 @@ public class Utils {
         return files;
     }
 
-    public static Date getDelayForSync() {
-        Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int min = calendar.get(Calendar.MINUTE);
-        int sec = calendar.get(Calendar.SECOND);
-        sec = sec + 4;
-        if (sec >= 60) {
-            min++;
-            sec = sec - 60;
-            if (min >= 60) {
-                hour++;
-                min = min - 60;
-                if (hour >= 24) {
-                    hour = 0;
-                }
-            }
-        }
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        calendar.set(Calendar.MINUTE, min);
-        calendar.set(Calendar.SECOND, sec);
-        calendar.set(Calendar.MILLISECOND, 0);
-        return calendar.getTime();
-    }
+
 }

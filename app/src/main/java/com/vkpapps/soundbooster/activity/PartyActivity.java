@@ -29,7 +29,6 @@ import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.connection.Server;
 import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.LocalSongFragment;
-import com.vkpapps.soundbooster.fragments.RequestFragment;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.HostSong;
@@ -41,6 +40,7 @@ import com.vkpapps.soundbooster.services.FileService;
 import com.vkpapps.soundbooster.services.MusicPlayerService;
 import com.vkpapps.soundbooster.utils.Utils;
 
+import java.io.File;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Map;
@@ -53,9 +53,6 @@ import static com.vkpapps.soundbooster.utils.PermissionUtils.checkStoragePermiss
 public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener,
         LocalSongFragment.OnLocalSongFragmentListener, HostSongFragment.OnHostSongFragmentListener {
     private String host;
-
-    private HostSongFragment hostSongFragment;
-    private RequestFragment requestFragment;
     private boolean isHost;
     private Server server;
     private User user;
@@ -105,7 +102,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void handleRequest(InformClient informClient) {
-
+        if (informClient.isReadyToReceive()) {
+            Intent intent = FileService.getReceiveIntent(this, informClient.getFile(), root + File.separator + informClient.getFile(), null);
+            startService(intent);
+        } else {
+            Intent intent = FileService.getSendIntent(this, informClient.getFile(), root + File.separator + informClient.getFile(), null);
+            startService(intent);
+        }
     }
 
 
@@ -119,8 +122,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void onSelectLocalMusic(LocalSong localSong) {
-        //TODO remove handle control from here
-        sendSignal(new Request(user.getUserId(), localSong.getName()), null);
         if (isHost) {
             Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
             for (Map.Entry<String, Socket> entry : entries) {
@@ -129,11 +130,11 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
                 startService(intent);
             }
         } else {
-            Intent intent = FileService.getSendIntent(this, localSong.getName(), localSong.getPath(), null);
-            startService(intent);
+            //todo
+            Request request = new Request(user.getUserId(), localSong.getName());
+            sendSignal(request, null);
         }
     }
-
 
 
     @Override
@@ -223,7 +224,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     private void initUI() {
         LocalSongFragment localSongFragment = new LocalSongFragment(this, root);
-        hostSongFragment = new HostSongFragment(this, root, hostSong);
+        HostSongFragment hostSongFragment = new HostSongFragment(this, root, hostSong);
 
         ArrayList<Fragment> fragments = new ArrayList<>();
         fragments.add(hostSongFragment);
@@ -253,7 +254,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             }
         });
     }
-
 
 
     @Override
