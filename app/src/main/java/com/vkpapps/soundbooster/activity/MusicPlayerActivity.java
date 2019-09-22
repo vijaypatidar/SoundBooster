@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.vkpapps.soundbooster.R;
+import com.vkpapps.soundbooster.connection.Server;
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.services.MusicPlayerService;
 import com.vkpapps.soundbooster.utils.Utils;
@@ -30,7 +31,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     private ImageView songPic;
     private TextView songTitle;
     private MusicPlayerService musicSrv;
-    private Intent playIntent;
+    private boolean isHost;
 
     private final ServiceConnection musicConnection = new ServiceConnection() {
 
@@ -72,18 +73,22 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
     @Override
     public void onClick(View view) {
+        Control control = null;
         switch (view.getId()) {
             case R.id.btnPlay:
-                musicSrv.processControlRequest(new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, 0, null));
+                control = new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, System.currentTimeMillis() + 3500, null);
                 break;
             case R.id.btnSync:
-                Control control = new Control(Control.SEEK, 0, musicSrv.getCurrentPosition());
-                musicSrv.processControlRequest(control);
+                control = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCurrentPosition());
                 break;
             case R.id.btnPrev:
                 break;
             case R.id.btnNext:
                 break;
+        }
+        if (control != null) {
+            sendControl(control);
+            musicSrv.processControlRequest(control);
         }
     }
 
@@ -91,17 +96,18 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     @Override
     protected void onStart() {
         super.onStart();
-        if (playIntent == null) {
-            playIntent = new Intent(this, MusicPlayerService.class);
-            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            startService(playIntent);
-        }
+        if (musicSrv == null)
+            bindService(new Intent(this, MusicPlayerService.class), musicConnection, Context.BIND_AUTO_CREATE);
+
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music_player);
+
+        Intent intent = getIntent();
+        isHost = intent.getBooleanExtra("isHost", false);
         initUI();
 
         IntentFilter intentFilter = new IntentFilter();
@@ -128,8 +134,12 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                if (b)
-                    musicSrv.processControlRequest(new Control(Control.SEEK, 0, musicSrv.getCalculatedSeek(i)));
+                if (b) {
+                    Control control = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCalculatedSeek(i));
+                    sendControl(control);
+                    musicSrv.processControlRequest(control);
+                }
+
             }
 
             @Override
@@ -149,5 +159,13 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         super.onDestroy();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(myBroadcastReceiver);
         unbindService(musicConnection);
+    }
+
+    private void sendControl(Control control) {
+        if (isHost) {
+            Server.getInstance().send(control, null);
+        } else {
+            PartyActivity.clientHelper.send(control);
+        }
     }
 }

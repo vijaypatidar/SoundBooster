@@ -54,7 +54,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private boolean isHost;
     private Server server;
     private User user;
-    private ClientHelper clientHelper;
+    public static ClientHelper clientHelper;
     private SignalHandler signalHandler;
     private HostSongFragment hostSongFragment;
     private String root;
@@ -62,6 +62,18 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private MusicPlayerService musicSrv;
     private TextView songTitle;
     private ImageView btnPlay;
+    private final ServiceConnection musicConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
+            musicSrv = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
 
     @Override
     protected void onStart() {
@@ -79,33 +91,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     public void handleConnectToHost() {
         sendSignal(user, null);
     }
-
-    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action != null) {
-                switch (action) {
-                    case MusicPlayerService.ACTION_PLAY:
-                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_pause));
-                        break;
-                    case MusicPlayerService.ACTION_PAUSE:
-                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_play));
-                        break;
-                    case FileService.FILE_SENT_SUCCESS:
-                    case FileService.FILE_RECEIVED_SUCCESS:
-                        hostSongFragment.refreshList();
-                        break;
-                    case FileService.FILE_SENDING_FAILED:
-                        Toast.makeText(context, "sending failed", Toast.LENGTH_SHORT).show();
-                        break;
-                    case FileService.FILE_RECEIVING_FAILED:
-                        Toast.makeText(context, "receiving failed", Toast.LENGTH_SHORT).show();
-                        break;
-                }
-            }
-        }
-    };
 
 
     @Override
@@ -159,18 +144,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         Toast.makeText(this, "play " + hostSong.getName(), Toast.LENGTH_SHORT).show();
     }
 
-    private final ServiceConnection musicConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
-            musicSrv = binder.getService();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-
-        }
-    };
 
     @Override
     public void onSelectLocalMusic(LocalSong localSong) {
@@ -184,6 +157,67 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             Request request = new Request(user.getUserId(), localSong.getName());
             sendSignal(request, null);
         }
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (isHost) {
+            server.stopServer();
+        } else {
+            clientHelper.stopClientHelper();
+        }
+    }
+
+    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null) {
+                switch (action) {
+                    case MusicPlayerService.ACTION_PLAY:
+                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_pause));
+                        break;
+                    case MusicPlayerService.ACTION_PAUSE:
+                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_play));
+                        break;
+                    case FileService.FILE_SENT_SUCCESS:
+                    case FileService.FILE_RECEIVED_SUCCESS:
+                        hostSongFragment.refreshList();
+                        break;
+                    case FileService.FILE_SENDING_FAILED:
+                        Toast.makeText(context, "sending failed", Toast.LENGTH_SHORT).show();
+                        break;
+                    case FileService.FILE_RECEIVING_FAILED:
+                        Toast.makeText(context, "receiving failed", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
+        }
+    };
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 101 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            recreate();
+        }
+    }
+
+    private void setUpServer() {
+        server = Server.getInstance();
+        server.setSignalHandler(signalHandler);
+        server.start();
+    }
+
+    private void setUpClient() {
+        clientHelper = new ClientHelper(host, signalHandler);
+        clientHelper.start();
+    }
+
+    private void doBindService() {
+        if (musicSrv == null)
+            bindService(new Intent(this, MusicPlayerService.class), musicConnection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -215,27 +249,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         registerMusicReceiver();
     }
 
-    private void registerMusicReceiver() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(MusicPlayerService.ACTION_PLAY);
-        intentFilter.addAction(MusicPlayerService.ACTION_PAUSE);
-        intentFilter.addAction(FileService.FILE_RECEIVED_SUCCESS);
-        intentFilter.addAction(FileService.FILE_RECEIVING_FAILED);
-        intentFilter.addAction(FileService.FILE_SENDING_FAILED);
-        intentFilter.addAction(FileService.FILE_SENT_SUCCESS);
-        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (isHost) {
-            server.stopServer();
-        } else {
-            clientHelper.stopClientHelper();
-        }
-    }
-
     private void initUI() {
         LocalSongFragment localSongFragment = new LocalSongFragment(this, root);
         hostSongFragment = new HostSongFragment(this, root, hostSong);
@@ -254,7 +267,9 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         songTitle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(PartyActivity.this, MusicPlayerActivity.class));
+                Intent intent = new Intent(PartyActivity.this, MusicPlayerActivity.class);
+                intent.putExtra("isHost", isHost);
+                startActivity(intent);
             }
         });
 
@@ -269,28 +284,14 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         });
     }
 
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 101 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            recreate();
-        }
-    }
-
-    private void setUpServer() {
-        server = Server.getInstance();
-        server.setSignalHandler(signalHandler);
-        server.start();
-    }
-
-    private void setUpClient() {
-        clientHelper = new ClientHelper(host, signalHandler);
-        clientHelper.start();
-    }
-
-    private void doBindService() {
-        if (musicSrv == null)
-            bindService(new Intent(this, MusicPlayerService.class), musicConnection, BIND_AUTO_CREATE);
+    private void registerMusicReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MusicPlayerService.ACTION_PLAY);
+        intentFilter.addAction(MusicPlayerService.ACTION_PAUSE);
+        intentFilter.addAction(FileService.FILE_RECEIVED_SUCCESS);
+        intentFilter.addAction(FileService.FILE_RECEIVING_FAILED);
+        intentFilter.addAction(FileService.FILE_SENDING_FAILED);
+        intentFilter.addAction(FileService.FILE_SENT_SUCCESS);
+        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
     }
 }

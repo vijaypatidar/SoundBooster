@@ -159,6 +159,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         MEDIA_PLAYER.pause();
     }
 
+    private void seekTo(Control control) {
+
+    }
+
     private void start(Control control) {
         actionIntent.setAction(ACTION_PLAY);
         localBroadcastManager.sendBroadcast(actionIntent);

@@ -33,7 +33,6 @@ public class FileService extends IntentService {
     public static final String FILE_RECEIVING_FAILED = "com.vkpapps.soundbooster.FILE_RECEIVING_FAILED";
 
     private File root;
-    private String TAG = "vijay";
 
 
     public FileService() {
