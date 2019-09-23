@@ -10,6 +10,7 @@ import android.os.Message;
 
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
+import com.vkpapps.soundbooster.model.Reaction;
 import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.User;
 
@@ -51,6 +52,9 @@ class ServerHelper extends Thread {
                     bundle.putSerializable("data", user);
                     Server.list.add(socket);
                     Server.socketHashMap.put(user.getUserId(), socket);
+                } else if (object instanceof Reaction) {
+                    message.what = SignalHandler.HANDLE_REACTION;
+                    bundle.putSerializable("data", (Reaction) object);
                 }
                 signalHandler.sendMessage(message);
             } catch (IOException | ClassNotFoundException ignored) {

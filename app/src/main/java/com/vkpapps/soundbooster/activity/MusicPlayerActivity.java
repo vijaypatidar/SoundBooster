@@ -24,38 +24,18 @@ import com.google.android.gms.ads.MobileAds;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.connection.Server;
 import com.vkpapps.soundbooster.model.Control;
+import com.vkpapps.soundbooster.model.Reaction;
 import com.vkpapps.soundbooster.services.MusicPlayerService;
 import com.vkpapps.soundbooster.utils.Utils;
 
 public class MusicPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
     private SeekBar seekBar;
-    private ImageView btnPlay;
+    private ImageView btnPlay, btnLike, btnUnLike;
     private ImageView songPic;
     private TextView songTitle;
     private MusicPlayerService musicSrv;
     private boolean isHost;
-
-    @Override
-    public void onClick(View view) {
-        Control control = null;
-        switch (view.getId()) {
-            case R.id.btnPlay:
-                control = new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, System.currentTimeMillis() + 3500, null);
-                break;
-            case R.id.btnSync:
-                control = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCurrentPosition());
-                break;
-            case R.id.btnPrev:
-                break;
-            case R.id.btnNext:
-                break;
-        }
-        if (control != null) {
-            sendControl(control);
-            musicSrv.processControlRequest(control);
-        }
-    }
 
 
     @Override
@@ -81,6 +61,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
         }
     };
+
     private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -110,14 +91,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         unbindService(musicConnection);
     }
 
-    private void sendControl(Control control) {
-        if (isHost) {
-            Server.getInstance().send(control, null);
-        } else {
-            PartyActivity.clientHelper.send(control);
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -136,18 +109,52 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
     }
 
+    @Override
+    public void onClick(View view) {
+        Object signal = null;
+        switch (view.getId()) {
+            case R.id.btnPlay:
+                signal = new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, System.currentTimeMillis() + 3500, null);
+                break;
+            case R.id.btnSync:
+                signal = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCurrentPosition());
+                break;
+            case R.id.btnPrev:
+                signal = new Control(Control.MOVE_TO, 0, -1);
+                break;
+            case R.id.btnNext:
+                signal = new Control(Control.MOVE_TO, 0, 1);
+                break;
+            case R.id.btnLike:
+                signal = new Reaction(true, null);
+                break;
+            case R.id.btnUnLike:
+                signal = new Reaction(false, null);
+                break;
+        }
+        if (signal != null) {
+            sendSignal(signal);
+            if (signal instanceof Control)
+                musicSrv.processControlRequest((Control) signal);
+        }
+    }
+
     private void initUI() {
         songPic = findViewById(R.id.songPic);
         songTitle = findViewById(R.id.songTitle);
         ImageView btnPrev = findViewById(R.id.btnPrev);
         ImageView btnNext = findViewById(R.id.btnNext);
         btnPlay = findViewById(R.id.btnPlay);
+        btnLike = findViewById(R.id.btnLike);
+        btnUnLike = findViewById(R.id.btnUnLike);
         ImageButton btnSync = findViewById(R.id.btnSync);
 
         btnPlay.setOnClickListener(this);
         btnNext.setOnClickListener(this);
         btnPrev.setOnClickListener(this);
         btnSync.setOnClickListener(this);
+        btnLike.setOnClickListener(this);
+        btnUnLike.setOnClickListener(this);
 
         seekBar = findViewById(R.id.seekBar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -155,7 +162,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 if (b) {
                     Control control = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCalculatedSeek(i));
-                    sendControl(control);
+                    sendSignal(control);
                     musicSrv.processControlRequest(control);
                 }
 
@@ -180,6 +187,14 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         Bitmap bitmap = musicSrv.getBitmapOfCurrentSong();
         if (bitmap != null) {
             songPic.setImageBitmap(bitmap);
+        }
+    }
+
+    private void sendSignal(Object signal) {
+        if (isHost) {
+            Server.getInstance().send(signal, null);
+        } else {
+            PartyActivity.clientHelper.send(signal);
         }
     }
 }

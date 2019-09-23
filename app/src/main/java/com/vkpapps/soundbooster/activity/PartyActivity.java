@@ -36,6 +36,7 @@ import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.HostSong;
 import com.vkpapps.soundbooster.model.InformClient;
 import com.vkpapps.soundbooster.model.LocalSong;
+import com.vkpapps.soundbooster.model.Reaction;
 import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.services.FileService;
@@ -44,6 +45,7 @@ import com.vkpapps.soundbooster.utils.Utils;
 
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,16 +58,62 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private String host;
     private boolean isHost;
     private Server server;
-    private User user;
+    private static User user;
     public static ClientHelper clientHelper;
     private SignalHandler signalHandler;
     private HostSongFragment hostSongFragment;
     private String root;
-    private AdView mAdView;
     private final ArrayList<String> hostSong = new ArrayList<>();
     private MusicPlayerService musicSrv;
     private TextView songTitle;
     private ImageView btnPlay;
+    private static HashMap<String, String> userHashMap = new HashMap<String, String>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_party);
+
+        MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
+        root = getDir("mySong", MODE_PRIVATE).getPath();
+        isHost = getIntent().getBooleanExtra("isHost", false);
+        host = getIntent().getStringExtra("host");
+
+        initUI();
+
+
+        user = Utils.getUser(getDir("files", MODE_PRIVATE));
+
+        signalHandler = new SignalHandler(this);
+
+        if (isHost) {
+            Toast.makeText(this, "Host of party", Toast.LENGTH_SHORT).show();
+            setUpServer();
+        } else {
+            setUpClient();
+        }
+
+        registerMusicReceiver();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        AdView mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (isHost) {
+            server.stopServer();
+        } else {
+            clientHelper.stopClientHelper();
+        }
+    }
+
     private final ServiceConnection musicConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -88,12 +136,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void handleNewClient(User user) {
+        userHashMap.put(user.getUserId(), user.getName());
         Toast.makeText(this, user.getName() + " join party", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void handleConnectToHost() {
-        sendSignal(user, null);
+        sendSignal(user);
     }
 
 
@@ -101,6 +150,11 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     public void handleControl(final Control control) {
         musicSrv.processControlRequest(control);
         songTitle.setText(musicSrv.getCurrentTitle());
+
+        if (control.getChoice() == Control.MOVE_TO && isHost) {
+            HostSong hostSong = hostSongFragment.moveTo(control.getValue());
+            if (hostSong != null) onMusicSelectToPlay(hostSong);
+        }
     }
 
     @Override
@@ -119,9 +173,9 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
 
-    private void sendSignal(Object s, Socket socket) {
+    private void sendSignal(Object s) {
         if (isHost) {
-            server.send(s, socket);
+            server.send(s, null);
         } else {
             clientHelper.send(s);
         }
@@ -139,11 +193,16 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         startService(intent);
     }
 
+    @Override
+    public void handleReaction(Reaction data) {
+        String msg = userHashMap.get(data.getUserId()) + " " + (data.isLike() ? "like " : "unlike ") + "song";
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    }
 
     @Override
     public void onMusicSelectToPlay(HostSong hostSong) {
         Control control = new Control(Control.PLAY, 0, hostSong.getName());
-        sendSignal(control, null);
+        sendSignal(control);
         handleControl(control);
     }
 
@@ -158,18 +217,43 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             }
         } else {
             Request request = new Request(user.getUserId(), localSong.getName());
-            sendSignal(request, null);
+            sendSignal(request);
         }
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (isHost) {
-            server.stopServer();
-        } else {
-            clientHelper.stopClientHelper();
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 101 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            recreate();
         }
+    }
+
+    private void registerMusicReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(MusicPlayerService.ACTION_PLAY);
+        intentFilter.addAction(MusicPlayerService.ACTION_PAUSE);
+        intentFilter.addAction(FileService.FILE_RECEIVED_SUCCESS);
+        intentFilter.addAction(FileService.FILE_RECEIVING_FAILED);
+        intentFilter.addAction(FileService.FILE_SENDING_FAILED);
+        intentFilter.addAction(FileService.FILE_SENT_SUCCESS);
+        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
+    }
+
+    private void setUpServer() {
+        server = Server.getInstance();
+        server.setSignalHandler(signalHandler);
+        server.start();
+    }
+
+    private void setUpClient() {
+        clientHelper = new ClientHelper(host, signalHandler);
+        clientHelper.start();
+    }
+
+    private void doBindService() {
+        if (musicSrv == null)
+            bindService(new Intent(this, MusicPlayerService.class), musicConnection, BIND_AUTO_CREATE);
     }
 
     private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
@@ -200,68 +284,18 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     };
 
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 101 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            recreate();
-        }
-    }
+    private void initUI() {
 
-    private void setUpServer() {
-        server = Server.getInstance();
-        server.setSignalHandler(signalHandler);
-        server.start();
-    }
-
-    private void setUpClient() {
-        clientHelper = new ClientHelper(host, signalHandler);
-        clientHelper.start();
-    }
-
-    private void doBindService() {
-        if (musicSrv == null)
-            bindService(new Intent(this, MusicPlayerService.class), musicConnection, BIND_AUTO_CREATE);
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_party);
-
-        MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
-        root = getDir("mySong", MODE_PRIVATE).getPath();
-        isHost = getIntent().getBooleanExtra("isHost", false);
-        host = getIntent().getStringExtra("host");
+        ArrayList<Fragment> fragments = new ArrayList<>();
+        hostSongFragment = new HostSongFragment(this, root, hostSong);
+        fragments.add(hostSongFragment);
 
         if (checkStoragePermission(this)) {
-            initUI();
+            LocalSongFragment localSongFragment = new LocalSongFragment(this, root);
+            fragments.add(localSongFragment);
         } else {
             askStoragePermission(this);
         }
-
-        user = Utils.getUser(getDir("files", MODE_PRIVATE));
-
-        signalHandler = new SignalHandler(this);
-
-        if (isHost) {
-            Toast.makeText(this, "Host of party", Toast.LENGTH_SHORT).show();
-            setUpServer();
-        } else {
-            setUpClient();
-        }
-
-        registerMusicReceiver();
-    }
-
-    private void initUI() {
-        LocalSongFragment localSongFragment = new LocalSongFragment(this, root);
-        hostSongFragment = new HostSongFragment(this, root, hostSong);
-
-        ArrayList<Fragment> fragments = new ArrayList<>();
-        fragments.add(hostSongFragment);
-        fragments.add(localSongFragment);
-
 
         ViewPager viewPager = findViewById(R.id.view_pager);
         viewPager.setAdapter(new MyFragmentPagerAdapter(getSupportFragmentManager(), PagerAdapter.POSITION_NONE, fragments));
@@ -285,29 +319,11 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             @Override
             public void onClick(View view) {
                 Control control = new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, 0, null);
-                sendSignal(control, null);
+                sendSignal(control);
                 handleControl(control);
             }
         });
 
-        mAdView = findViewById(R.id.adView);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
-    }
-
-    private void registerMusicReceiver() {
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(MusicPlayerService.ACTION_PLAY);
-        intentFilter.addAction(MusicPlayerService.ACTION_PAUSE);
-        intentFilter.addAction(FileService.FILE_RECEIVED_SUCCESS);
-        intentFilter.addAction(FileService.FILE_RECEIVING_FAILED);
-        intentFilter.addAction(FileService.FILE_SENDING_FAILED);
-        intentFilter.addAction(FileService.FILE_SENT_SUCCESS);
-        LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
-    }
 }

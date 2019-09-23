@@ -12,6 +12,7 @@ import android.util.Log;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.InformClient;
+import com.vkpapps.soundbooster.model.Reaction;
 import com.vkpapps.soundbooster.model.Request;
 
 import java.io.IOException;
@@ -72,18 +73,15 @@ public class ClientHelper extends Thread {
                 } else if (object instanceof InformClient) {
                     message.what = SignalHandler.HANDLE_REQUEST;
                     bundle.putSerializable("data", (InformClient) object);
+                } else if (object instanceof Reaction) {
+                    message.what = SignalHandler.HANDLE_REACTION;
+                    bundle.putSerializable("data", (Reaction) object);
                 }
 
                 message.setData(bundle);
                 signalHandler.sendMessage(message);
 
-            } catch (IOException | ClassNotFoundException ex) {
-//                Logger.getLogger(ClientHelper.class.getName()).log(Level.SEVERE, null, ex);
-//                try {
-//                    sleep(1000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
+            } catch (IOException | ClassNotFoundException ignored) {
             }
         }
 

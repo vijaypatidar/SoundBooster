@@ -13,6 +13,7 @@ import com.vkpapps.soundbooster.connection.WifiHelper;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.InformClient;
+import com.vkpapps.soundbooster.model.Reaction;
 import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.Utils;
@@ -88,6 +89,11 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
 
     @Override
     public void handleNewClient(User user) {
+
+    }
+
+    @Override
+    public void handleReaction(Reaction data) {
 
     }
 
