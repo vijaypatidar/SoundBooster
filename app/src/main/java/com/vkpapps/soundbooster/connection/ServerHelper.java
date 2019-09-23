@@ -41,7 +41,6 @@ class ServerHelper extends Thread {
                 if (object instanceof Request) {
                     message.what = SignalHandler.NEW_SONG_REQUEST;
                     bundle.putSerializable("data", (Request) object);
-                    Server.getInstance().send(object, socket);
                 } else if (object instanceof Control) {
                     message.what = SignalHandler.NEW_CONTROL_REQUEST;
                     bundle.putSerializable("data", (Control) object);

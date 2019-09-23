@@ -3,11 +3,11 @@ package com.vkpapps.soundbooster.activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -35,9 +35,10 @@ public class UserDetailActivity extends AppCompatActivity {
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent();
-                intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
-                startActivityForResult(intent, 101);
+//                Intent intent = new Intent();
+//                intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
+//                startActivityForResult(intent, 101);
+                Toast.makeText(UserDetailActivity.this, "leave it for now", Toast.LENGTH_SHORT).show();
             }
         });
 

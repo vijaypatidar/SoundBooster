@@ -24,6 +24,7 @@ public class Control implements Serializable {
         this.name = name;
     }
 
+
     public long getTime() {
         return time;
     }

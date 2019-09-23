@@ -26,8 +26,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     public static final String ACTION_PLAY = "PLAY";
     public static final String ACTION_PAUSE = "PAUSE";
     public static final String ACTION_UPDATE_PROGRESS = "UPDATE_PROGRESS";
+
     private final Intent actionIntent = new Intent();
     private static final MediaPlayer MEDIA_PLAYER = new MediaPlayer();
+
     private final IBinder musicBind = new MusicPlayerService.MusicBinder();
     private final String TAG = "vijay";
     private String title;
@@ -109,7 +111,7 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         Log.d(TAG, "processControlRequest:  ================================ control " + control.toString());
         switch (control.getChoice()) {
             case Control.SEEK:
-                MEDIA_PLAYER.seekTo(control.getValue());
+                seekTo(control);
                 break;
             case Control.PAUSE:
                 pause();
@@ -157,6 +159,10 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         MEDIA_PLAYER.pause();
     }
 
+    private void seekTo(final Control control) {
+        MEDIA_PLAYER.seekTo(control.getValue());
+    }
+
     private void start(Control control) {
         actionIntent.setAction(ACTION_PLAY);
         localBroadcastManager.sendBroadcast(actionIntent);
@@ -179,7 +185,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     }
 
     public class MusicBinder extends Binder {
-
         public MusicPlayerService getService() {
             return MusicPlayerService.this;
         }

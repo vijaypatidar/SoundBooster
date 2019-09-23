@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:ads="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     tools:context=".activity.MusicPlayerActivity">
 
@@ -74,7 +75,7 @@
 
         <ImageView
             android:id="@+id/btnPlay"
-            android:layout_width="0dp"
+            android:layout_width="75dp"
             android:layout_height="50dp"
             android:layout_gravity="center"
             android:layout_weight="1"
@@ -106,4 +107,15 @@
         android:layout_height="wrap_content"
         android:layout_above="@+id/ll"
         android:background="@color/white" />
+
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/seekBar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="7dp"
+        ads:adSize="BANNER"
+        ads:adUnitId="ca-app-pub-4043007075380826/5490426831" />
+
 </RelativeLayout>

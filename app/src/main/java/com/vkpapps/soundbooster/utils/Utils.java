@@ -24,8 +24,6 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -79,38 +77,31 @@ public class Utils {
             return null;
         }
     }
-    public static Socket getSocket(boolean isHost, String host) {
-        Socket socket = null;
 
-
+    public static Socket getSocket(boolean isHost, String host) throws IOException {
+        Log.d("vijay", "getSocket: ======================================== isHost = " + isHost + " host " + host);
+        Socket socket;
         if (isHost) {
-            try {
-                Log.d("patidar", "getSocket: ser ======================================== ");
-                ServerSocket serverSocket;
-                serverSocket = new ServerSocket(15448);
+            try (ServerSocket serverSocket = new ServerSocket(15448)) {
+                serverSocket.setSoTimeout(5000);
                 socket = serverSocket.accept();
-                Log.d("patidar", "getSocket: found  ======================================== ");
-                serverSocket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         } else {
-            try {
-                Log.d("patidar", "getSocket: con ======================================== ");
-                socket = new Socket();
-                socket.connect(new InetSocketAddress(host, 15448), 5000);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            socket = new Socket();
+            socket.connect(new InetSocketAddress(host, 15448), 5000);
         }
         return socket;
     }
 
-    public static void deleteFile(String path) {
-        for (File file : Objects.requireNonNull(new File(path).listFiles())) {
-            file.delete();
-        }
-
+    public static void deleteFile(final String path) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (File file : Objects.requireNonNull(new File(path).listFiles())) {
+                    file.delete();
+                }
+            }
+        }).start();
     }
 
     public static List<File> getAllAudios(Context c) {
@@ -131,27 +122,5 @@ public class Utils {
         return files;
     }
 
-    public static Date getDelayForSync() {
-        Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int min = calendar.get(Calendar.MINUTE);
-        int sec = calendar.get(Calendar.SECOND);
-        sec = sec + 4;
-        if (sec >= 60) {
-            min++;
-            sec = sec - 60;
-            if (min >= 60) {
-                hour++;
-                min = min - 60;
-                if (hour >= 24) {
-                    hour = 0;
-                }
-            }
-        }
-        calendar.set(Calendar.HOUR_OF_DAY, hour);
-        calendar.set(Calendar.MINUTE, min);
-        calendar.set(Calendar.SECOND, sec);
-        calendar.set(Calendar.MILLISECOND, 0);
-        return calendar.getTime();
-    }
+
 }

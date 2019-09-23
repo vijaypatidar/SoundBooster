@@ -15,6 +15,7 @@ import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.InformClient;
 import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.User;
+import com.vkpapps.soundbooster.utils.Utils;
 import com.vkpapps.soundbooster.view.CircleView;
 
 import java.lang.reflect.InvocationTargetException;
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
         intent = new Intent(MainActivity.this, PartyActivity.class);
         CircleView circleView = findViewById(R.id.circleView);
         circleView.setOnCircleViewListener(this);
-
+        Utils.deleteFile(getDir("mySong", MODE_PRIVATE).getPath());
         WifiHelper.getDeviceList();
         message = findViewById(R.id.message);
     }
@@ -99,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
 
 
     @Override
-    public void handelFileRequest(Request request) {
+    public void handelClientFileRequest(Request request) {
 
     }
 

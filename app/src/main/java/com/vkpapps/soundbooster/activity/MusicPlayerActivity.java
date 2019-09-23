@@ -18,7 +18,11 @@ import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.MobileAds;
 import com.vkpapps.soundbooster.R;
+import com.vkpapps.soundbooster.connection.Server;
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.services.MusicPlayerService;
 import com.vkpapps.soundbooster.utils.Utils;
@@ -30,7 +34,37 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     private ImageView songPic;
     private TextView songTitle;
     private MusicPlayerService musicSrv;
-    private Intent playIntent;
+    private boolean isHost;
+
+    @Override
+    public void onClick(View view) {
+        Control control = null;
+        switch (view.getId()) {
+            case R.id.btnPlay:
+                control = new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, System.currentTimeMillis() + 3500, null);
+                break;
+            case R.id.btnSync:
+                control = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCurrentPosition());
+                break;
+            case R.id.btnPrev:
+                break;
+            case R.id.btnNext:
+                break;
+        }
+        if (control != null) {
+            sendControl(control);
+            musicSrv.processControlRequest(control);
+        }
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (musicSrv == null)
+            bindService(new Intent(this, MusicPlayerService.class), musicConnection, Context.BIND_AUTO_CREATE);
+
+    }
 
     private final ServiceConnection musicConnection = new ServiceConnection() {
 
@@ -38,10 +72,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
             musicSrv = binder.getService();
-            Bitmap bitmap = musicSrv.getBitmapOfCurrentSong();
-            if (bitmap != null) {
-                songPic.setImageBitmap(bitmap);
-            }
+            loadPic();
             songTitle.setText(musicSrv.getCurrentTitle());
         }
 
@@ -57,6 +88,8 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
             if (action != null) {
                 switch (action) {
                     case MusicPlayerService.ACTION_PLAY:
+                        songTitle.setText(musicSrv.getCurrentTitle());
+                        loadPic();
                         btnPlay.setImageBitmap(Utils.getBitmap(MusicPlayerActivity.this, R.drawable.ic_action_pause));
                         break;
                     case MusicPlayerService.ACTION_PAUSE:
@@ -71,30 +104,17 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     };
 
     @Override
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.btnPlay:
-                musicSrv.processControlRequest(new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, 0, null));
-                break;
-            case R.id.btnSync:
-                Control control = new Control(Control.SEEK, 0, musicSrv.getCurrentPosition());
-                musicSrv.processControlRequest(control);
-                break;
-            case R.id.btnPrev:
-                break;
-            case R.id.btnNext:
-                break;
-        }
+    protected void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(myBroadcastReceiver);
+        unbindService(musicConnection);
     }
 
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (playIntent == null) {
-            playIntent = new Intent(this, MusicPlayerService.class);
-            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
-            startService(playIntent);
+    private void sendControl(Control control) {
+        if (isHost) {
+            Server.getInstance().send(control, null);
+        } else {
+            PartyActivity.clientHelper.send(control);
         }
     }
 
@@ -102,6 +122,11 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_music_player);
+
+        MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
+
+        Intent intent = getIntent();
+        isHost = intent.getBooleanExtra("isHost", false);
         initUI();
 
         IntentFilter intentFilter = new IntentFilter();
@@ -128,8 +153,12 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
-                if (b)
-                    musicSrv.processControlRequest(new Control(Control.SEEK, 0, musicSrv.getCalculatedSeek(i)));
+                if (b) {
+                    Control control = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCalculatedSeek(i));
+                    sendControl(control);
+                    musicSrv.processControlRequest(control);
+                }
+
             }
 
             @Override
@@ -142,12 +171,15 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
             }
         });
+        AdView mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(myBroadcastReceiver);
-        unbindService(musicConnection);
+    private void loadPic() {
+        Bitmap bitmap = musicSrv.getBitmapOfCurrentSong();
+        if (bitmap != null) {
+            songPic.setImageBitmap(bitmap);
+        }
     }
 }
