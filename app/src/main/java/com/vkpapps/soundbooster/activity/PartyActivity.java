@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,9 +27,11 @@ import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.tabs.TabLayout;
 import com.vkpapps.soundbooster.R;
+import com.vkpapps.soundbooster.adapter.ClientAdapter;
 import com.vkpapps.soundbooster.adapter.MyFragmentPagerAdapter;
 import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.connection.Server;
+import com.vkpapps.soundbooster.fragments.ClientControlFragment;
 import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.LocalSongFragment;
 import com.vkpapps.soundbooster.handler.SignalHandler;
@@ -58,7 +61,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private String host;
     private boolean isHost;
     private Server server;
-    private static User user;
+    public static User user;
     public static ClientHelper clientHelper;
     private SignalHandler signalHandler;
     private HostSongFragment hostSongFragment;
@@ -67,34 +70,35 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private MusicPlayerService musicSrv;
     private TextView songTitle;
     private ImageView btnPlay;
-    private static HashMap<String, String> userHashMap = new HashMap<String, String>();
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_party);
-
-        MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
-        root = getDir("mySong", MODE_PRIVATE).getPath();
-        isHost = getIntent().getBooleanExtra("isHost", false);
-        host = getIntent().getStringExtra("host");
-
-        initUI();
-
-
-        user = Utils.getUser(getDir("files", MODE_PRIVATE));
-
-        signalHandler = new SignalHandler(this);
-
-        if (isHost) {
-            Toast.makeText(this, "Host of party", Toast.LENGTH_SHORT).show();
-            setUpServer();
-        } else {
-            setUpClient();
+    private static HashMap<String, String> userHashMap = new HashMap<>();
+    private LinearLayout linearLayout;
+    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action != null) {
+                switch (action) {
+                    case MusicPlayerService.ACTION_PLAY:
+                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_pause));
+                        linearLayout.setVisibility(View.VISIBLE);
+                        break;
+                    case MusicPlayerService.ACTION_PAUSE:
+                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_play));
+                        break;
+                    case FileService.FILE_SENT_SUCCESS:
+                    case FileService.FILE_RECEIVED_SUCCESS:
+                        hostSongFragment.refreshList();
+                        break;
+                    case FileService.FILE_SENDING_FAILED:
+                        Toast.makeText(context, "sending failed", Toast.LENGTH_SHORT).show();
+                        break;
+                    case FileService.FILE_RECEIVING_FAILED:
+                        Toast.makeText(context, "receiving failed", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+            }
         }
-
-        registerMusicReceiver();
-    }
+    };
 
     @Override
     protected void onResume() {
@@ -133,11 +137,33 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         doBindService();
     }
 
-
     @Override
-    public void handleNewClient(User user) {
-        userHashMap.put(user.getUserId(), user.getName());
-        Toast.makeText(this, user.getName() + " join party", Toast.LENGTH_SHORT).show();
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_party);
+
+        MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
+        root = getDir("mySong", MODE_PRIVATE).getPath();
+        isHost = getIntent().getBooleanExtra("isHost", false);
+        host = getIntent().getStringExtra("host");
+
+        initUI();
+
+
+        user = Utils.getUser(getDir("files", MODE_PRIVATE));
+        user.setSharingAllowed(isHost);
+
+
+        signalHandler = new SignalHandler(this);
+
+        if (isHost) {
+            Toast.makeText(this, "Host of party", Toast.LENGTH_SHORT).show();
+            setUpServer();
+        } else {
+            setUpClient();
+        }
+
+        registerMusicReceiver();
     }
 
     @Override
@@ -256,33 +282,27 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             bindService(new Intent(this, MusicPlayerService.class), musicConnection, BIND_AUTO_CREATE);
     }
 
-    private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action != null) {
-                switch (action) {
-                    case MusicPlayerService.ACTION_PLAY:
-                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_pause));
-                        break;
-                    case MusicPlayerService.ACTION_PAUSE:
-                        btnPlay.setImageBitmap(Utils.getBitmap(PartyActivity.this, R.drawable.ic_action_play));
-                        break;
-                    case FileService.FILE_SENT_SUCCESS:
-                    case FileService.FILE_RECEIVED_SUCCESS:
-                        hostSongFragment.refreshList();
-                        break;
-                    case FileService.FILE_SENDING_FAILED:
-                        Toast.makeText(context, "sending failed", Toast.LENGTH_SHORT).show();
-                        break;
-                    case FileService.FILE_RECEIVING_FAILED:
-                        Toast.makeText(context, "receiving failed", Toast.LENGTH_SHORT).show();
-                        break;
+    @Override
+    public void handleNewClient(User user) {
+        if (isHost) {
+            //handle new client
+            userHashMap.put(user.getUserId(), user.getName());
+            long id = Long.parseLong(user.getUserId());
+            ArrayList<User> users = ClientAdapter.users;
+            for (int i = 0; i < users.size(); i++) {
+                User u = users.get(i);
+                long tid = Long.parseLong(u.getUserId());
+                if (id == tid) {
+                    ClientAdapter.users.remove(u);
                 }
             }
+            ClientAdapter.users.add(user);
+            Toast.makeText(this, user.getName() + " join party", Toast.LENGTH_SHORT).show();
+        } else {
+            // get allow sharing info
+            PartyActivity.user.setSharingAllowed(user.isSharingAllowed());
         }
-    };
-
+    }
 
     private void initUI() {
 
@@ -297,12 +317,17 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             askStoragePermission(this);
         }
 
+        if (isHost) {
+            ClientControlFragment clientControlFragment = new ClientControlFragment();
+            fragments.add(clientControlFragment);
+        }
         ViewPager viewPager = findViewById(R.id.view_pager);
         viewPager.setAdapter(new MyFragmentPagerAdapter(getSupportFragmentManager(), PagerAdapter.POSITION_NONE, fragments));
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
 
         songTitle = findViewById(R.id.songTitle);
+        linearLayout = findViewById(R.id.ll);
         songTitle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

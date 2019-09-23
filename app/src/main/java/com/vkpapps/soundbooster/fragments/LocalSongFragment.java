@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
+import com.vkpapps.soundbooster.activity.PartyActivity;
 import com.vkpapps.soundbooster.adapter.LocalMusicAdapter;
 import com.vkpapps.soundbooster.model.LocalSong;
 
@@ -57,21 +59,25 @@ public class LocalSongFragment extends Fragment implements LocalMusicAdapter.OnI
 
     @Override
     public void onLocalMusicSelect(int position) {
-        try {
-            FileInputStream fileInputStream = new FileInputStream(new File(localSongArrayList.get(position).getPath()));
-            FileOutputStream fileOutputStream = new FileOutputStream(new File(root + File.separator + localSongArrayList.get(position).getName()));
-            byte[] bytes = new byte[1024 * 2];
-            int read;
-            while ((read = fileInputStream.read(bytes)) > 0) {
-                fileOutputStream.write(bytes, 0, read);
+        if (PartyActivity.user.isSharingAllowed()) {
+            try {
+                FileInputStream fileInputStream = new FileInputStream(new File(localSongArrayList.get(position).getPath()));
+                FileOutputStream fileOutputStream = new FileOutputStream(new File(root + File.separator + localSongArrayList.get(position).getName()));
+                byte[] bytes = new byte[1024 * 2];
+                int read;
+                while ((read = fileInputStream.read(bytes)) > 0) {
+                    fileOutputStream.write(bytes, 0, read);
+                }
+                fileOutputStream.flush();
+                fileOutputStream.close();
+                fileInputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            fileOutputStream.flush();
-            fileOutputStream.close();
-            fileInputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            onLocalSongFragmentListener.onSelectLocalMusic(localSongArrayList.get(position));
+        } else {
+            Toast.makeText(getContext(), "host decline", Toast.LENGTH_SHORT).show();
         }
-        onLocalSongFragmentListener.onSelectLocalMusic(localSongArrayList.get(position));
     }
 
     public interface OnLocalSongFragmentListener {

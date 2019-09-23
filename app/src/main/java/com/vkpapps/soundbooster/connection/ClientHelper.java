@@ -14,6 +14,7 @@ import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.InformClient;
 import com.vkpapps.soundbooster.model.Reaction;
 import com.vkpapps.soundbooster.model.Request;
+import com.vkpapps.soundbooster.model.User;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,6 +77,9 @@ public class ClientHelper extends Thread {
                 } else if (object instanceof Reaction) {
                     message.what = SignalHandler.HANDLE_REACTION;
                     bundle.putSerializable("data", (Reaction) object);
+                } else if (object instanceof User) {
+                    message.what = SignalHandler.NEW_DEVICE_CONNECTED;
+                    bundle.putSerializable("data", (User) object);
                 }
 
                 message.setData(bundle);

@@ -7,6 +7,7 @@ package com.vkpapps.soundbooster.connection;
 
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.InformClient;
+import com.vkpapps.soundbooster.model.User;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -15,14 +16,13 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Server extends Thread {
 
     public static final HashMap<String, Socket> socketHashMap = new HashMap<>();
-    static final List<Socket> list = new ArrayList<>();
+    static final ArrayList<Socket> list = new ArrayList<>();
     private static Server server;
     private ServerSocket serverSocket;
     private SignalHandler signalHandler;
@@ -118,5 +118,25 @@ public class Server extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void sendRule(final User user) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Socket socket = socketHashMap.get(user.getUserId());
+                if (socket != null && socket.isConnected()) {
+                    OutputStream outputStream;
+                    ObjectOutputStream objectOutputStream;
+                    try {
+                        outputStream = socket.getOutputStream();
+                        objectOutputStream = new ObjectOutputStream(outputStream);
+                        objectOutputStream.writeObject(user);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
     }
 }
