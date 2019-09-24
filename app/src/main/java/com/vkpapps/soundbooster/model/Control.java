@@ -7,6 +7,7 @@ public class Control implements Serializable {
     public static final int PLAY = 1;
     public static final int PAUSE = 3;
     public static final int SEEK = 6;
+    public static final int MOVE_TO = 2;
     private int choice;
     private long time;
     private int value;

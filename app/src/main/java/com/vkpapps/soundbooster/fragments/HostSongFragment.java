@@ -25,6 +25,7 @@ public class HostSongFragment extends Fragment implements HostMusicAdapter.OnIte
     private final String root;
     private HostMusicAdapter hostMusicAdapter;
     private final ArrayList<String> hostSongList;
+    private int index = 0;
 
     public HostSongFragment(OnHostSongFragmentListener onHostSongFragmentListener, String root, ArrayList<String> hostSongList) {
         this.onHostSongFragmentListener = onHostSongFragmentListener;
@@ -69,5 +70,20 @@ public class HostSongFragment extends Fragment implements HostMusicAdapter.OnIte
 
     public interface OnHostSongFragmentListener {
         void onMusicSelectToPlay(HostSong hostSong);
+    }
+
+    public HostSong moveTo(int pos) {
+        index = index + pos;
+        if (index >= 0 && index < hostSongs.size()) {
+            return hostSongs.get(index);
+        }
+        return null;
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshList();
     }
 }

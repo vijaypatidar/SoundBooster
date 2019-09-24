@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.InformClient;
+import com.vkpapps.soundbooster.model.Reaction;
 import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.User;
 
@@ -16,6 +17,7 @@ public class SignalHandler extends Handler {
     public static final int NEW_DEVICE_CONNECTED = 1;
     public static final int NEW_SONG_REQUEST = 3;
     public static final int NEW_CONTROL_REQUEST = 4;
+    public static final int HANDLE_REACTION = 11;
     public static final int CONNECT_TO_HOST = 6;
     public static final int HANDLE_REQUEST = 7;
 
@@ -44,6 +46,9 @@ public class SignalHandler extends Handler {
                 break;
             case HANDLE_REQUEST:
                 onMessageHandlerListener.handleRequest((InformClient) bundle.getSerializable("data"));
+                break;
+            case HANDLE_REACTION:
+                onMessageHandlerListener.handleReaction((Reaction) bundle.getSerializable("data"));
         }
     }
 
@@ -58,5 +63,6 @@ public class SignalHandler extends Handler {
 
         void handleRequest(InformClient informClient);
 
+        void handleReaction(Reaction data);
     }
 }

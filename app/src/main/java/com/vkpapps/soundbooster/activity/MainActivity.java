@@ -13,13 +13,16 @@ import com.vkpapps.soundbooster.connection.WifiHelper;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
 import com.vkpapps.soundbooster.model.InformClient;
+import com.vkpapps.soundbooster.model.Reaction;
 import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.User;
+import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.Utils;
 import com.vkpapps.soundbooster.view.CircleView;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+
 
 public class MainActivity extends AppCompatActivity implements CircleView.OnCircleViewListener, SignalHandler.OnMessageHandlerListener {
     private Intent intent;
@@ -39,11 +42,16 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
         Utils.deleteFile(getDir("mySong", MODE_PRIVATE).getPath());
         WifiHelper.getDeviceList();
         message = findViewById(R.id.message);
+
+        if (!PermissionUtils.checkStoragePermission(this)) {
+            PermissionUtils.askStoragePermission(this);
+        }
     }
 
 
     private void setup() {
         WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+
         Method[] wmMethods = wifiManager.getClass().getDeclaredMethods();
         for (Method method : wmMethods) {
             if (method.getName().equals("isWifiApEnabled")) {
@@ -88,6 +96,11 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
 
     @Override
     public void handleNewClient(User user) {
+
+    }
+
+    @Override
+    public void handleReaction(Reaction data) {
 
     }
 

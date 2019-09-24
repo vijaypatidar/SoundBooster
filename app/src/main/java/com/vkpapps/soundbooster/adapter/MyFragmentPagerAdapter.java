@@ -38,7 +38,7 @@ public class MyFragmentPagerAdapter extends FragmentPagerAdapter {
         } else if (fragments.get(position) instanceof LocalSongFragment) {
             return "Local Music";
         } else {
-            return "Pending Requests";
+            return "Client List";
         }
     }
 }

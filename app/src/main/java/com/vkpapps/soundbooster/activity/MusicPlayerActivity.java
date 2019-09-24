@@ -14,6 +14,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -24,6 +25,8 @@ import com.google.android.gms.ads.MobileAds;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.connection.Server;
 import com.vkpapps.soundbooster.model.Control;
+import com.vkpapps.soundbooster.model.Reaction;
+import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.services.MusicPlayerService;
 import com.vkpapps.soundbooster.utils.Utils;
 
@@ -35,28 +38,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
     private TextView songTitle;
     private MusicPlayerService musicSrv;
     private boolean isHost;
-
-    @Override
-    public void onClick(View view) {
-        Control control = null;
-        switch (view.getId()) {
-            case R.id.btnPlay:
-                control = new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, System.currentTimeMillis() + 3500, null);
-                break;
-            case R.id.btnSync:
-                control = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCurrentPosition());
-                break;
-            case R.id.btnPrev:
-                break;
-            case R.id.btnNext:
-                break;
-        }
-        if (control != null) {
-            sendControl(control);
-            musicSrv.processControlRequest(control);
-        }
-    }
-
+    private User user;
 
     @Override
     protected void onStart() {
@@ -81,6 +63,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
         }
     };
+
     private BroadcastReceiver myBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -110,14 +93,6 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         unbindService(musicConnection);
     }
 
-    private void sendControl(Control control) {
-        if (isHost) {
-            Server.getInstance().send(control, null);
-        } else {
-            PartyActivity.clientHelper.send(control);
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -125,6 +100,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
 
         MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
 
+        user = PartyActivity.user;
         Intent intent = getIntent();
         isHost = intent.getBooleanExtra("isHost", false);
         initUI();
@@ -136,27 +112,74 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         LocalBroadcastManager.getInstance(this).registerReceiver(myBroadcastReceiver, intentFilter);
     }
 
+    @Override
+    public void onClick(View view) {
+        if (user.isSharingAllowed()) {
+            Control signal = null;
+            switch (view.getId()) {
+                case R.id.btnPlay:
+                    signal = new Control(musicSrv.isPlaying() ? Control.PAUSE : Control.PLAY, System.currentTimeMillis() + 3500, null);
+                    break;
+                case R.id.btnSync:
+                    signal = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCurrentPosition());
+                    break;
+                case R.id.btnPrev:
+                    signal = new Control(Control.MOVE_TO, 0, -1);
+                    break;
+                case R.id.btnNext:
+                    signal = new Control(Control.MOVE_TO, 0, 1);
+                    break;
+            }
+            sendSignal(signal);
+            if (signal != null) {
+                musicSrv.processControlRequest(signal);
+            }
+
+        } else {
+            Toast.makeText(this, "Host decline", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void initUI() {
         songPic = findViewById(R.id.songPic);
         songTitle = findViewById(R.id.songTitle);
         ImageView btnPrev = findViewById(R.id.btnPrev);
         ImageView btnNext = findViewById(R.id.btnNext);
         btnPlay = findViewById(R.id.btnPlay);
+        ImageView btnLike = findViewById(R.id.btnLike);
+        ImageView btnUnLike = findViewById(R.id.btnUnLike);
         ImageButton btnSync = findViewById(R.id.btnSync);
 
         btnPlay.setOnClickListener(this);
         btnNext.setOnClickListener(this);
         btnPrev.setOnClickListener(this);
         btnSync.setOnClickListener(this);
-
+        btnLike.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Reaction reaction = new Reaction(true, PartyActivity.user.getName());
+                sendSignal(reaction);
+            }
+        });
+        btnUnLike.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Reaction reaction = new Reaction(false, PartyActivity.user.getName());
+                sendSignal(reaction);
+            }
+        });
         seekBar = findViewById(R.id.seekBar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
                 if (b) {
-                    Control control = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCalculatedSeek(i));
-                    sendControl(control);
-                    musicSrv.processControlRequest(control);
+                    if (user.isSharingAllowed()) {
+                        Control control = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCalculatedSeek(i));
+                        sendSignal(control);
+                        musicSrv.processControlRequest(control);
+                    } else {
+                        Toast.makeText(MusicPlayerActivity.this, "Host decline", Toast.LENGTH_SHORT).show();
+                    }
                 }
 
             }
@@ -180,6 +203,14 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         Bitmap bitmap = musicSrv.getBitmapOfCurrentSong();
         if (bitmap != null) {
             songPic.setImageBitmap(bitmap);
+        }
+    }
+
+    private void sendSignal(Object signal) {
+        if (isHost) {
+            Server.getInstance().send(signal, null);
+        } else {
+            PartyActivity.clientHelper.send(signal);
         }
     }
 }

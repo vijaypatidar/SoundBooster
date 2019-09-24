@@ -52,6 +52,7 @@ public class UserDetailActivity extends AppCompatActivity {
                 if (!name.isEmpty()) {
                     user.setName(name);
                     user.setUserId(System.currentTimeMillis() + "");
+                    user.setSharingAllowed(true);
                 } else {
                     editTextName.setError("name required!");
                 }
