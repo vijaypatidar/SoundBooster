@@ -33,19 +33,20 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     private final IBinder musicBind = new MusicPlayerService.MusicBinder();
     private final String TAG = "vijay";
     private String title;
+    private boolean run = true;
     private final Intent progressIntent = new Intent(ACTION_UPDATE_PROGRESS);
     private LocalBroadcastManager localBroadcastManager;
     Thread thread = new Thread(new Runnable() {
         @Override
         public void run() {
-            while (true) {
+            while (run) {
                 try {
                     long totalDuration = MEDIA_PLAYER.getDuration();
                     long currentDuration = MEDIA_PLAYER.getCurrentPosition();
                     int per = (int) (currentDuration * 100 / totalDuration);
                     progressIntent.putExtra("progress", per);
                     localBroadcastManager.sendBroadcast(progressIntent);
-                } catch (ArithmeticException ignored) {
+                } catch (Exception ignored) {
                 }
                 try {
                     Thread.sleep(1000);
@@ -72,10 +73,8 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
 
     @Override
     public void onDestroy() {
+        run = false;
         super.onDestroy();
-        MEDIA_PLAYER.stop();
-        MEDIA_PLAYER.reset();
-        MEDIA_PLAYER.release();
         Log.d(TAG, "onDestroy: ============================================================================= ");
     }
 
@@ -166,18 +165,22 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
     private void start(Control control) {
         actionIntent.setAction(ACTION_PLAY);
         localBroadcastManager.sendBroadcast(actionIntent);
-        if (control.getName() != null) {
-            MEDIA_PLAYER.reset();
-            try {
-                MEDIA_PLAYER.setDataSource(root + control.getName());
-                MEDIA_PLAYER.prepare();
-                MEDIA_PLAYER.start();
-            } catch (IOException e) {
-                e.printStackTrace();
+        try {
+            if (control.getName() != null) {
+                MEDIA_PLAYER.reset();
+                try {
+                    MEDIA_PLAYER.setDataSource(root + control.getName());
+                    MEDIA_PLAYER.prepare();
+                    MEDIA_PLAYER.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                title = root + control.getName();
             }
-            title = root + control.getName();
+            MEDIA_PLAYER.start();
+
+        } catch (Exception ignored) {
         }
-        MEDIA_PLAYER.start();
     }
 
     public boolean isPlaying() {

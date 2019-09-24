@@ -52,7 +52,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import static com.vkpapps.soundbooster.utils.PermissionUtils.askStoragePermission;
 import static com.vkpapps.soundbooster.utils.PermissionUtils.checkStoragePermission;
 
 
@@ -143,18 +142,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         setContentView(R.layout.activity_party);
 
         MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
+        user = Utils.getUser(getDir("files", MODE_PRIVATE));
         root = getDir("mySong", MODE_PRIVATE).getPath();
         isHost = getIntent().getBooleanExtra("isHost", false);
         host = getIntent().getStringExtra("host");
+        signalHandler = new SignalHandler(this);
 
         initUI();
-
-
-        user = Utils.getUser(getDir("files", MODE_PRIVATE));
-        user.setSharingAllowed(isHost);
-
-
-        signalHandler = new SignalHandler(this);
 
         if (isHost) {
             Toast.makeText(this, "Host of party", Toast.LENGTH_SHORT).show();
@@ -177,6 +171,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         musicSrv.processControlRequest(control);
         songTitle.setText(musicSrv.getCurrentTitle());
 
+        // select song for move to event
         if (control.getChoice() == Control.MOVE_TO && isHost) {
             HostSong hostSong = hostSongFragment.moveTo(control.getValue());
             if (hostSong != null) onMusicSelectToPlay(hostSong);
@@ -232,7 +227,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         handleControl(control);
     }
 
-
     @Override
     public void onSelectLocalMusic(LocalSong localSong) {
         if (isHost) {
@@ -251,7 +245,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 101 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            recreate();
+            initUI();
         }
     }
 
@@ -313,8 +307,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         if (checkStoragePermission(this)) {
             LocalSongFragment localSongFragment = new LocalSongFragment(this, root);
             fragments.add(localSongFragment);
-        } else {
-            askStoragePermission(this);
         }
 
         if (isHost) {
@@ -350,5 +342,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         });
 
     }
+
 
 }
