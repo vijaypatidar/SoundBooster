@@ -7,8 +7,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -17,6 +20,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.PagerAdapter;
@@ -140,6 +144,8 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_party);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
         MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
         user = Utils.getUser(getDir("files", MODE_PRIVATE));
@@ -249,6 +255,30 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_update) {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + getPackageName())));
+        } else if (id == R.id.action_share) {
+            Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+            String shareBody = "Sound Booster in a free android app for playing music on multiple devices simultaneously to make the sound louder" +
+                    ".\nDownload the app now and make party with friends any where any time without data usage. " +
+                    "\nhttps://vkp.page.link/soundbooster";
+            sharingIntent.putExtra(Intent.EXTRA_SUBJECT, "Sound Booster");
+            sharingIntent.putExtra(Intent.EXTRA_TEXT, shareBody);
+            startActivity(Intent.createChooser(sharingIntent, "Share via"));
+        }
+        return super.onOptionsItemSelected(item);
+    }
     private void registerMusicReceiver() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(MusicPlayerService.ACTION_PLAY);

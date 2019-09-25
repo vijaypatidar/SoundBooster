@@ -16,6 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
+
         <service
             android:name=".services.FileService"
             android:exported="false" />
@@ -36,6 +37,7 @@
             android:name=".activity.PartyActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar" />
+
         <activity android:name=".activity.UserDetailActivity" />
         <activity
             android:name=".activity.SplashActivity"

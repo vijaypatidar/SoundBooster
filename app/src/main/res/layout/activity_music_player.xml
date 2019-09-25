@@ -18,7 +18,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="@color/colorPrimary"
         android:orientation="horizontal">
 
         <TextView
@@ -27,11 +27,9 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_weight="1"
-            android:ellipsize="marquee"
-            android:marqueeRepeatLimit="marquee_forever"
+            android:lines="1"
             android:padding="15dp"
-            android:scrollHorizontally="true"
-            android:textColor="@color/colorPrimary"
+            android:textColor="@color/white"
             android:textSize="20sp"
             tools:text="song title" />
 
@@ -42,8 +40,7 @@
             android:layout_gravity="center"
             android:layout_margin="5dp"
             android:background="@null"
-            android:src="@drawable/ic_sync_black"
-            android:textColor="@color/colorPrimary" />
+            android:src="@drawable/ic_sync_black" />
     </LinearLayout>
 
     <LinearLayout
@@ -51,9 +48,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:background="@color/white"
+        android:background="@color/colorPrimary"
         android:orientation="horizontal"
-        android:padding="15dp">
+        android:padding="10dp">
 
         <ImageView
             android:id="@+id/btnUnLike"
@@ -106,7 +103,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_above="@+id/ll"
-        android:background="@color/white" />
+        android:background="@color/colorPrimary"
+        android:paddingTop="5dp" />
 
     <com.google.android.gms.ads.AdView
         android:id="@+id/adView"
