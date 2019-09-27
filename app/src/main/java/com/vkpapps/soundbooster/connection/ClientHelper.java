@@ -29,7 +29,7 @@ import java.util.logging.Logger;
 
 public class ClientHelper extends Thread {
 
-    static final String TAG = "vijay";
+    private static final String TAG = "vijay";
     private Socket socket;
     private final String host;
     private final SignalHandler signalHandler;
@@ -65,12 +65,12 @@ public class ClientHelper extends Thread {
                 Message message = new Message();
                 Bundle bundle = new Bundle();
 
-                if (object instanceof Request) {
-                    message.what = SignalHandler.NEW_SONG_REQUEST;
-                    bundle.putSerializable("data", (Request) object);
-                } else if (object instanceof Control) {
+                if (object instanceof Control) {
                     message.what = SignalHandler.NEW_CONTROL_REQUEST;
                     bundle.putSerializable("data", (Control) object);
+                } else if (object instanceof Request) {
+                    message.what = SignalHandler.NEW_SONG_REQUEST;
+                    bundle.putSerializable("data", (Request) object);
                 } else if (object instanceof InformClient) {
                     message.what = SignalHandler.HANDLE_REQUEST;
                     bundle.putSerializable("data", (InformClient) object);

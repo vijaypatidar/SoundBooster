@@ -39,13 +39,13 @@ class ServerHelper extends Thread {
                 Message message = new Message();
                 Bundle bundle = new Bundle();
                 message.setData(bundle);
-                if (object instanceof Request) {
-                    message.what = SignalHandler.NEW_SONG_REQUEST;
-                    bundle.putSerializable("data", (Request) object);
-                } else if (object instanceof Control) {
+                if (object instanceof Control) {
                     message.what = SignalHandler.NEW_CONTROL_REQUEST;
                     bundle.putSerializable("data", (Control) object);
                     Server.getInstance().send(object, socket);
+                } else if (object instanceof Request) {
+                    message.what = SignalHandler.NEW_SONG_REQUEST;
+                    bundle.putSerializable("data", (Request) object);
                 } else if (object instanceof User) {
                     User user = (User) object;
                     message.what = SignalHandler.NEW_DEVICE_CONNECTED;
@@ -58,11 +58,6 @@ class ServerHelper extends Thread {
                 }
                 signalHandler.sendMessage(message);
             } catch (IOException | ClassNotFoundException ignored) {
-//                try {
-//                    sleep(1000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
             }
 
         }
