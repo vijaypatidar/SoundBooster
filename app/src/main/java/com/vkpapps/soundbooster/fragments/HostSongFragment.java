@@ -87,7 +87,6 @@ public class HostSongFragment extends Fragment implements HostMusicAdapter.OnIte
         return null;
     }
 
-
     @Override
     public void onResume() {
         super.onResume();

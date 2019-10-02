@@ -54,7 +54,6 @@ public class HostMusicAdapter extends RecyclerView.Adapter<HostMusicAdapter.MyVi
         } catch (Exception ignored) {
 
         }
-//        String albumName = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
         holder.imageView.setAdjustViewBounds(true);
     }
 
