@@ -278,6 +278,10 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             sharingIntent.putExtra(Intent.EXTRA_SUBJECT, "Sound Booster");
             sharingIntent.putExtra(Intent.EXTRA_TEXT, shareBody);
             startActivity(Intent.createChooser(sharingIntent, "Share via"));
+        } else if (id == R.id.action_sync) {
+            Control signal = new Control(Control.SEEK, System.currentTimeMillis() + 3500, musicSrv.getCurrentPosition());
+            sendSignal(signal);
+            handleControl(signal);
         }
         return super.onOptionsItemSelected(item);
     }
