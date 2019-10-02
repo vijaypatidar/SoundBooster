@@ -3,6 +3,7 @@ package com.vkpapps.soundbooster.activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -19,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
@@ -279,6 +281,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         }
         return super.onOptionsItemSelected(item);
     }
+
     private void registerMusicReceiver() {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(MusicPlayerService.ACTION_PLAY);
@@ -373,5 +376,18 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     }
 
-
+    @Override
+    public void onBackPressed() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Want to close");
+        builder.setMessage("Do you want to leave the party?");
+        builder.setNegativeButton("No", null);
+        builder.setPositiveButton("Yse", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                finish();
+            }
+        });
+        builder.create().show();
+    }
 }
