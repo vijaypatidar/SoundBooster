@@ -5,6 +5,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -34,18 +36,23 @@ public class HostSongFragment extends Fragment implements HostMusicAdapter.OnIte
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_host_song, container, false);
-        RecyclerView recyclerView = (RecyclerView) view;
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
+        RecyclerView recyclerView = (RecyclerView) view;
         hostSongs = new ArrayList<>();
         hostMusicAdapter = new HostMusicAdapter(hostSongs, this);
         recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(hostMusicAdapter);
         refreshList();
-        return view;
+
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_host_song, container, false);
     }
 
     @Override
