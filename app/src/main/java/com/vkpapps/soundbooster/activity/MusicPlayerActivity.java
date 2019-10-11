@@ -157,14 +157,14 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
         btnLike.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Reaction reaction = new Reaction(true, PartyActivity.user.getName());
+                Reaction reaction = new Reaction(true, user.getUserId());
                 sendSignal(reaction);
             }
         });
         btnUnLike.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Reaction reaction = new Reaction(false, PartyActivity.user.getName());
+                Reaction reaction = new Reaction(false, user.getUserId());
                 sendSignal(reaction);
             }
         });

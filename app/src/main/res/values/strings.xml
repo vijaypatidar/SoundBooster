@@ -4,9 +4,10 @@
 
     <string name="save">save</string>
     <string name="hint_name">name</string>
-    <string name="retry">Retry</string>
     <string name="searching_for_party">Searching for party…</string>
     <string name="message_connect_host">please connect to host</string>
-    <string name="title_activity_music_player">Music Player</string>
+    <string name="sync_devices">sync devices</string>
+    <string name="check_for_update">Check for update</string>
+    <string name="share">Share</string>
 
 </resources>
