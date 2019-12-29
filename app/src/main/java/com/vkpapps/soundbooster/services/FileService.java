@@ -22,6 +22,7 @@ public class FileService extends IntentService {
     public static final String EXTRA_FILE_NAME = "com.vkpapps.soundbooster.extra.FILE_NAME";
     public static final String EXTRA_CLIENT_ID = "com.vkpapps.soundbooster.extra.CLIENT_ID";
     public static final String EXTRA_HOST_ADDRESS = "com.vkpapps.soundbooster.extra.HOST_ADDRESS";
+    public static final String EXTRA_LAST_CLIENT = "com.vkpapps.soundbooster.extra.EXTRA_LAST_CLIENT";
 
     private static final String ACTION_SEND = "com.vkpapps.soundbooster.action.SEND_FILE";
     private static final String ACTION_RECEIVE = "com.vkpapps.soundbooster.action.RECEIVE_FILE";
@@ -68,9 +69,10 @@ public class FileService extends IntentService {
             final String FILE_NAME = intent.getStringExtra(EXTRA_FILE_NAME);
             final String CLIENT_ID = intent.getStringExtra(EXTRA_CLIENT_ID);
             final String HOST_ADDRESS = intent.getStringExtra(EXTRA_HOST_ADDRESS);
+            final boolean isLastClient = intent.getBooleanExtra(EXTRA_LAST_CLIENT,false);
             if (ACTION_SEND.equals(action)) {
                 makeClientReady(CLIENT_ID, FILE_NAME, true);
-                handleActionSend(FILE_NAME, CLIENT_ID, HOST_ADDRESS);
+                handleActionSend(FILE_NAME, CLIENT_ID, HOST_ADDRESS,isLastClient);
             } else if (ACTION_RECEIVE.equals(action)) {
                 makeClientReady(CLIENT_ID, FILE_NAME, false);
                 handleActionReceive(FILE_NAME, CLIENT_ID, HOST_ADDRESS);
@@ -99,7 +101,7 @@ public class FileService extends IntentService {
         }
     }
 
-    private void handleActionSend(String file_name, String client_id, String host_address) {
+    private void handleActionSend(String file_name, String client_id, String host_address,boolean isLastClient) {
         try {
             Socket socket = Utils.getSocket(client_id != null, host_address);
             InputStream inputStream = new FileInputStream(new File(root, file_name));
@@ -113,16 +115,17 @@ public class FileService extends IntentService {
             outputStream.close();
             inputStream.close();
             socket.close();
-            sendBroadcastFileSent(file_name);
+            sendBroadcastFileSent(file_name,isLastClient);
         } catch (IOException e) {
             sendBroadcastFileSendingFailed(file_name);
             e.printStackTrace();
         }
     }
 
-    private void sendBroadcastFileSent(String fileName) {
+    private void sendBroadcastFileSent(String fileName,boolean isLastClient) {
         Intent intent = new Intent(FILE_SENT_SUCCESS);
         intent.putExtra(EXTRA_FILE_NAME, fileName);
+        intent.putExtra(EXTRA_LAST_CLIENT, isLastClient);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 

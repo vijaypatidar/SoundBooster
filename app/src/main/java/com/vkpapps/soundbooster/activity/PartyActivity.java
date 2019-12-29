@@ -93,6 +93,11 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
                     case FileService.FILE_SENT_SUCCESS:
                     case FileService.FILE_RECEIVED_SUCCESS:
                         hostSongFragment.refreshList();
+                        if (isHost){
+                            String song_name = intent.getStringExtra(FileService.EXTRA_FILE_NAME);
+                            HostSong hostSong = new HostSong(song_name,song_name,true);
+                            onMusicSelectToPlay(hostSong);
+                        }
                         break;
                     case FileService.FILE_SENDING_FAILED:
                         Toast.makeText(context, "sending failed", Toast.LENGTH_SHORT).show();
@@ -158,14 +163,17 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
         initUI();
 
+        setUpUser();
+        registerMusicReceiver();
+    }
+
+    private void setUpUser() {
         if (isHost) {
             Toast.makeText(this, "Host of party", Toast.LENGTH_SHORT).show();
             setUpServer();
         } else {
             setUpClient();
         }
-
-        registerMusicReceiver();
     }
 
     @Override
@@ -191,13 +199,16 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         Intent intent = FileService.getReceiveIntent(this, request.getName(), request.getUserId());
         startService(intent);
         Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
+        int i = 1, s = Server.socketHashMap.size();
         long id = Long.parseLong(request.getUserId());
         for (Map.Entry<String, Socket> entry : entries) {
             long tid = Long.parseLong(entry.getKey());
             if (id != tid) {
                 Intent sendIntent = FileService.getSendIntent(this, request.getName(), entry.getKey());
+                if (i == s) sendIntent.putExtra(FileService.EXTRA_LAST_CLIENT, true);
                 startService(sendIntent);
             }
+            i++;
         }
     }
 
@@ -228,6 +239,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
+
     @Override
     public void onMusicSelectToPlay(HostSong hostSong) {
         Control control = new Control(Control.PLAY, 0, hostSong.getName());
@@ -239,9 +251,12 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     public void onSelectLocalMusic(LocalSong localSong) {
         if (isHost) {
             Set<Map.Entry<String, Socket>> entries = Server.socketHashMap.entrySet();
+            int i = 1, s = Server.socketHashMap.size();
             for (Map.Entry<String, Socket> entry : entries) {
                 Intent intent = FileService.getSendIntent(this, localSong.getName(), entry.getKey());
+                if (i == s) intent.putExtra(FileService.EXTRA_LAST_CLIENT, true);
                 startService(intent);
+                i++;
             }
         } else {
             Request request = new Request(user.getUserId(), localSong.getName());

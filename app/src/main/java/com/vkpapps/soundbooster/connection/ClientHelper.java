@@ -62,9 +62,9 @@ public class ClientHelper extends Thread {
                 InputStream inputStream = socket.getInputStream();
                 objectInputStream = new ObjectInputStream(inputStream);
                 Object object = objectInputStream.readObject();
+
                 Message message = new Message();
                 Bundle bundle = new Bundle();
-
                 if (object instanceof Control) {
                     message.what = SignalHandler.NEW_CONTROL_REQUEST;
                     bundle.putSerializable("data", (Control) object);
