@@ -19,7 +19,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 import com.vkpapps.soundbooster.R;
@@ -29,6 +28,8 @@ import com.vkpapps.soundbooster.model.Reaction;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.services.MusicPlayerService;
 import com.vkpapps.soundbooster.utils.Utils;
+
+import static com.vkpapps.soundbooster.utils.FirebaseUtils.getAdRequest;
 
 public class MusicPlayerActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -195,8 +196,7 @@ public class MusicPlayerActivity extends AppCompatActivity implements View.OnCli
             }
         });
         AdView mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
+        mAdView.loadAd(getAdRequest());
     }
 
     private void loadPic() {

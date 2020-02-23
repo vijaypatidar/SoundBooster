@@ -64,7 +64,5 @@ public class SignalHandler extends Handler {
         void handleRequest(InformClient informClient);
 
         void handleReaction(Reaction data);
-
-//        void handleConnectionLost();
     }
 }

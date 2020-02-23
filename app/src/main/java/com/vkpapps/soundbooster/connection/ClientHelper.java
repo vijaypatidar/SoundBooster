@@ -55,12 +55,15 @@ public class ClientHelper extends Thread {
     @Override
     public void run() {
         connect();
-        while (socket.isConnected() && run) {
 
-            try {
-                ObjectInputStream objectInputStream;
-                InputStream inputStream = socket.getInputStream();
-                objectInputStream = new ObjectInputStream(inputStream);
+        ObjectInputStream objectInputStream;
+        InputStream inputStream = null;
+        try {
+            inputStream = socket.getInputStream();
+            objectInputStream = new ObjectInputStream(inputStream);
+
+            while (socket.isConnected() && run) {
+
                 Object object = objectInputStream.readObject();
 
                 Message message = new Message();
@@ -85,15 +88,17 @@ public class ClientHelper extends Thread {
                 message.setData(bundle);
                 signalHandler.sendMessage(message);
 
-            } catch (IOException | ClassNotFoundException ignored) {
             }
+
+            socket.close();
+
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+
+        } finally {
+            Log.d(TAG, "connection lost ============================ " + host);
         }
 
-        try {
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
     }
 

@@ -29,15 +29,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:lines="1"
+            android:textSize="14sp"
             android:padding="5dp"
             tools:text="song name" />
 
         <TextView
-
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:lines="1"
             android:padding="5dp"
+            android:textSize="12sp"
             tools:text="song name" />
     </LinearLayout>
 </LinearLayout>

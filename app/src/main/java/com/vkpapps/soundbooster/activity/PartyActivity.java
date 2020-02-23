@@ -28,7 +28,6 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
-import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.tabs.TabLayout;
@@ -58,6 +57,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static com.vkpapps.soundbooster.utils.FirebaseUtils.getAdRequest;
 import static com.vkpapps.soundbooster.utils.PermissionUtils.checkStoragePermission;
 
 
@@ -114,8 +114,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     protected void onResume() {
         super.onResume();
         AdView mAdView = findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
+        mAdView.loadAd(getAdRequest());
     }
 
     @Override
@@ -398,10 +397,9 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     @Override
     public void onBackPressed() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Want to close");
         builder.setMessage("Do you want to leave the party?");
         builder.setNegativeButton("No", null);
-        builder.setPositiveButton("Yse", new DialogInterface.OnClickListener() {
+        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 finish();

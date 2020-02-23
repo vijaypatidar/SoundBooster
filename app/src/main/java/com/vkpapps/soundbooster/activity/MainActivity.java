@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -70,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
     }
 
     private void createHost() {
+        Toast.makeText(this, "host", Toast.LENGTH_SHORT).show();
         intent.putExtra("isHost", true);
         startActivity(intent);
         finish();
