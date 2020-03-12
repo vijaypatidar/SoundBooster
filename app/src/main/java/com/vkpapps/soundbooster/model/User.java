@@ -5,8 +5,15 @@ import java.io.Serializable;
 public class User implements Serializable {
     private String name;
     private String userId;
-    private boolean sharingAllowed;
+    private boolean access;
 
+    public boolean isAccess() {
+        return access;
+    }
+
+    public void setAccess(boolean access) {
+        this.access = access;
+    }
 
     public User(String name, String userId) {
         this.name = name;
@@ -17,13 +24,6 @@ public class User implements Serializable {
 
     }
 
-    public boolean isSharingAllowed() {
-        return sharingAllowed;
-    }
-
-    public void setSharingAllowed(boolean sharingAllowed) {
-        this.sharingAllowed = sharingAllowed;
-    }
 
     public String getName() {
         return name;

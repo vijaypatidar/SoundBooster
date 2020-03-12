@@ -11,7 +11,6 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.connection.Server;
 import com.vkpapps.soundbooster.model.User;
 
 import java.util.ArrayList;
@@ -32,12 +31,12 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
     public void onBindViewHolder(@NonNull MyHolder holder, int position) {
         final User user = users.get(position);
         holder.userName.setText(user.getName());
-        holder.switchAllow.setChecked(user.isSharingAllowed());
+        holder.switchAllow.setChecked(user.isAccess());
         holder.switchAllow.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                user.setSharingAllowed(b);
-                Server.getInstance().sendRule(user);
+                user.setAccess(b);
+                //TODO switch permission
             }
         });
     }
@@ -47,7 +46,7 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
         return users.size();
     }
 
-    class MyHolder extends RecyclerView.ViewHolder {
+    static class MyHolder extends RecyclerView.ViewHolder {
 
         private Switch switchAllow;
         private TextView userName;

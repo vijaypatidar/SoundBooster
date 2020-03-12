@@ -18,14 +18,12 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        File root = getDir("files", MODE_PRIVATE);
-        final File user = new File(root, "user.txt");
+        final File user = new File("user");
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 if (user.exists()) {
-
                     startActivity(new Intent(SplashActivity.this, MainActivity.class));
                 } else {
                     startActivity(new Intent(SplashActivity.this, UserDetailActivity.class));

@@ -8,7 +8,6 @@
     android:orientation="horizontal">
 
     <ImageView
-        android:id="@+id/songPic"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_gravity="center"
@@ -25,7 +24,6 @@
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/songTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:lines="1"
@@ -34,7 +32,6 @@
             tools:text="song name" />
 
         <TextView
-            android:id="@+id/playedBy"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:lines="1"

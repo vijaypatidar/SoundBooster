@@ -7,7 +7,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,7 +15,6 @@ import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.Utils;
 
-import java.io.File;
 import java.util.Objects;
 
 public class UserDetailActivity extends AppCompatActivity {
@@ -32,15 +30,6 @@ public class UserDetailActivity extends AppCompatActivity {
         user = new User();
 
         imageView = findViewById(R.id.userPic);
-        imageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                Intent intent = new Intent();
-//                intent.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
-//                startActivityForResult(intent, 101);
-                Toast.makeText(UserDetailActivity.this, "leave it for now", Toast.LENGTH_SHORT).show();
-            }
-        });
 
         final EditText editTextName = findViewById(R.id.userName);
         Button btnSave = findViewById(R.id.btnSave);
@@ -48,21 +37,19 @@ public class UserDetailActivity extends AppCompatActivity {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String name = editTextName.getText().toString();
+                String name = editTextName.getText().toString().trim();
                 if (!name.isEmpty()) {
                     user.setName(name);
-                    user.setUserId(System.currentTimeMillis() + "");
-                    user.setSharingAllowed(true);
+                    user.setUserId(System.currentTimeMillis() + name);
+                    user.setAccess(true);
                 } else {
                     editTextName.setError("name required!");
                 }
-                File root = getDir("files", MODE_PRIVATE);
-                Utils.setUser(root, user);
+                Utils.setUser(user);
                 startActivity(new Intent(UserDetailActivity.this, MainActivity.class));
                 finish();
             }
         });
-
     }
 
     @Override

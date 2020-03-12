@@ -18,16 +18,8 @@
         tools:ignore="GoogleAppIndexingWarning">
 
         <service
-            android:name=".services.FileService"
-            android:exported="false" />
-        <service
             android:name=".services.MusicPlayerService"
             android:exported="false" />
-
-        <activity
-            android:name=".activity.MusicPlayerActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppThemeNoAction" />
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
@@ -35,18 +27,18 @@
 
         <activity
             android:name=".activity.PartyActivity"
-            android:screenOrientation="portrait"
+            android:screenOrientation="fullSensor"
             android:theme="@style/AppThemeNoAction" />
 
         <activity
             android:name=".activity.UserDetailActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="portrait"
+            android:screenOrientation="fullSensor"
             android:theme="@style/UserDetail" />
         <activity
             android:name=".activity.SplashActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="portrait"
+            android:screenOrientation="fullSensor"
             android:theme="@style/SplashScreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -55,7 +47,6 @@
         </activity>
         <activity
             android:name=".activity.MainActivity"
-            android:screenOrientation="portrait"
             android:theme="@style/AppThemeNoAction" />
     </application>
 

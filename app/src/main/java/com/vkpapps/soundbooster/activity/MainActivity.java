@@ -9,13 +9,9 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.connection.WifiHelper;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.Control;
-import com.vkpapps.soundbooster.model.InformClient;
-import com.vkpapps.soundbooster.model.Reaction;
-import com.vkpapps.soundbooster.model.Request;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.Utils;
@@ -29,7 +25,6 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
     private Intent intent;
     private TextView message;
     private SignalHandler signalHandler;
-    private ClientHelper clientHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,8 +78,6 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
             String host = WifiHelper.deviceList.get(0);
             intent.putExtra("isHost", false);
             intent.putExtra("host", host);
-            clientHelper = new ClientHelper(host, signalHandler);
-            clientHelper.start();
         } else {
             message.setText(getString(R.string.message_connect_host));
         }
@@ -101,32 +94,17 @@ public class MainActivity extends AppCompatActivity implements CircleView.OnCirc
 
     }
 
-    @Override
-    public void handleReaction(Reaction data) {
-
-    }
 
     @Override
     public void handleConnectToHost() {
         startActivity(intent);
-        clientHelper.stopClientHelper();
         finish();
     }
-
-
-    @Override
-    public void handelClientFileRequest(Request request) {
-
-    }
-
 
     @Override
     public void handleControl(Control control) {
 
     }
 
-    @Override
-    public void handleRequest(InformClient informClient) {
-    }
 
 }

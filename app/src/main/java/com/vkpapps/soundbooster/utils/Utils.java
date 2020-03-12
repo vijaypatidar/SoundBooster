@@ -1,14 +1,11 @@
 package com.vkpapps.soundbooster.utils;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.VectorDrawable;
-import android.provider.MediaStore;
-import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
@@ -23,15 +20,13 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 public class Utils {
-    public static User getUser(File root) {
+    public static User loadUser(File root) {
         User user = null;
         try {
-            FileInputStream inputStream = new FileInputStream(new File(root, "user.txt"));
+            FileInputStream inputStream = new FileInputStream(new File("user"));
             ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
             Object object = objectInputStream.readObject();
             if (object instanceof User) {
@@ -45,13 +40,15 @@ public class Utils {
         return user;
     }
 
-    public static void setUser(File root, User user) {
+    public static void setUser(User user) {
         try {
-            FileOutputStream os = new FileOutputStream(new File(root, "user.txt"));
+            File file = new File("user");
+            FileOutputStream os = new FileOutputStream(file);
             ObjectOutputStream outputStream = new ObjectOutputStream(os);
             outputStream.writeObject(user);
             outputStream.flush();
             outputStream.close();
+            os.flush();
             os.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -79,7 +76,6 @@ public class Utils {
     }
 
     public static Socket getSocket(boolean isHost, String host) throws IOException {
-        Log.d("vijay", "getSocket: ======================================== isHost = " + isHost + " host " + host);
         Socket socket;
         if (isHost) {
             try (ServerSocket serverSocket = new ServerSocket(15448)) {
@@ -104,23 +100,6 @@ public class Utils {
         }).start();
     }
 
-    public static List<File> getAllAudios(Context c) {
-        List<File> files = new ArrayList<>();
-        String[] projection = {MediaStore.Audio.AudioColumns.DATA, MediaStore.Audio.Media.DISPLAY_NAME};
-        Cursor cursor = c.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, null, null, null);
-        try {
-            assert cursor != null;
-            cursor.moveToFirst();
-            do {
-                files.add((new File(cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)))));
-            } while (cursor.moveToNext());
-
-            cursor.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return files;
-    }
 
 
 }

@@ -4,7 +4,6 @@
     tools:context="com.vkpapps.soundbooster.activity.PartyActivity">
 
     <item
-        android:id="@+id/action_sync"
         android:icon="@drawable/ic_sync_black"
         android:orderInCategory="101"
         android:title="@string/sync_devices"
