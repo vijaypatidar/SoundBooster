@@ -6,6 +6,7 @@ import android.os.Message;
 import androidx.annotation.NonNull;
 
 import com.vkpapps.soundbooster.handler.SignalHandler;
+import com.vkpapps.soundbooster.model.User;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,13 +14,15 @@ import java.io.OutputStream;
 import java.net.Socket;
 
 public class CommandHelperRunnable implements Runnable {
+    public User user;
     private OutputStream outputStream;
     private SignalHandler signalHandler;
     private Socket socket;
-
+    public String id;
     public CommandHelperRunnable(Socket socket, @NonNull SignalHandler signalHandler) {
         this.socket = socket;
         this.signalHandler = signalHandler;
+        this.id = System.currentTimeMillis() + "";
     }
 
     @Override
@@ -30,20 +33,16 @@ public class CommandHelperRunnable implements Runnable {
             outputStream = socket.getOutputStream();
             byte[] bytes = new byte[2048];
             String command;
-            while (true) {
+            while (socket.isConnected()) {
                 int read = inputStream.read(bytes);
                 command = new String(bytes, 0, read);
-                if (command.equals("exit")) break;
-                System.out.println(command);
                 Message message = new Message();
                 Bundle bundle = new Bundle();
-                bundle.putCharSequence("command", command);
+                bundle.putString("command", command);
+                bundle.putString("id", id);
                 message.setData(bundle);
                 signalHandler.sendMessage(message);
             }
-            //TODO notify connection closed
-            outputStream.close();
-            inputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -58,5 +57,9 @@ public class CommandHelperRunnable implements Runnable {
                 e.printStackTrace();
             }
         }).start();
+    }
+
+    public boolean isConnected() {
+        return socket.isConnected();
     }
 }

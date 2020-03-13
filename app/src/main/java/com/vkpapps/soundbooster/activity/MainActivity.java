@@ -2,21 +2,16 @@ package com.vkpapps.soundbooster.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
-
 
 public class MainActivity extends AppCompatActivity {
     private Intent intent;
-    private TextView message;
-    private SignalHandler signalHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void connectToHost() {
-            intent.putExtra("isHost", false);
+        intent.putExtra("isHost", false);
         startActivity(intent);
         finish();
     }

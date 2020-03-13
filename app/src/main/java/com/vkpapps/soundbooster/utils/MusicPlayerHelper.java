@@ -1,0 +1,65 @@
+package com.vkpapps.soundbooster.utils;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.media.MediaPlayer;
+import android.util.Log;
+
+import java.io.File;
+import java.io.IOException;
+
+public class MusicPlayerHelper {
+    @SuppressLint("StaticFieldLeak")
+    private static MusicPlayerHelper musicPlayerHelper;
+    private MediaPlayer mediaPlayer = new MediaPlayer();
+    private File root;
+
+    private MusicPlayerHelper(Context context) {
+        this.root = context.getDir("song", Context.MODE_PRIVATE);
+    }
+
+    public static MusicPlayerHelper getInstance(Context context) {
+        if (musicPlayerHelper == null) {
+            musicPlayerHelper = new MusicPlayerHelper(context);
+        }
+        return musicPlayerHelper;
+    }
+
+    public void loadAndPlay(String name) {
+        try {
+            Log.d("CONTROLS", "loadAndPlay:==========  " + new File(root, name).exists());
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(new File(root, name).getAbsolutePath());
+            mediaPlayer.prepare();
+            mediaPlayer.start();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void resume() {
+        try {
+            mediaPlayer.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void pause() {
+        try {
+            mediaPlayer.pause();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void seekTo(int dur) {
+        try {
+            mediaPlayer.seekTo(dur);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+}

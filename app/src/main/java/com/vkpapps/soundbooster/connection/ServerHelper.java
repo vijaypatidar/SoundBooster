@@ -1,6 +1,7 @@
 package com.vkpapps.soundbooster.connection;
 
 import com.vkpapps.soundbooster.handler.SignalHandler;
+import com.vkpapps.soundbooster.model.User;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -37,5 +38,17 @@ public class ServerHelper implements Runnable {
                 c.write(command);
             }
         }).start();
+    }
+
+    public void setUser(User tmp, String id) {
+        for (CommandHelperRunnable c : commandHelperRunnables) {
+            if (c.id.equals(id)) {
+                c.user = tmp;
+            }
+        }
+    }
+
+    public ArrayList<CommandHelperRunnable> getCommandHelperRunnables() {
+        return commandHelperRunnables;
     }
 }

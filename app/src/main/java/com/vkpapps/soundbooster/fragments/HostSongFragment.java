@@ -14,13 +14,9 @@ import com.vkpapps.soundbooster.R;
 public class HostSongFragment extends Fragment {
 
 
-    private int index = 0;
-
-
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
 
     }
 

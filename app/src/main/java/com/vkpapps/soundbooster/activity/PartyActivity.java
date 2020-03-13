@@ -1,12 +1,9 @@
 package com.vkpapps.soundbooster.activity;
 
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -19,7 +16,6 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
-import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.tabs.TabLayout;
 import com.vkpapps.soundbooster.R;
@@ -31,7 +27,7 @@ import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.LocalSongFragment;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.model.User;
-import com.vkpapps.soundbooster.services.MusicPlayerService;
+import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.IOException;
@@ -39,7 +35,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import static com.vkpapps.soundbooster.utils.FirebaseUtils.getAdRequest;
 import static com.vkpapps.soundbooster.utils.PermissionUtils.askStoragePermission;
 import static com.vkpapps.soundbooster.utils.PermissionUtils.checkStoragePermission;
 
@@ -49,41 +44,11 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private boolean isHost;
     public static User user;
     private ServerHelper serverHelper;
-    private MusicPlayerService musicSrv;
     private SignalHandler signalHandler;
     private CommandHelperRunnable commandHelperRunnable;
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        AdView mAdView = findViewById(R.id.adView);
-        mAdView.loadAd(getAdRequest());
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        //TODO close socket here
-    }
-
-    private final ServiceConnection musicConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicPlayerService.MusicBinder binder = (MusicPlayerService.MusicBinder) service;
-            musicSrv = binder.getService();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-
-        }
-    };
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        doBindService();
-    }
+    //fragments
+    ClientControlFragment clientControlFragment;
+    private MusicPlayerHelper musicPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +62,9 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         isHost = getIntent().getBooleanExtra("isHost", false);
         setup();
         initUI();
+
+        musicPlayer = MusicPlayerHelper.getInstance(this);
+
     }
 
     private void setup() {
@@ -108,7 +76,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             new Thread(() -> {
                 Socket socket = new Socket();
                 try {
-                    socket.connect(new InetSocketAddress(1203));
+                    socket.connect(new InetSocketAddress("192.168.43.1", 1203));
                     commandHelperRunnable = new CommandHelperRunnable(socket, signalHandler);
                     new Thread(commandHelperRunnable).start();
                 } catch (IOException e) {
@@ -151,6 +119,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             String command = "ST 10000";
             if (isHost) {
                 serverHelper.sendCommand(command);
+                musicPlayer.seekTo(10000);
             } else {
                 commandHelperRunnable.write(command);
             }
@@ -159,10 +128,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
 
-    private void doBindService() {
-        if (musicSrv == null)
-            bindService(new Intent(this, MusicPlayerService.class), musicConnection, BIND_AUTO_CREATE);
-    }
 
     private void initUI() {
         ArrayList<Fragment> fragments = new ArrayList<>();
@@ -175,7 +140,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         fragments.add(hostSongFragment);
 
         if (isHost) {
-            ClientControlFragment clientControlFragment = new ClientControlFragment();
+            clientControlFragment = new ClientControlFragment();
             fragments.add(clientControlFragment);
         }
 
@@ -196,27 +161,34 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void onPlayRequest(String name) {
+        musicPlayer.loadAndPlay(name);
         Toast.makeText(this, "onPlayRequest " + name, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onResumeRequest() {
+        musicPlayer.resume();
         Toast.makeText(this, "onResumeRequest", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onPauseRequest() {
+        musicPlayer.pause();
         Toast.makeText(this, "onPauseRequest ", Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void onSeekToRequest(long time) {
-
+    public void onSeekToRequest(int time) {
+        musicPlayer.seekTo(time);
         Toast.makeText(this, "onSeekToRequest " + time, Toast.LENGTH_SHORT).show();
     }
 
     @Override
-    public void onIdentityRequest(String user) {
+    public void onIdentityRequest(String user, String id) {
+        String[] strings = user.split(",");
+        User tmp = new User(strings[0], strings[1]);
+        serverHelper.setUser(tmp, id);
+        clientControlFragment.addUser(tmp);
         Toast.makeText(this, "onIdentityRequest " + user, Toast.LENGTH_SHORT).show();
     }
 

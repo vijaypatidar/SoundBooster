@@ -22,7 +22,7 @@ public class SignalHandler extends Handler {
     @Override
     public void handleMessage(@NonNull Message msg) {
         try {
-            String command = Objects.requireNonNull(msg.getData().getCharSequence("command")).toString();
+            String command = Objects.requireNonNull(msg.getData().getString("command"));
             Log.d("CONTROLS", "handleMessage: " + command.substring(0, 2));
             if (isHost) {
                 onMessageHandlerListener.broadcastCommand(command);
@@ -35,10 +35,10 @@ public class SignalHandler extends Handler {
                     onMessageHandlerListener.onPauseRequest();
                     break;
                 case "ST":
-                    onMessageHandlerListener.onSeekToRequest(Long.parseLong(command.substring(3)));
+                    onMessageHandlerListener.onSeekToRequest(Integer.parseInt(command.substring(3)));
                     break;
                 case "ID":
-                    onMessageHandlerListener.onIdentityRequest(command.substring(3));
+                    onMessageHandlerListener.onIdentityRequest(command.substring(3), msg.getData().getString("ID"));
                     break;
                 default:
                     Log.d("CONTROLS", "handleMessage: =================================== invalid req " + command);
@@ -56,10 +56,10 @@ public class SignalHandler extends Handler {
 
         void onPauseRequest();
 
-        void onSeekToRequest(long time);
+        void onSeekToRequest(int time);
 
         void broadcastCommand(String command);
 
-        void onIdentityRequest(String user);
+        void onIdentityRequest(String user, String id);
     }
 }

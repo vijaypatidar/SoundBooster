@@ -16,8 +16,11 @@ import java.util.ArrayList;
 
 public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> {
 
-    public static ArrayList<User> users = new ArrayList<>();
+    private ArrayList<User> users = new ArrayList<>();
 
+    public ClientAdapter(ArrayList<User> users) {
+        this.users = users;
+    }
 
     @NonNull
     @Override
@@ -33,7 +36,7 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
         holder.switchAllow.setChecked(user.isAccess());
         holder.switchAllow.setOnCheckedChangeListener((compoundButton, b) -> {
             user.setAccess(b);
-            //TODO switch permission
+            //todo add permission manager
         });
     }
 
