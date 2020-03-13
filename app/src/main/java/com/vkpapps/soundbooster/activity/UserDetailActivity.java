@@ -3,7 +3,6 @@ package com.vkpapps.soundbooster.activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -34,21 +33,18 @@ public class UserDetailActivity extends AppCompatActivity {
         final EditText editTextName = findViewById(R.id.userName);
         Button btnSave = findViewById(R.id.btnSave);
 
-        btnSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String name = editTextName.getText().toString().trim();
-                if (!name.isEmpty()) {
-                    user.setName(name);
-                    user.setUserId(System.currentTimeMillis() + name);
-                    user.setAccess(true);
-                } else {
-                    editTextName.setError("name required!");
-                }
-                Utils.setUser(user);
-                startActivity(new Intent(UserDetailActivity.this, MainActivity.class));
-                finish();
+        btnSave.setOnClickListener(view -> {
+            String name = editTextName.getText().toString().trim();
+            if (!name.isEmpty()) {
+                user.setName(name);
+                user.setUserId(System.currentTimeMillis() + name);
+                user.setAccess(true);
+            } else {
+                editTextName.setError("name required!");
             }
+            Utils.setUser(user);
+            startActivity(new Intent(UserDetailActivity.this, MainActivity.class));
+            finish();
         });
     }
 

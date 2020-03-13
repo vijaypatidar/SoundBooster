@@ -15,10 +15,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.vkpapps.soundbooster.model.Control;
-
 import java.io.File;
-import java.io.IOException;
 
 public class MusicPlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
 
@@ -106,21 +103,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         thread.start();
     }
 
-    public void processControlRequest(Control control) {
-        Log.d(TAG, "processControlRequest:  ================================ control " + control.toString());
-        switch (control.getChoice()) {
-            case Control.SEEK:
-                seekTo(control);
-                break;
-            case Control.PAUSE:
-                pause();
-                break;
-            case Control.PLAY:
-                start(control);
-                break;
-        }
-    }
-
     public int getCalculatedSeek(int per) {
         return MEDIA_PLAYER.getDuration() * per / 100;
     }
@@ -158,30 +140,6 @@ public class MusicPlayerService extends Service implements MediaPlayer.OnPrepare
         MEDIA_PLAYER.pause();
     }
 
-    private void seekTo(final Control control) {
-        MEDIA_PLAYER.seekTo(control.getValue());
-    }
-
-    private void start(Control control) {
-        actionIntent.setAction(ACTION_PLAY);
-        localBroadcastManager.sendBroadcast(actionIntent);
-        try {
-            if (control.getName() != null) {
-                MEDIA_PLAYER.reset();
-                try {
-                    MEDIA_PLAYER.setDataSource(root + control.getName());
-                    MEDIA_PLAYER.prepare();
-                    MEDIA_PLAYER.start();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                title = root + control.getName();
-            }
-            MEDIA_PLAYER.start();
-
-        } catch (Exception ignored) {
-        }
-    }
 
     public boolean isPlaying() {
         return MEDIA_PLAYER.isPlaying();

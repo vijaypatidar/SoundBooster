@@ -1,7 +1,6 @@
 package com.vkpapps.soundbooster.activity;
 
 import android.content.ComponentName;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -25,6 +24,7 @@ import com.google.android.material.tabs.TabLayout;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.MyFragmentPagerAdapter;
 import com.vkpapps.soundbooster.fragments.ClientControlFragment;
+import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.LocalSongFragment;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.services.MusicPlayerService;
@@ -83,7 +83,7 @@ public class PartyActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
-        user = Utils.loadUser(getDir("files", MODE_PRIVATE));
+        user = Utils.loadUser();
         isHost = getIntent().getBooleanExtra("isHost", false);
         host = getIntent().getStringExtra("host");
 
@@ -137,6 +137,8 @@ public class PartyActivity extends AppCompatActivity {
         if (checkStoragePermission(this)) {
             LocalSongFragment localSongFragment = new LocalSongFragment();
             fragments.add(localSongFragment);
+            HostSongFragment hostSongFragment = new HostSongFragment();
+            fragments.add(hostSongFragment);
         }
 
         if (isHost) {
@@ -154,12 +156,7 @@ public class PartyActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Do you want to leave the party?");
         builder.setNegativeButton("No", null);
-        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                finish();
-            }
-        });
+        builder.setPositiveButton("Yes", (dialogInterface, i) -> finish());
         builder.create().show();
     }
 }

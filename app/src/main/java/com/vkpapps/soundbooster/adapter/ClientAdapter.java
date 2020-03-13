@@ -3,7 +3,6 @@ package com.vkpapps.soundbooster.adapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -32,12 +31,9 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
         final User user = users.get(position);
         holder.userName.setText(user.getName());
         holder.switchAllow.setChecked(user.isAccess());
-        holder.switchAllow.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                user.setAccess(b);
-                //TODO switch permission
-            }
+        holder.switchAllow.setOnCheckedChangeListener((compoundButton, b) -> {
+            user.setAccess(b);
+            //TODO switch permission
         });
     }
 

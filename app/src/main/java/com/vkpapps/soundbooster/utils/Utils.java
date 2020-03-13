@@ -20,20 +20,17 @@ import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Objects;
 
 public class Utils {
-    public static User loadUser(File root) {
+    public static User loadUser() {
         User user = null;
         try {
-            FileInputStream inputStream = new FileInputStream(new File("user"));
-            ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+            ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(new File("user")));
             Object object = objectInputStream.readObject();
             if (object instanceof User) {
                 user = (User) object;
             }
             objectInputStream.close();
-            inputStream.close();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -43,13 +40,10 @@ public class Utils {
     public static void setUser(User user) {
         try {
             File file = new File("user");
-            FileOutputStream os = new FileOutputStream(file);
-            ObjectOutputStream outputStream = new ObjectOutputStream(os);
+            ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
             outputStream.writeObject(user);
             outputStream.flush();
             outputStream.close();
-            os.flush();
-            os.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -88,18 +82,4 @@ public class Utils {
         }
         return socket;
     }
-
-    public static void deleteFile(final String path) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (File file : Objects.requireNonNull(new File(path).listFiles())) {
-                    file.delete();
-                }
-            }
-        }).start();
-    }
-
-
-
 }
