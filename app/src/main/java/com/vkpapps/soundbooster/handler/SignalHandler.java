@@ -10,41 +10,38 @@ import java.util.Objects;
 
 
 public class SignalHandler extends Handler {
-    public static final int PLAY = 3;
-    public static final int PLAY_THIS = 4;
-    public static final int PAUSE = 11;
-    public static final int PLAY_NEXT = 7;
-    public static final int PLAY_PREVIOUS = 7;
-
-    // for client only
-    public static final int CONNECT_TO_HOST = 6;
-
-    // for host only
-    public static final int NEW_DEVICE_CONNECTED = 1;
 
     private final OnMessageHandlerListener onMessageHandlerListener;
+    private boolean isHost;
 
-    public SignalHandler(OnMessageHandlerListener onMessageHandlerListener) {
+    public SignalHandler(OnMessageHandlerListener onMessageHandlerListener, boolean isHost) {
         this.onMessageHandlerListener = onMessageHandlerListener;
+        this.isHost = isHost;
     }
 
     @Override
     public void handleMessage(@NonNull Message msg) {
         try {
             String command = Objects.requireNonNull(msg.getData().getCharSequence("command")).toString();
-            String[] commands = command.split(" ");
-            switch (commands[0]) {
+            Log.d("CONTROLS", "handleMessage: " + command.substring(0, 2));
+            if (isHost) {
+                onMessageHandlerListener.broadcastCommand(command);
+            }
+            switch (command.substring(0, 2)) {
                 case "PL":
-                    onMessageHandlerListener.onPlayRequest(commands[1]);
+                    onMessageHandlerListener.onPlayRequest(command.substring(3));
                     break;
                 case "PA":
                     onMessageHandlerListener.onPauseRequest();
                     break;
                 case "ST":
-                    onMessageHandlerListener.onSeekToRequest(Long.parseLong(commands[1]));
+                    onMessageHandlerListener.onSeekToRequest(Long.parseLong(command.substring(3)));
+                    break;
+                case "ID":
+                    onMessageHandlerListener.onIdentityRequest(command.substring(3));
                     break;
                 default:
-                    Log.d("CONTROLS", "handleMessage: =================================== invalid req " + commands.toString());
+                    Log.d("CONTROLS", "handleMessage: =================================== invalid req " + command);
             }
         } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
             e.printStackTrace();
@@ -61,6 +58,8 @@ public class SignalHandler extends Handler {
 
         void onSeekToRequest(long time);
 
-        void onIdentityRequest();
+        void broadcastCommand(String command);
+
+        void onIdentityRequest(String user);
     }
 }
