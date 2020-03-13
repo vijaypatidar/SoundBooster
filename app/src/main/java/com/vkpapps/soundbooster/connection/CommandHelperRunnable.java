@@ -19,10 +19,12 @@ public class CommandHelperRunnable implements Runnable {
     private SignalHandler signalHandler;
     private Socket socket;
     public String id;
-    public CommandHelperRunnable(Socket socket, @NonNull SignalHandler signalHandler) {
+
+    public CommandHelperRunnable(Socket socket, @NonNull SignalHandler signalHandler, User user) {
         this.socket = socket;
         this.signalHandler = signalHandler;
         this.id = System.currentTimeMillis() + "";
+        this.user = user;
     }
 
     @Override
@@ -31,6 +33,9 @@ public class CommandHelperRunnable implements Runnable {
             System.out.println("Connection established");
             InputStream inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
+            String IDCom = "ID " + user.getName() + "," + user.getUserId();
+            outputStream.write(IDCom.getBytes());
+            outputStream.flush();
             byte[] bytes = new byte[2048];
             String command;
             while (socket.isConnected()) {

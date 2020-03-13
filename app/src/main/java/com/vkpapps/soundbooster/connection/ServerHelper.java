@@ -11,10 +11,13 @@ import java.util.ArrayList;
 public class ServerHelper implements Runnable {
     private SignalHandler signalHandler;
     private ArrayList<CommandHelperRunnable> commandHelperRunnables;
+    private User user;
 
-    public ServerHelper(SignalHandler signalHandler) {
+    public ServerHelper(SignalHandler signalHandler, User user) {
         this.signalHandler = signalHandler;
+        this.user = user;
         commandHelperRunnables = new ArrayList<>();
+
     }
 
     @Override
@@ -23,7 +26,7 @@ public class ServerHelper implements Runnable {
             try {
                 ServerSocket serverSocket = new ServerSocket(1203);
                 Socket socket = serverSocket.accept();
-                CommandHelperRunnable commandHelper = new CommandHelperRunnable(socket, signalHandler);
+                CommandHelperRunnable commandHelper = new CommandHelperRunnable(socket, signalHandler, user);
                 commandHelperRunnables.add(commandHelper);
                 new Thread(commandHelper).start();
             } catch (IOException e) {

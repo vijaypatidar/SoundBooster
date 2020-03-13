@@ -37,7 +37,7 @@ public class UserDetailActivity extends AppCompatActivity {
             String name = editTextName.getText().toString().trim();
             if (!name.isEmpty()) {
                 user.setName(name);
-                user.setUserId(System.currentTimeMillis() + name);
+                user.setUserId(System.currentTimeMillis() + name.replaceAll(" ", ""));
                 user.setAccess(true);
             } else {
                 editTextName.setError("name required!");

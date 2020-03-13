@@ -70,14 +70,14 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private void setup() {
         signalHandler = new SignalHandler(this, isHost);
         if (isHost) {
-            serverHelper = new ServerHelper(signalHandler);
+            serverHelper = new ServerHelper(signalHandler, user);
             new Thread(serverHelper).start();
         } else {
             new Thread(() -> {
                 Socket socket = new Socket();
                 try {
                     socket.connect(new InetSocketAddress("192.168.43.1", 1203));
-                    commandHelperRunnable = new CommandHelperRunnable(socket, signalHandler);
+                    commandHelperRunnable = new CommandHelperRunnable(socket, signalHandler, user);
                     new Thread(commandHelperRunnable).start();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -185,11 +185,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void onIdentityRequest(String user, String id) {
-        String[] strings = user.split(",");
-        User tmp = new User(strings[0], strings[1]);
-        serverHelper.setUser(tmp, id);
-        clientControlFragment.addUser(tmp);
         Toast.makeText(this, "onIdentityRequest " + user, Toast.LENGTH_SHORT).show();
+        if (isHost) {
+            String[] strings = user.split(",");
+            User tmp = new User(strings[0], strings[1]);
+            serverHelper.setUser(tmp, id);
+            clientControlFragment.addUser(tmp);
+        }
     }
 
     @Override
