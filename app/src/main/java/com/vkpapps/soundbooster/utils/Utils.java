@@ -22,10 +22,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Utils {
+    public static File root;
     public static User loadUser() {
         User user = null;
         try {
-            ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(new File("user")));
+            ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(new File(root, "user")));
             Object object = objectInputStream.readObject();
             if (object instanceof User) {
                 user = (User) object;
@@ -39,7 +40,8 @@ public class Utils {
 
     public static void setUser(User user) {
         try {
-            File file = new File("user");
+            File file = new File(root, "user");
+            if (!file.exists()) file.canExecute();
             ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
             outputStream.writeObject(user);
             outputStream.flush();

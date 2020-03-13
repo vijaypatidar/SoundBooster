@@ -11,6 +11,8 @@ import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import static com.vkpapps.soundbooster.utils.Utils.root;
+
 public class SplashActivity extends AppCompatActivity {
 
     @Override
@@ -18,7 +20,9 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        final File user = new File("user");
+        root = getDir("files", MODE_PRIVATE);
+        final File user = new File(root, "user");
+
         Timer timer = new Timer();
         timer.schedule(new TimerTask() {
             @Override
