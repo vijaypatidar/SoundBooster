@@ -13,15 +13,18 @@ public class MusicPlayerHelper {
     private static MusicPlayerHelper musicPlayerHelper;
     private MediaPlayer mediaPlayer = new MediaPlayer();
     private File root;
+    private OnMusicPlayerHelperListener onMusicPlayerHelperListener;
 
-    private MusicPlayerHelper(Context context) {
+    private MusicPlayerHelper(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
         this.root = context.getDir("song", Context.MODE_PRIVATE);
+        this.onMusicPlayerHelperListener = onMusicPlayerHelperListener;
     }
 
-    public static MusicPlayerHelper getInstance(Context context) {
+    public static MusicPlayerHelper getInstance(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
         if (musicPlayerHelper == null) {
-            musicPlayerHelper = new MusicPlayerHelper(context);
+            musicPlayerHelper = new MusicPlayerHelper(context, onMusicPlayerHelperListener);
         }
+
         return musicPlayerHelper;
     }
 
@@ -32,6 +35,9 @@ public class MusicPlayerHelper {
             mediaPlayer.setDataSource(new File(root, name).getAbsolutePath());
             mediaPlayer.prepare();
             mediaPlayer.start();
+            if (onMusicPlayerHelperListener != null) {
+                onMusicPlayerHelperListener.onSongChange(name);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -61,5 +67,7 @@ public class MusicPlayerHelper {
         }
     }
 
-
+    public interface OnMusicPlayerHelperListener {
+        void onSongChange(String name);
+    }
 }

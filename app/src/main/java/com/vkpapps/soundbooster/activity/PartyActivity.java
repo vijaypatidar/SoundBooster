@@ -6,6 +6,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -39,8 +42,9 @@ import static com.vkpapps.soundbooster.utils.PermissionUtils.askStoragePermissio
 import static com.vkpapps.soundbooster.utils.PermissionUtils.checkStoragePermission;
 
 
-public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener {
-    private String host;
+public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener {
+    private TextView audioTitle;
+    private LinearLayout linearLayout;
     private boolean isHost;
     public static User user;
     private ServerHelper serverHelper;
@@ -58,12 +62,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         setSupportActionBar(toolbar);
 
         MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
+        musicPlayer = MusicPlayerHelper.getInstance(this, this);
+
         user = Utils.loadUser();
         isHost = getIntent().getBooleanExtra("isHost", false);
         setup();
         initUI();
 
-        musicPlayer = MusicPlayerHelper.getInstance(this);
 
     }
 
@@ -128,15 +133,14 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
 
-
     private void initUI() {
         ArrayList<Fragment> fragments = new ArrayList<>();
 
         if (!checkStoragePermission(this)) askStoragePermission(this);
 
-        LocalSongFragment localSongFragment = new LocalSongFragment();
+        LocalSongFragment localSongFragment = new LocalSongFragment(musicPlayer);
         fragments.add(localSongFragment);
-        HostSongFragment hostSongFragment = new HostSongFragment();
+        HostSongFragment hostSongFragment = new HostSongFragment(musicPlayer);
         fragments.add(hostSongFragment);
 
         if (isHost) {
@@ -148,6 +152,15 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         viewPager.setAdapter(new MyFragmentPagerAdapter(getSupportFragmentManager(), PagerAdapter.POSITION_NONE, fragments));
         TabLayout tabs = findViewById(R.id.tabs);
         tabs.setupWithViewPager(viewPager);
+
+        linearLayout = findViewById(R.id.ll);
+        audioTitle = findViewById(R.id.audio_title);
+        findViewById(R.id.btnPlayPause).setOnClickListener(v -> {
+            musicPlayer.pause();
+        });
+        audioTitle.setOnClickListener(v -> {
+
+        });
     }
 
     @Override
@@ -197,5 +210,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     @Override
     public void broadcastCommand(String command) {
         serverHelper.sendCommand(command);
+    }
+
+    @Override
+    public void onSongChange(String name) {
+        runOnUiThread(() -> {
+            audioTitle.setText(name);
+            linearLayout.setVisibility(View.VISIBLE);
+        });
     }
 }
