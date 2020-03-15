@@ -1,6 +1,5 @@
 package com.vkpapps.soundbooster.fragments;
 
-
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -81,8 +80,6 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
         } else {
             PermissionUtils.askStoragePermission(getActivity());
         }
-
-
     }
 
     @Override
@@ -101,6 +98,5 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
 
     @Override
     public void onAudioLongSelected(AudioModel audioModel) {
-
     }
 }

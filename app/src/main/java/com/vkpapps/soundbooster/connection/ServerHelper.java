@@ -17,7 +17,6 @@ public class ServerHelper implements Runnable {
         this.signalHandler = signalHandler;
         this.user = user;
         commandHelperRunnables = new ArrayList<>();
-
     }
 
     @Override
@@ -36,11 +35,9 @@ public class ServerHelper implements Runnable {
     }
 
     public void sendCommand(String command) {
-        new Thread(() -> {
-            for (CommandHelperRunnable c : commandHelperRunnables) {
-                c.write(command);
-            }
-        }).start();
+        for (CommandHelperRunnable c : commandHelperRunnables) {
+            c.write(command);
+        }
     }
 
     public void setUser(User tmp, String id) {
@@ -51,7 +48,4 @@ public class ServerHelper implements Runnable {
         }
     }
 
-    public ArrayList<CommandHelperRunnable> getCommandHelperRunnables() {
-        return commandHelperRunnables;
-    }
 }

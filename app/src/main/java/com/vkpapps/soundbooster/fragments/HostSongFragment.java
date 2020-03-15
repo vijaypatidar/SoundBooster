@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.AudioAdapter;
 import com.vkpapps.soundbooster.model.AudioModel;
-import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
 
 import java.io.File;
@@ -28,11 +27,11 @@ import java.util.Objects;
 public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSelectedListener {
 
     private File song;
-    private MusicPlayerHelper musicPlayerHelper;
+    private OnHostSongFragmentListener onHostSongFragmentListener;
     private List<AudioModel> selectedSong, allSong;
 
-    public HostSongFragment(MusicPlayerHelper musicPlayerHelper) {
-        this.musicPlayerHelper = musicPlayerHelper;
+    public HostSongFragment(OnHostSongFragmentListener onHostSongFragmentListener) {
+        this.onHostSongFragmentListener = onHostSongFragmentListener;
     }
 
     @Override
@@ -85,10 +84,7 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
 
     @Override
     public void onAudioSelected(AudioModel audioMode) {
-        new Thread(() -> {
-            musicPlayerHelper.loadAndPlay(audioMode.getName());
-
-        }).start();
+        onHostSongFragmentListener.onSelectAudio(audioMode);
     }
 
     @Override
@@ -106,5 +102,10 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
         }
         return audioModels;
     }
+
+    public interface OnHostSongFragmentListener {
+        void onSelectAudio(AudioModel name);
+    }
+
 }
 

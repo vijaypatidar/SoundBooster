@@ -22,9 +22,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,19 +77,6 @@ public class Utils {
         }
     }
 
-    public static Socket getSocket(boolean isHost, String host) throws IOException {
-        Socket socket;
-        if (isHost) {
-            try (ServerSocket serverSocket = new ServerSocket(15448)) {
-                serverSocket.setSoTimeout(5000);
-                socket = serverSocket.accept();
-            }
-        } else {
-            socket = new Socket();
-            socket.connect(new InetSocketAddress(host, 15448), 5000);
-        }
-        return socket;
-    }
 
     public static List<AudioModel> getAllAudioFromDevice(final Context context) {
         Log.d("control", "getAllAudioFromDevice: ========================");

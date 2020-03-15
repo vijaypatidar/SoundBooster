@@ -17,6 +17,14 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
+        <receiver
+            android:name=".FileRequestReciever"
+            android:enabled="false"
+            android:exported="false"></receiver>
+
+        <service
+            android:name=".connection.FileService"
+            android:exported="false" />
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
@@ -27,29 +35,29 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppThemeNoAction"
             tools:ignore="LockedOrientationActivity" />
-
         <activity
             android:name=".activity.UserDetailActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:theme="@style/UserDetail" />
+            android:theme="@style/UserDetail"
+            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activity.SplashActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:theme="@style/SplashScreen">
+            android:theme="@style/SplashScreen"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".activity.MainActivity"
             android:screenOrientation="portrait"
-            tools:ignore="LockedOrientationActivity"
-            android:theme="@style/AppThemeNoAction" />
+            android:theme="@style/AppThemeNoAction"
+            tools:ignore="LockedOrientationActivity" />
     </application>
 
 </manifest>

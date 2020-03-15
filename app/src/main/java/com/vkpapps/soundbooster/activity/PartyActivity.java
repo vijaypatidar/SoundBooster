@@ -29,6 +29,7 @@ import com.vkpapps.soundbooster.fragments.ClientControlFragment;
 import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.LocalSongFragment;
 import com.vkpapps.soundbooster.handler.SignalHandler;
+import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.Utils;
@@ -42,7 +43,7 @@ import static com.vkpapps.soundbooster.utils.PermissionUtils.askStoragePermissio
 import static com.vkpapps.soundbooster.utils.PermissionUtils.checkStoragePermission;
 
 
-public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener {
+public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener, HostSongFragment.OnHostSongFragmentListener {
     private TextView audioTitle;
     private LinearLayout linearLayout;
     private boolean isHost;
@@ -63,7 +64,6 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
         MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
         musicPlayer = MusicPlayerHelper.getInstance(this, this);
-
         user = Utils.loadUser();
         isHost = getIntent().getBooleanExtra("isHost", false);
         setup();
@@ -140,7 +140,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
         LocalSongFragment localSongFragment = new LocalSongFragment(musicPlayer);
         fragments.add(localSongFragment);
-        HostSongFragment hostSongFragment = new HostSongFragment(musicPlayer);
+        HostSongFragment hostSongFragment = new HostSongFragment(this);
         fragments.add(hostSongFragment);
 
         if (isHost) {
@@ -199,11 +199,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     @Override
     public void onIdentityRequest(String user, String id) {
         Toast.makeText(this, "onIdentityRequest " + user, Toast.LENGTH_SHORT).show();
+        String[] strings = user.split(",");
+        User tmp = new User(strings[0], strings[1]);
         if (isHost) {
-            String[] strings = user.split(",");
-            User tmp = new User(strings[0], strings[1]);
             serverHelper.setUser(tmp, id);
             clientControlFragment.addUser(tmp);
+        } else {
+            commandHelperRunnable.user = tmp;
         }
     }
 
@@ -218,5 +220,16 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             audioTitle.setText(name);
             linearLayout.setVisibility(View.VISIBLE);
         });
+    }
+
+    @Override
+    public void onSelectAudio(AudioModel audioModel) {
+        String command = "PL " + audioModel.getName();
+        if (isHost) {
+            serverHelper.sendCommand(command);
+            musicPlayer.loadAndPlay(audioModel.getName());
+        } else {
+            commandHelperRunnable.write(command);
+        }
     }
 }
