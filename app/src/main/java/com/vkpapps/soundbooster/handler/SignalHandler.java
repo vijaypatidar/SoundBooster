@@ -37,8 +37,17 @@ public class SignalHandler extends Handler {
                 case "ST":
                     onMessageHandlerListener.onSeekToRequest(Integer.parseInt(command.substring(3)));
                     break;
-                case "ID":
-                    onMessageHandlerListener.onIdentityRequest(command.substring(3), msg.getData().getString("ID"));
+                case "RF":
+                    onMessageHandlerListener.onReceiveFileRequest(command.substring(3), msg.getData().getString("ID"));
+                    break;
+                case "SF":
+                    onMessageHandlerListener.onSendFileRequest(command.substring(3), msg.getData().getString("ID"));
+                    break;
+                case "DC":
+                    onMessageHandlerListener.onNewDeviceConnected(msg.getData().getString("ID"));
+                    break;
+                case "DD":
+                    onMessageHandlerListener.onDeviceDisconnected(msg.getData().getString("ID"));
                     break;
                 default:
                     Log.d("CONTROLS", "handleMessage: =================================== invalid req " + command);
@@ -60,6 +69,13 @@ public class SignalHandler extends Handler {
 
         void broadcastCommand(String command);
 
-        void onIdentityRequest(String user, String id);
+        void onNewDeviceConnected(String id);
+
+        void onDeviceDisconnected(String id);
+
+        void onSendFileRequest(String name, String id);
+
+        void onReceiveFileRequest(String name, String id);
+
     }
 }

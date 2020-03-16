@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.AudioAdapter;
 import com.vkpapps.soundbooster.model.AudioModel;
-import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.Utils;
 
@@ -29,11 +28,11 @@ import java.util.List;
 public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioSelectedListener {
 
     private File song;
-    private MusicPlayerHelper musicPlayerHelper;
+    private OnLocalSongFragmentListener onLocalSongFragmentListener;
     private List<AudioModel> selectedSong, allSong;
 
-    public LocalSongFragment(MusicPlayerHelper musicPlayerHelper) {
-        this.musicPlayerHelper = musicPlayerHelper;
+    public LocalSongFragment(OnLocalSongFragmentListener onLocalSongFragmentListener) {
+        this.onLocalSongFragmentListener = onLocalSongFragmentListener;
     }
 
     @Override
@@ -84,19 +83,20 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
 
     @Override
     public void onAudioSelected(AudioModel audioMode) {
-        new Thread(() -> {
-            try {
-                Utils.copyFromTo(new File(audioMode.getPath()), new File(song, audioMode.getName()));
-                //todo send to other
-                //play
-                musicPlayerHelper.loadAndPlay(audioMode.getName());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
+        try {
+            Utils.copyFromTo(new File(audioMode.getPath()), new File(song, audioMode.getName()));
+            onLocalSongFragmentListener.onLocalSongSelected(audioMode.getName());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public void onAudioLongSelected(AudioModel audioModel) {
     }
+
+    public interface OnLocalSongFragmentListener {
+        void onLocalSongSelected(String name);
+    }
+
 }

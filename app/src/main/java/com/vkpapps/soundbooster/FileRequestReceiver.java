@@ -26,10 +26,6 @@ public class FileRequestReceiver extends BroadcastReceiver {
         }
     }
 
-    public void setOnFileRequestReceiverListener(OnFileRequestReceiverListener onFileRequestReceiverListener) {
-        this.onFileRequestReceiverListener = onFileRequestReceiverListener;
-    }
-
     public interface OnFileRequestReceiverListener {
         void onRequestFailed(String name);
 

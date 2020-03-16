@@ -24,6 +24,7 @@ import com.google.android.material.tabs.TabLayout;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.MyFragmentPagerAdapter;
 import com.vkpapps.soundbooster.connection.CommandHelperRunnable;
+import com.vkpapps.soundbooster.connection.FileService;
 import com.vkpapps.soundbooster.connection.ServerHelper;
 import com.vkpapps.soundbooster.fragments.ClientControlFragment;
 import com.vkpapps.soundbooster.fragments.HostSongFragment;
@@ -43,7 +44,9 @@ import static com.vkpapps.soundbooster.utils.PermissionUtils.askStoragePermissio
 import static com.vkpapps.soundbooster.utils.PermissionUtils.checkStoragePermission;
 
 
-public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener, HostSongFragment.OnHostSongFragmentListener {
+public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener,
+        MusicPlayerHelper.OnMusicPlayerHelperListener
+        , HostSongFragment.OnHostSongFragmentListener, LocalSongFragment.OnLocalSongFragmentListener {
     private TextView audioTitle;
     private LinearLayout linearLayout;
     private boolean isHost;
@@ -81,10 +84,18 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             new Thread(() -> {
                 Socket socket = new Socket();
                 try {
-                    socket.connect(new InetSocketAddress("192.168.43.1", 1203));
+                    socket.connect(new InetSocketAddress("192.168.43.1", 1203), 5000);
                     commandHelperRunnable = new CommandHelperRunnable(socket, signalHandler, user);
                     new Thread(commandHelperRunnable).start();
                 } catch (IOException e) {
+                    runOnUiThread(() -> {
+                        AlertDialog.Builder ab = new AlertDialog.Builder(this);
+                        ab.setTitle("no host found!");
+                        ab.setMessage("there is no host on this wifi");
+                        ab.setCancelable(false);
+                        ab.setPositiveButton("retry", (dialog, which) -> setup());
+                        ab.create().show();
+                    });
                     e.printStackTrace();
                 }
             }).start();
@@ -138,7 +149,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
         if (!checkStoragePermission(this)) askStoragePermission(this);
 
-        LocalSongFragment localSongFragment = new LocalSongFragment(musicPlayer);
+        LocalSongFragment localSongFragment = new LocalSongFragment(this);
         fragments.add(localSongFragment);
         HostSongFragment hostSongFragment = new HostSongFragment(this);
         fragments.add(hostSongFragment);
@@ -174,6 +185,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void onPlayRequest(String name) {
+        //triggered by hosted Song fragment
         musicPlayer.loadAndPlay(name);
         Toast.makeText(this, "onPlayRequest " + name, Toast.LENGTH_SHORT).show();
     }
@@ -197,15 +209,30 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     @Override
-    public void onIdentityRequest(String user, String id) {
-        Toast.makeText(this, "onIdentityRequest " + user, Toast.LENGTH_SHORT).show();
-        String[] strings = user.split(",");
-        User tmp = new User(strings[0], strings[1]);
+    public void onNewDeviceConnected(String id) {
+        Toast.makeText(this, "onNewDeviceConnected " + id, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onDeviceDisconnected(String id) {
+        Toast.makeText(this, "onDeviceDisconnected " + id, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onSendFileRequest(String name, String id) {
+        if (isHost)
+            FileService.startActionSend(this, name, id);
+    }
+
+    @Override
+    public void onReceiveFileRequest(String name, String id) {
         if (isHost) {
-            serverHelper.setUser(tmp, id);
-            clientControlFragment.addUser(tmp);
-        } else {
-            commandHelperRunnable.user = tmp;
+            FileService.startActionReceive(this, name, id);
+            for (CommandHelperRunnable chr : serverHelper.getCommandHelperRunnables()) {
+                String cid = chr.user.getUserId();
+                if (!cid.equals(id))
+                    FileService.startActionSend(this, name, chr.user.getUserId());
+            }
         }
     }
 
@@ -224,12 +251,27 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void onSelectAudio(AudioModel audioModel) {
+
         String command = "PL " + audioModel.getName();
         if (isHost) {
             serverHelper.sendCommand(command);
             musicPlayer.loadAndPlay(audioModel.getName());
         } else {
             commandHelperRunnable.write(command);
+        }
+    }
+
+    @Override
+    public void onLocalSongSelected(String name) {
+        // triggered by local song fragment after copying song to private storage
+        if (isHost) {
+            for (CommandHelperRunnable chr : serverHelper.getCommandHelperRunnables()) {
+                String cid = chr.user.getUserId();
+                Toast.makeText(this, name + " cid " + cid, Toast.LENGTH_SHORT).show();
+                FileService.startActionSend(this, name, cid);
+            }
+        } else {
+            commandHelperRunnable.write("RF " + name);
         }
     }
 }

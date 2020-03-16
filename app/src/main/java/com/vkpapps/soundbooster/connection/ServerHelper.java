@@ -48,4 +48,7 @@ public class ServerHelper implements Runnable {
         }
     }
 
+    public ArrayList<CommandHelperRunnable> getCommandHelperRunnables() {
+        return commandHelperRunnables;
+    }
 }

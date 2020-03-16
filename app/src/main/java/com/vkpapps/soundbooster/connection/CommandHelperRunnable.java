@@ -2,6 +2,7 @@ package com.vkpapps.soundbooster.connection;
 
 import android.os.Bundle;
 import android.os.Message;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -23,34 +24,53 @@ public class CommandHelperRunnable implements Runnable {
     public CommandHelperRunnable(Socket socket, @NonNull SignalHandler signalHandler, User user) {
         this.socket = socket;
         this.signalHandler = signalHandler;
-        this.id = System.currentTimeMillis() + "";
         this.user = user;
     }
 
     @Override
     public void run() {
+        String command;
+        Bundle bundle = new Bundle();
         try {
             System.out.println("Connection established");
             InputStream inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
+            // send identity to connected device
             String IDCom = "ID " + user.getName() + "," + user.getUserId();
             outputStream.write(IDCom.getBytes());
             outputStream.flush();
+            Thread.sleep(2000);
             byte[] bytes = new byte[2048];
-            String command;
+
+            // read identity of connected device
+            int read1 = inputStream.read(bytes);
+            String res = new String(bytes, 0, read1);
+            String[] strings = res.split(",");
+            id = strings[1];
+            user = new User(strings[0], id);
+            command = "DC " + id;
+            Log.d("CONTROLS", "run:  =============== " + user.getName() + "  id " + id);
+            bundle.putString("ID", id);
             while (socket.isConnected()) {
-                int read = inputStream.read(bytes);
-                command = new String(bytes, 0, read);
                 Message message = new Message();
-                Bundle bundle = new Bundle();
                 bundle.putString("command", command);
-                bundle.putString("id", id);
                 message.setData(bundle);
                 signalHandler.sendMessage(message);
+                int read = inputStream.read(bytes);
+                command = new String(bytes, 0, read);
             }
-        } catch (IOException e) {
+
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+
+        // NOTIFY DEVICE DISCONNECT
+        command = "DD " + id;
+        bundle.putString("command", command);
+        Message message = new Message();
+        message.setData(bundle);
+        signalHandler.sendMessage(message);
+        Log.d("CONTROLS", "run: ================================== dis " + id);
     }
 
     public void write(String command) {
