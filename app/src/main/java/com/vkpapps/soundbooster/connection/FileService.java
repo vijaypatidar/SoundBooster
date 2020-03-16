@@ -3,6 +3,7 @@ package com.vkpapps.soundbooster.connection;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -22,9 +23,11 @@ public class FileService extends IntentService {
     public static final String ACTION_RECEIVE = "com.vkpapps.soundbooster.action.RECEIVE";
     public static final String STATUS_SUCCESS = "com.vkpapps.soundbooster.action.SUCCESS";
     public static final String STATUS_FAILED = "com.vkpapps.soundbooster.action.FAILED";
+    public static final String REQUEST_ACCEPTED = "com.vkpapps.soundbooster.action.ACCEPTED";
 
-    private static final String NAME = "com.vkpapps.soundbooster.extra.NAME";
-    private static final String CLIENT_ID = "com.vkpapps.soundbooster.extra.CLIENT_ID";
+    public static final String NAME = "com.vkpapps.soundbooster.extra.NAME";
+    public static final String CLIENT_ID = "com.vkpapps.soundbooster.extra.CLIENT_ID";
+    private static final String IS_HOST = "com.vkpapps.soundbooster.extra.IS_HOST";
 
     private File root;
 
@@ -32,19 +35,21 @@ public class FileService extends IntentService {
         super("FileService");
     }
 
-    public static void startActionSend(Context context, String name, String clientId) {
+    public static void startActionSend(Context context, String name, String clientId, boolean isHost) {
         Intent intent = new Intent(context, FileService.class);
         intent.setAction(ACTION_SEND);
         intent.putExtra(NAME, name);
         intent.putExtra(CLIENT_ID, clientId);
+        intent.putExtra(IS_HOST, isHost);
         context.startService(intent);
     }
 
-    public static void startActionReceive(Context context, String name, String clientId) {
+    public static void startActionReceive(Context context, String name, String clientId, boolean isHost) {
         Intent intent = new Intent(context, FileService.class);
         intent.setAction(ACTION_RECEIVE);
         intent.putExtra(NAME, name);
         intent.putExtra(CLIENT_ID, clientId);
+        intent.putExtra(IS_HOST, isHost);
         context.startService(intent);
     }
 
@@ -60,10 +65,11 @@ public class FileService extends IntentService {
             final String action = intent.getAction();
             final String name = intent.getStringExtra(NAME);
             final String clientId = intent.getStringExtra(CLIENT_ID);
+            final boolean isHost = intent.getBooleanExtra(IS_HOST, false);
             if (ACTION_SEND.equals(action)) {
-                handleActionSend(name, clientId);
+                handleActionSend(name, clientId, isHost);
             } else if (ACTION_RECEIVE.equals(action)) {
-                handleActionReceive(name, clientId);
+                handleActionReceive(name, clientId, isHost);
             }
         }
     }
@@ -83,9 +89,10 @@ public class FileService extends IntentService {
         return socket;
     }
 
-    private void handleActionReceive(String name, String clientId) {
+    private void handleActionReceive(String name, String clientId, boolean isHost) {
         try {
-            Socket socket = getSocket(clientId != null);
+            onAccepted(name, clientId, false);
+            Socket socket = getSocket(isHost);
             InputStream in = socket.getInputStream();
             OutputStream out = new FileOutputStream(new File(root, name));
             byte[] bytes = new byte[2 * 1024];
@@ -104,9 +111,10 @@ public class FileService extends IntentService {
         }
     }
 
-    private void handleActionSend(String name, String clientId) {
+    private void handleActionSend(String name, String clientId, boolean isHost) {
         try {
-            Socket socket = getSocket(clientId != null);
+            onAccepted(name, clientId, true);
+            Socket socket = getSocket(isHost);
             InputStream inputStream = new FileInputStream(new File(root, name));
             OutputStream outputStream = socket.getOutputStream();
             byte[] bytes = new byte[2 * 1024];
@@ -127,13 +135,24 @@ public class FileService extends IntentService {
 
     private void onSuccess(String name) {
         Intent intent = new Intent(STATUS_SUCCESS);
-        intent.putExtra("name", name);
+        intent.putExtra(NAME, name);
+        Log.d("CONTROLS", "onSuccess: ============ " + name);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void onFailed(String name) {
         Intent intent = new Intent(STATUS_FAILED);
-        intent.putExtra("name", name);
+        intent.putExtra(NAME, name);
+        Log.d("CONTROLS", "onFailed: ============ " + name);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void onAccepted(String name, String clientID, boolean send) {
+        Intent intent = new Intent(REQUEST_ACCEPTED);
+        intent.putExtra(NAME, name);
+        intent.putExtra(ACTION_SEND, send);
+        intent.putExtra(CLIENT_ID, clientID);
+        Log.d("CONTROLS", "onAccepted: ========== " + name + "   " + send);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 }

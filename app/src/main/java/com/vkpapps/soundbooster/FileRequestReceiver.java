@@ -18,17 +18,26 @@ public class FileRequestReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        String name = intent.getStringExtra("name");
-        if (action.equals(FileService.STATUS_SUCCESS)) {
-            onFileRequestReceiverListener.onRequestSuccess(name);
-        } else {
-            onFileRequestReceiverListener.onRequestFailed(name);
+        String name = intent.getStringExtra(FileService.NAME);
+        switch (action) {
+            case FileService.STATUS_SUCCESS:
+                onFileRequestReceiverListener.onRequestSuccess(name);
+                break;
+            case FileService.STATUS_FAILED:
+                onFileRequestReceiverListener.onRequestFailed(name);
+                break;
+            case FileService.REQUEST_ACCEPTED:
+                String clientId = intent.getStringExtra(FileService.CLIENT_ID);
+                boolean send = intent.getBooleanExtra(FileService.ACTION_SEND, false);
+                onFileRequestReceiverListener.onRequestAccepted(name, send, clientId);
+                break;
         }
     }
 
     public interface OnFileRequestReceiverListener {
         void onRequestFailed(String name);
 
+        void onRequestAccepted(String name, boolean send, String clientId);
         void onRequestSuccess(String name);
     }
 

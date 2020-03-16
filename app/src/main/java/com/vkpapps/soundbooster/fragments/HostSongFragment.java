@@ -29,6 +29,7 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
     private File song;
     private OnHostSongFragmentListener onHostSongFragmentListener;
     private List<AudioModel> selectedSong, allSong;
+    private AudioAdapter audioAdapter;
 
     public HostSongFragment(OnHostSongFragmentListener onHostSongFragmentListener) {
         this.onHostSongFragmentListener = onHostSongFragmentListener;
@@ -46,10 +47,11 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
 
         song = view.getContext().getDir("song", Context.MODE_PRIVATE);
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
-            RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
-            allSong = getAllSong();
+            allSong = new ArrayList<>();
             selectedSong = new ArrayList<>(allSong);
-            AudioAdapter audioAdapter = new AudioAdapter(selectedSong, this);
+            RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
+            refreshSong();
+            audioAdapter = new AudioAdapter(selectedSong, this);
             recyclerView.setItemAnimator(new DefaultItemAnimator());
             recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
             recyclerView.setAdapter(audioAdapter);
@@ -92,15 +94,25 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
 
     }
 
-    private List<AudioModel> getAllSong() {
-        ArrayList<AudioModel> audioModels = new ArrayList<>();
+    public void refreshSong() {
+        allSong.clear();
+        selectedSong.clear();
         for (File file : Objects.requireNonNull(song.listFiles())) {
             AudioModel audioModel = new AudioModel();
             audioModel.setName(file.getName());
             audioModel.setPath(file.getPath());
-            audioModels.add(audioModel);
+            allSong.add(audioModel);
         }
-        return audioModels;
+        selectedSong.addAll(allSong);
+        if (audioAdapter != null) {
+            audioAdapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshSong();
     }
 
     public interface OnHostSongFragmentListener {

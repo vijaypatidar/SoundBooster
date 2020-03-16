@@ -2,7 +2,6 @@ package com.vkpapps.soundbooster.connection;
 
 import android.os.Bundle;
 import android.os.Message;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -36,7 +35,7 @@ public class CommandHelperRunnable implements Runnable {
             InputStream inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
             // send identity to connected device
-            String IDCom = "ID " + user.getName() + "," + user.getUserId();
+            String IDCom = user.getName() + "," + user.getUserId();
             outputStream.write(IDCom.getBytes());
             outputStream.flush();
             Thread.sleep(2000);
@@ -48,8 +47,7 @@ public class CommandHelperRunnable implements Runnable {
             String[] strings = res.split(",");
             id = strings[1];
             user = new User(strings[0], id);
-            command = "DC " + id;
-            Log.d("CONTROLS", "run:  =============== " + user.getName() + "  id " + id);
+            command = "DCN " + id;
             bundle.putString("ID", id);
             while (socket.isConnected()) {
                 Message message = new Message();
@@ -65,12 +63,11 @@ public class CommandHelperRunnable implements Runnable {
         }
 
         // NOTIFY DEVICE DISCONNECT
-        command = "DD " + id;
+        command = "DDN " + id;
         bundle.putString("command", command);
         Message message = new Message();
         message.setData(bundle);
         signalHandler.sendMessage(message);
-        Log.d("CONTROLS", "run: ================================== dis " + id);
     }
 
     public void write(String command) {

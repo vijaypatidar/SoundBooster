@@ -1,9 +1,11 @@
 package com.vkpapps.soundbooster.activity;
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -16,11 +18,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.tabs.TabLayout;
+import com.vkpapps.soundbooster.FileRequestReceiver;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.MyFragmentPagerAdapter;
 import com.vkpapps.soundbooster.connection.CommandHelperRunnable;
@@ -46,7 +50,7 @@ import static com.vkpapps.soundbooster.utils.PermissionUtils.checkStoragePermiss
 
 public class PartyActivity extends AppCompatActivity implements SignalHandler.OnMessageHandlerListener,
         MusicPlayerHelper.OnMusicPlayerHelperListener
-        , HostSongFragment.OnHostSongFragmentListener, LocalSongFragment.OnLocalSongFragmentListener {
+        , HostSongFragment.OnHostSongFragmentListener, LocalSongFragment.OnLocalSongFragmentListener, FileRequestReceiver.OnFileRequestReceiverListener {
     private TextView audioTitle;
     private LinearLayout linearLayout;
     private boolean isHost;
@@ -56,7 +60,9 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     private CommandHelperRunnable commandHelperRunnable;
     //fragments
     ClientControlFragment clientControlFragment;
+    HostSongFragment hostSongFragment;
     private MusicPlayerHelper musicPlayer;
+    private FileRequestReceiver requestReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,8 +77,18 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         isHost = getIntent().getBooleanExtra("isHost", false);
         setup();
         initUI();
+        setupReceiver();
+    }
 
-
+    private void setupReceiver() {
+        requestReceiver = new FileRequestReceiver(this);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(FileService.STATUS_FAILED);
+        intentFilter.addAction(FileService.STATUS_SUCCESS);
+        if (isHost) {
+            intentFilter.addAction(FileService.REQUEST_ACCEPTED);
+        }
+        LocalBroadcastManager.getInstance(this).registerReceiver(requestReceiver, intentFilter);
     }
 
     private void setup() {
@@ -151,7 +167,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
         LocalSongFragment localSongFragment = new LocalSongFragment(this);
         fragments.add(localSongFragment);
-        HostSongFragment hostSongFragment = new HostSongFragment(this);
+        hostSongFragment = new HostSongFragment(this);
         fragments.add(hostSongFragment);
 
         if (isHost) {
@@ -221,20 +237,34 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     @Override
     public void onSendFileRequest(String name, String id) {
         if (isHost)
-            FileService.startActionSend(this, name, id);
+            FileService.startActionSend(this, name, id, true);
     }
 
     @Override
     public void onReceiveFileRequest(String name, String id) {
         if (isHost) {
-            FileService.startActionReceive(this, name, id);
+            FileService.startActionReceive(this, name, id, true);
             for (CommandHelperRunnable chr : serverHelper.getCommandHelperRunnables()) {
                 String cid = chr.user.getUserId();
                 if (!cid.equals(id))
-                    FileService.startActionSend(this, name, chr.user.getUserId());
+                    FileService.startActionSend(this, name, chr.user.getUserId(), isHost);
             }
         }
     }
+
+    @Override
+    public void onSendFileRequestAccepted(String name, String id) {
+        // receiver requested file
+        FileService.startActionReceive(this, name, id, isHost);
+    }
+
+    @Override
+    public void onReceiveFileRequestAccepted(String name, String id) {
+        // send request file
+        FileService.startActionSend(this, name, id, isHost);
+    }
+
+
 
     @Override
     public void broadcastCommand(String command) {
@@ -252,7 +282,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     @Override
     public void onSelectAudio(AudioModel audioModel) {
 
-        String command = "PL " + audioModel.getName();
+        String command = "PLY " + audioModel.getName();
         if (isHost) {
             serverHelper.sendCommand(command);
             musicPlayer.loadAndPlay(audioModel.getName());
@@ -268,10 +298,27 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             for (CommandHelperRunnable chr : serverHelper.getCommandHelperRunnables()) {
                 String cid = chr.user.getUserId();
                 Toast.makeText(this, name + " cid " + cid, Toast.LENGTH_SHORT).show();
-                FileService.startActionSend(this, name, cid);
+                FileService.startActionSend(this, name, cid, isHost);
             }
         } else {
-            commandHelperRunnable.write("RF " + name);
+            commandHelperRunnable.write("RFR " + name);
         }
+    }
+
+    @Override
+    public void onRequestFailed(String name) {
+
+    }
+
+    @Override
+    public void onRequestAccepted(String name, boolean send, String clientId) {
+        String command = send ? "SFC" : "RFC" + " " + name;
+        Log.d("CONTROLS", "onRequestAccepted:  = " + command + "  " + clientId);
+        serverHelper.sendCommandToOnly(command, clientId);
+    }
+
+    @Override
+    public void onRequestSuccess(String name) {
+        hostSongFragment.refreshSong();
     }
 }

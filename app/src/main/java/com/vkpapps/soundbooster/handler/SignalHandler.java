@@ -23,30 +23,36 @@ public class SignalHandler extends Handler {
     public void handleMessage(@NonNull Message msg) {
         try {
             String command = Objects.requireNonNull(msg.getData().getString("command"));
-            Log.d("CONTROLS", "handleMessage: " + command.substring(0, 2));
+            Log.d("CONTROLS", "handleMessage: " + command.substring(0, 3));
             if (isHost) {
                 onMessageHandlerListener.broadcastCommand(command);
             }
-            switch (command.substring(0, 2)) {
-                case "PL":
+            switch (command.substring(0, 3)) {
+                case "PLY":
                     onMessageHandlerListener.onPlayRequest(command.substring(3));
                     break;
-                case "PA":
+                case "PAS":
                     onMessageHandlerListener.onPauseRequest();
                     break;
-                case "ST":
+                case "SKT":
                     onMessageHandlerListener.onSeekToRequest(Integer.parseInt(command.substring(3)));
                     break;
-                case "RF":
+                case "RFR":
                     onMessageHandlerListener.onReceiveFileRequest(command.substring(3), msg.getData().getString("ID"));
                     break;
-                case "SF":
+                case "SFR":
                     onMessageHandlerListener.onSendFileRequest(command.substring(3), msg.getData().getString("ID"));
                     break;
-                case "DC":
+                case "RFC":
+                    onMessageHandlerListener.onReceiveFileRequestAccepted(command.substring(3), msg.getData().getString("ID"));
+                    break;
+                case "SFC":
+                    onMessageHandlerListener.onSendFileRequestAccepted(command.substring(3), msg.getData().getString("ID"));
+                    break;
+                case "DCN":
                     onMessageHandlerListener.onNewDeviceConnected(msg.getData().getString("ID"));
                     break;
-                case "DD":
+                case "DDN":
                     onMessageHandlerListener.onDeviceDisconnected(msg.getData().getString("ID"));
                     break;
                 default:
@@ -77,5 +83,8 @@ public class SignalHandler extends Handler {
 
         void onReceiveFileRequest(String name, String id);
 
+        void onSendFileRequestAccepted(String name, String id);
+
+        void onReceiveFileRequestAccepted(String name, String id);
     }
 }

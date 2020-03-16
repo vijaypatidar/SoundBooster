@@ -40,6 +40,12 @@ public class ServerHelper implements Runnable {
         }
     }
 
+    public void sendCommandToOnly(String command, String clientId) {
+        for (CommandHelperRunnable c : commandHelperRunnables) {
+            if (c.id.equals(clientId)) c.write(command);
+        }
+    }
+
     public void setUser(User tmp, String id) {
         for (CommandHelperRunnable c : commandHelperRunnables) {
             if (c.id.equals(id)) {
