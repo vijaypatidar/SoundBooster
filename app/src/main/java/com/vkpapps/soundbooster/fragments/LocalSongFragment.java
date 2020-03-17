@@ -1,6 +1,5 @@
 package com.vkpapps.soundbooster.fragments;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,14 +19,11 @@ import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.Utils;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioSelectedListener {
 
-    private File song;
     private OnLocalSongFragmentListener onLocalSongFragmentListener;
     private List<AudioModel> selectedSong, allSong;
 
@@ -44,8 +40,6 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        song = view.getContext().getDir("song", Context.MODE_PRIVATE);
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
             allSong = Utils.getAllAudioFromDevice(view.getContext());
@@ -83,12 +77,7 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
 
     @Override
     public void onAudioSelected(AudioModel audioMode) {
-        try {
-            Utils.copyFromTo(new File(audioMode.getPath()), new File(song, audioMode.getName()));
-            onLocalSongFragmentListener.onLocalSongSelected(audioMode.getName());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        onLocalSongFragmentListener.onLocalSongSelected(audioMode);
     }
 
     @Override
@@ -96,7 +85,7 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
     }
 
     public interface OnLocalSongFragmentListener {
-        void onLocalSongSelected(String name);
+        void onLocalSongSelected(AudioModel name);
     }
 
 }

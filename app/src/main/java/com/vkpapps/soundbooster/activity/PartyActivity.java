@@ -24,10 +24,10 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.material.tabs.TabLayout;
-import com.vkpapps.soundbooster.FileRequestReceiver;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.MyFragmentPagerAdapter;
 import com.vkpapps.soundbooster.connection.CommandHelperRunnable;
+import com.vkpapps.soundbooster.connection.FileRequestReceiver;
 import com.vkpapps.soundbooster.connection.FileService;
 import com.vkpapps.soundbooster.connection.ServerHelper;
 import com.vkpapps.soundbooster.fragments.ClientControlFragment;
@@ -39,6 +39,7 @@ import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.Utils;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -63,6 +64,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     HostSongFragment hostSongFragment;
     private MusicPlayerHelper musicPlayer;
     private FileRequestReceiver requestReceiver;
+    private File root;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +76,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         MobileAds.initialize(this, "ca-app-pub-4043007075380826~2360517416");
         musicPlayer = MusicPlayerHelper.getInstance(this, this);
         user = Utils.loadUser();
+        root = getDir("song", MODE_PRIVATE);
         isHost = getIntent().getBooleanExtra("isHost", false);
         setup();
         initUI();
@@ -171,7 +174,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
         fragments.add(hostSongFragment);
 
         if (isHost) {
-            clientControlFragment = new ClientControlFragment();
+            clientControlFragment = new ClientControlFragment(serverHelper);
             fragments.add(clientControlFragment);
         }
 
@@ -246,8 +249,10 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
             FileService.startActionReceive(this, name, id, true);
             for (CommandHelperRunnable chr : serverHelper.getCommandHelperRunnables()) {
                 String cid = chr.user.getUserId();
-                if (!cid.equals(id))
+                if (!cid.equals(id)) {
                     FileService.startActionSend(this, name, chr.user.getUserId(), isHost);
+                    Toast.makeText(this, "onReceiveFileRequest " + name, Toast.LENGTH_SHORT).show();
+                }
             }
         }
     }
@@ -256,11 +261,13 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     public void onSendFileRequestAccepted(String name, String id) {
         // receiver requested file
         FileService.startActionReceive(this, name, id, isHost);
+        Toast.makeText(this, name + "send", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onReceiveFileRequestAccepted(String name, String id) {
         // send request file
+        Toast.makeText(this, "receive", Toast.LENGTH_SHORT).show();
         FileService.startActionSend(this, name, id, isHost);
     }
 
@@ -292,17 +299,25 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
     }
 
     @Override
-    public void onLocalSongSelected(String name) {
+    public void onLocalSongSelected(AudioModel audioMode) {
+
         // triggered by local song fragment after copying song to private storage
+        try {
+            Utils.copyFromTo(new File(audioMode.getPath()), new File(root, audioMode.getName().trim()));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
         if (isHost) {
             for (CommandHelperRunnable chr : serverHelper.getCommandHelperRunnables()) {
                 String cid = chr.user.getUserId();
-                Toast.makeText(this, name + " cid " + cid, Toast.LENGTH_SHORT).show();
-                FileService.startActionSend(this, name, cid, isHost);
+                FileService.startActionSend(this, audioMode.getName(), cid, isHost);
             }
         } else {
-            commandHelperRunnable.write("RFR " + name);
+            commandHelperRunnable.write("RFR " + audioMode.getName());
         }
+
     }
 
     @Override
@@ -312,7 +327,7 @@ public class PartyActivity extends AppCompatActivity implements SignalHandler.On
 
     @Override
     public void onRequestAccepted(String name, boolean send, String clientId) {
-        String command = send ? "SFC" : "RFC" + " " + name;
+        String command = (send ? "SFC" : "RFC") + " " + name.trim();
         Log.d("CONTROLS", "onRequestAccepted:  = " + command + "  " + clientId);
         serverHelper.sendCommandToOnly(command, clientId);
     }

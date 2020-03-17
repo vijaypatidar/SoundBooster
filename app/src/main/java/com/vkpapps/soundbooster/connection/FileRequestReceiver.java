@@ -1,10 +1,8 @@
-package com.vkpapps.soundbooster;
+package com.vkpapps.soundbooster.connection;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-
-import com.vkpapps.soundbooster.connection.FileService;
 
 public class FileRequestReceiver extends BroadcastReceiver {
 
@@ -36,7 +34,6 @@ public class FileRequestReceiver extends BroadcastReceiver {
 
     public interface OnFileRequestReceiverListener {
         void onRequestFailed(String name);
-
         void onRequestAccepted(String name, boolean send, String clientId);
         void onRequestSuccess(String name);
     }

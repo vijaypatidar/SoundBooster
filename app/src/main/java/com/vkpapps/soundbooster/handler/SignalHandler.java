@@ -23,19 +23,19 @@ public class SignalHandler extends Handler {
     public void handleMessage(@NonNull Message msg) {
         try {
             String command = Objects.requireNonNull(msg.getData().getString("command"));
-            Log.d("CONTROLS", "handleMessage: " + command.substring(0, 3));
+            Log.d("CONTROLS", "handleMessage: " + command.substring(0, 3) + " t->" + command.substring(4) + "<");
             if (isHost) {
                 onMessageHandlerListener.broadcastCommand(command);
             }
             switch (command.substring(0, 3)) {
                 case "PLY":
-                    onMessageHandlerListener.onPlayRequest(command.substring(3));
+                    onMessageHandlerListener.onPlayRequest(command.substring(4));
                     break;
                 case "PAS":
                     onMessageHandlerListener.onPauseRequest();
                     break;
                 case "SKT":
-                    onMessageHandlerListener.onSeekToRequest(Integer.parseInt(command.substring(3)));
+                    onMessageHandlerListener.onSeekToRequest(Integer.parseInt(command.substring(4)));
                     break;
                 case "RFR":
                     onMessageHandlerListener.onReceiveFileRequest(command.substring(3), msg.getData().getString("ID"));

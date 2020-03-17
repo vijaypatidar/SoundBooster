@@ -7,7 +7,6 @@
     tools:context=".activity.MainActivity">
 
     <com.vkpapps.soundbooster.view.CircleView
-        android:id="@+id/circleView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_centerInParent="true" />

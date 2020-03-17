@@ -26,6 +26,7 @@ public class ServerHelper implements Runnable {
                 ServerSocket serverSocket = new ServerSocket(1203);
                 Socket socket = serverSocket.accept();
                 CommandHelperRunnable commandHelper = new CommandHelperRunnable(socket, signalHandler, user);
+                commandHelper.setServerHelper(this);
                 commandHelperRunnables.add(commandHelper);
                 new Thread(commandHelper).start();
             } catch (IOException e) {

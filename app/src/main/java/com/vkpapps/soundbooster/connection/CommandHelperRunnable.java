@@ -19,6 +19,11 @@ public class CommandHelperRunnable implements Runnable {
     private SignalHandler signalHandler;
     private Socket socket;
     public String id;
+    private ServerHelper serverHelper;
+
+    public void setServerHelper(ServerHelper serverHelper) {
+        this.serverHelper = serverHelper;
+    }
 
     public CommandHelperRunnable(Socket socket, @NonNull SignalHandler signalHandler, User user) {
         this.socket = socket;
@@ -58,7 +63,7 @@ public class CommandHelperRunnable implements Runnable {
                 command = new String(bytes, 0, read);
             }
 
-        } catch (IOException | InterruptedException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -68,6 +73,10 @@ public class CommandHelperRunnable implements Runnable {
         Message message = new Message();
         message.setData(bundle);
         signalHandler.sendMessage(message);
+        // remove from server client list
+        if (serverHelper != null) {
+            serverHelper.getCommandHelperRunnables().remove(this);
+        }
     }
 
     public void write(String command) {
@@ -80,6 +89,7 @@ public class CommandHelperRunnable implements Runnable {
             }
         }).start();
     }
+
 
     public boolean isConnected() {
         return socket.isConnected();

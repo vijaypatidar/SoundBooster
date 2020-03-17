@@ -15,25 +15,35 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.ClientAdapter;
+import com.vkpapps.soundbooster.connection.CommandHelperRunnable;
+import com.vkpapps.soundbooster.connection.ServerHelper;
 import com.vkpapps.soundbooster.model.User;
 
 import java.util.ArrayList;
 
 public class ClientControlFragment extends Fragment {
 
-    private ClientAdapter clientAdapter;
-    private ArrayList<User> users;
+    private ServerHelper serverHelper;
+
+    public ClientControlFragment(ServerHelper serverHelper) {
+        this.serverHelper = serverHelper;
+    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        users = new ArrayList<>();
-        clientAdapter = new ClientAdapter(users);
+
+        ArrayList<User> users = new ArrayList<>();
+        for (CommandHelperRunnable commandHelperRunnable : serverHelper.getCommandHelperRunnables()) {
+            users.add(commandHelperRunnable.user);
+        }
+        ClientAdapter clientAdapter = new ClientAdapter(users);
         RecyclerView recyclerView = view.findViewById(R.id.clientList);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         recyclerView.setAdapter(clientAdapter);
         clientAdapter.notifyDataSetChanged();
+
         Log.d("TAG", "onViewCreated: ============================== ");
     }
 
@@ -44,19 +54,4 @@ public class ClientControlFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_client_control, container, false);
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (clientAdapter != null) clientAdapter.notifyDataSetChanged();
-    }
-
-    public void addUser(User user) {
-        for (int i = 0; i < users.size(); i++) {
-            if (users.get(i).getUserId().equals(user.getUserId())) {
-                users.remove(i--);
-            }
-        }
-        users.add(user);
-        clientAdapter.notifyDataSetChanged();
-    }
 }

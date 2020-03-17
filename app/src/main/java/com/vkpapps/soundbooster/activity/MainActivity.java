@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
         ab.setNegativeButton("member", (dialog, which) -> {
             connectToHost();
         });
+        ab.setCancelable(false);
         ab.create().show();
     }
 

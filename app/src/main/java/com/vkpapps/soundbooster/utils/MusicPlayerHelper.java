@@ -30,7 +30,7 @@ public class MusicPlayerHelper {
 
     public void loadAndPlay(String name) {
         try {
-            Log.d("CONTROLS", "loadAndPlay:==========  " + new File(root, name).exists());
+            Log.d("CONTROLS", "loadAndPlay:==========  >" + name + "<");
             mediaPlayer.reset();
             mediaPlayer.setDataSource(new File(root, name).getAbsolutePath());
             mediaPlayer.prepare();

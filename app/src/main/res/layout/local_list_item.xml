@@ -3,8 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="3dp"
-    android:background="@drawable/round_rectangle"
+    android:layout_margin="2dp"
     android:orientation="horizontal">
 
     <ImageView
@@ -31,6 +30,7 @@
             android:lines="1"
             android:textSize="14sp"
             android:padding="5dp"
+            android:textColor="@color/black"
             tools:text="song name" />
 
         <TextView

@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> {
 
-    private ArrayList<User> users = new ArrayList<>();
+    private ArrayList<User> users;
 
     public ClientAdapter(ArrayList<User> users) {
         this.users = users;
