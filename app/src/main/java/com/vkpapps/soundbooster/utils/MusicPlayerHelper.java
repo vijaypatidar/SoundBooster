@@ -15,7 +15,7 @@ public class MusicPlayerHelper {
     private File root;
     private OnMusicPlayerHelperListener onMusicPlayerHelperListener;
 
-    private MusicPlayerHelper(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
+    public MusicPlayerHelper(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
         this.root = context.getDir("song", Context.MODE_PRIVATE);
         this.onMusicPlayerHelperListener = onMusicPlayerHelperListener;
     }

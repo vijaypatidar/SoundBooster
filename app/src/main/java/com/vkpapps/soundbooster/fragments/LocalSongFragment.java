@@ -1,5 +1,6 @@
 package com.vkpapps.soundbooster.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,7 +8,6 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -15,22 +15,23 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.AudioAdapter;
+import com.vkpapps.soundbooster.interfaces.OnLocalSongFragmentListener;
+import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.Utils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioSelectedListener {
 
     private OnLocalSongFragmentListener onLocalSongFragmentListener;
-    private List<AudioModel> selectedSong, allSong;
+    private OnNavigationVisibilityListener onNavigationVisibilityListener;
+    private List<AudioModel> allSong;
 
-    public LocalSongFragment(OnLocalSongFragmentListener onLocalSongFragmentListener) {
-        this.onLocalSongFragmentListener = onLocalSongFragmentListener;
+    public LocalSongFragment() {
+
     }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -43,33 +44,20 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
             allSong = Utils.getAllAudioFromDevice(view.getContext());
-            selectedSong = new ArrayList<>(allSong);
-            AudioAdapter audioAdapter = new AudioAdapter(selectedSong, this);
+            AudioAdapter audioAdapter = new AudioAdapter(allSong, this);
             recyclerView.setItemAnimator(new DefaultItemAnimator());
             recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
             recyclerView.setAdapter(audioAdapter);
-            audioAdapter.notifyDataSetChanged();
-
-            // searchView
-            SearchView searchView = view.findViewById(R.id.search_bar);
-            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
                 @Override
-                public boolean onQueryTextSubmit(String query) {
-                    return false;
-                }
-
-                @Override
-                public boolean onQueryTextChange(String newText) {
-                    selectedSong.clear();
-                    for (AudioModel audioModel : allSong) {
-                        if (audioModel.getName().toLowerCase().contains(newText.toLowerCase())) {
-                            selectedSong.add(audioModel);
-                        }
-                    }
-                    audioAdapter.notifyDataSetChanged();
+                public boolean onFling(int velocityX, int velocityY) {
+                    if (onNavigationVisibilityListener != null)
+                        onNavigationVisibilityListener.onNavVisibilityChange(velocityY > 0);
                     return false;
                 }
             });
+            audioAdapter.notifyDataSetChanged();
+
         } else {
             PermissionUtils.askStoragePermission(getActivity());
         }
@@ -77,15 +65,31 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
 
     @Override
     public void onAudioSelected(AudioModel audioMode) {
-        onLocalSongFragmentListener.onLocalSongSelected(audioMode);
+        if (onLocalSongFragmentListener != null)
+            onLocalSongFragmentListener.onLocalSongSelected(audioMode);
     }
 
     @Override
     public void onAudioLongSelected(AudioModel audioModel) {
     }
 
-    public interface OnLocalSongFragmentListener {
-        void onLocalSongSelected(AudioModel name);
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof OnLocalSongFragmentListener) {
+            onLocalSongFragmentListener = (OnLocalSongFragmentListener) context;
+        }
+        if (context instanceof OnNavigationVisibilityListener) {
+            onNavigationVisibilityListener = (OnNavigationVisibilityListener) context;
+        }
+
     }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        onLocalSongFragmentListener = null;
+        onNavigationVisibilityListener = null;
+    }
 }

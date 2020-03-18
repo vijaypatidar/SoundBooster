@@ -6,6 +6,7 @@ import android.os.Message;
 import androidx.annotation.NonNull;
 
 import com.vkpapps.soundbooster.handler.SignalHandler;
+import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
 import com.vkpapps.soundbooster.model.User;
 
 import java.io.IOException;
@@ -13,22 +14,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
-public class CommandHelperRunnable implements Runnable {
+public class ClientHelper extends Thread {
     public User user;
     private OutputStream outputStream;
     private SignalHandler signalHandler;
     private Socket socket;
     public String id;
-    private ServerHelper serverHelper;
+    private OnClientConnectionStateListener onClientConnectionStateListener;
 
-    public void setServerHelper(ServerHelper serverHelper) {
-        this.serverHelper = serverHelper;
-    }
-
-    public CommandHelperRunnable(Socket socket, @NonNull SignalHandler signalHandler, User user) {
+    public ClientHelper(Socket socket, @NonNull SignalHandler signalHandler, User user, OnClientConnectionStateListener onClientConnectionStateListener) {
         this.socket = socket;
         this.signalHandler = signalHandler;
         this.user = user;
+        this.onClientConnectionStateListener = onClientConnectionStateListener;
     }
 
     @Override
@@ -52,6 +50,12 @@ public class CommandHelperRunnable implements Runnable {
             String[] strings = res.split(",");
             id = strings[1];
             user = new User(strings[0], id);
+
+            //notify user added
+            if (onClientConnectionStateListener != null) {
+                onClientConnectionStateListener.onClientConnected(this);
+            }
+
             command = "DCN " + id;
             bundle.putString("ID", id);
             while (socket.isConnected()) {
@@ -73,9 +77,10 @@ public class CommandHelperRunnable implements Runnable {
         Message message = new Message();
         message.setData(bundle);
         signalHandler.sendMessage(message);
-        // remove from server client list
-        if (serverHelper != null) {
-            serverHelper.getCommandHelperRunnables().remove(this);
+
+        // notify client leaved or disconnected
+        if (onClientConnectionStateListener != null) {
+            onClientConnectionStateListener.onClientDisconnected(this);
         }
     }
 
@@ -90,8 +95,4 @@ public class CommandHelperRunnable implements Runnable {
         }).start();
     }
 
-
-    public boolean isConnected() {
-        return socket.isConnected();
-    }
 }
