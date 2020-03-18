@@ -2,9 +2,11 @@ package com.vkpapps.soundbooster.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -19,8 +21,10 @@ import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
+import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,11 +36,13 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private List<AudioModel> allSong;
     private AudioAdapter audioAdapter;
+    private File download;
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        download = container.getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         return inflater.inflate(R.layout.fragment_host_song, container, false);
     }
 
@@ -56,7 +62,7 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
                 @Override
                 public boolean onFling(int velocityX, int velocityY) {
                     if (onNavigationVisibilityListener != null)
-                        onNavigationVisibilityListener.onNavVisibilityChange(velocityY > 0);
+                        onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
                     return false;
                 }
             });
@@ -77,10 +83,15 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
 
     @Override
     public void onAudioLongSelected(AudioModel audioModel) {
-
+        try {
+            Utils.copyFromTo(new File(audioModel.getPath()), new File(download, audioModel.getName()));
+            Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void refreshSong() {
+    private void refreshSong() {
         allSong.clear();
         for (File file : Objects.requireNonNull(song.listFiles())) {
             AudioModel audioModel = new AudioModel();

@@ -52,7 +52,7 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
                 @Override
                 public boolean onFling(int velocityX, int velocityY) {
                     if (onNavigationVisibilityListener != null)
-                        onNavigationVisibilityListener.onNavVisibilityChange(velocityY > 0);
+                        onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
                     return false;
                 }
             });

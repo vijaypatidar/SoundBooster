@@ -7,6 +7,9 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.widget.Toast;
@@ -26,6 +29,7 @@ import com.vkpapps.soundbooster.connection.FileService;
 import com.vkpapps.soundbooster.connection.ServerHelper;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
+import com.vkpapps.soundbooster.interfaces.OnFragmentPopBackListener;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnLocalSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
@@ -42,7 +46,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
-        OnUserListRequestListener, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener, FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener {
+        OnUserListRequestListener, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
+        FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener, OnFragmentPopBackListener {
     private BottomNavigationView navView;
     private ServerHelper serverHelper;
     private SignalHandler signalHandler;
@@ -53,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private File root;
     private ArrayList<User> users = new ArrayList<>();
     private FileRequestReceiver requestReceiver;
+    private NavController navController;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,14 +70,29 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
                 R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications, R.id.navigation_local)
                 .build();
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
+        navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
         root = getDir("song", MODE_PRIVATE);
         user = Utils.loadUser();
         musicPlayer = new MusicPlayerHelper(this, this);
-        getChoice();
+        if (user == null) {
+            navController.navigate(R.id.navigation_profile);
+        } else
+            getChoice();
+    }
+
+    @Override
+    public void onPopBackStack() {
+        Toast.makeText(this, "pop back", Toast.LENGTH_SHORT).show();
+        navController.popBackStack();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        new MenuInflater(this).inflate(R.menu.main_menu, menu);
+        return true;
     }
 
     private void getChoice() {
@@ -157,11 +178,11 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     @Override
     public void onNavVisibilityChange(boolean visible) {
         if (visible) {
-            navView.setAnimation(AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar));
-            navView.setVisibility(View.GONE);
-        } else {
             navView.setAnimation(AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar));
             navView.setVisibility(View.VISIBLE);
+        } else {
+            navView.setAnimation(AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar));
+            navView.setVisibility(View.GONE);
         }
     }
 
@@ -253,14 +274,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     }
 
-    @Override
-    public void onBackPressed() {
-        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
-        builder.setMessage("Do you want to leave the party?");
-        builder.setNegativeButton("No", null);
-        builder.setPositiveButton("Yes", (dialogInterface, i) -> finish());
-        builder.create().show();
-    }
 
     @Override
     public void onRequestFailed(String name) {
@@ -290,6 +303,16 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            onBackPressed();
+        } else if (item.getItemId() == R.id.menu_profile) {
+            navController.navigate(R.id.navigation_profile);
+        }
+        ;
+        return super.onOptionsItemSelected(item);
+    }
     private void setupReceiver() {
         LocalBroadcastManager instance = LocalBroadcastManager.getInstance(this);
         if (requestReceiver != null)
