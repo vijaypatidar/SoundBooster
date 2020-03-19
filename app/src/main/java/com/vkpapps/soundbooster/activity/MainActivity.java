@@ -7,8 +7,6 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AnimationUtils;
@@ -85,15 +83,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onPopBackStack() {
-        Toast.makeText(this, "pop back", Toast.LENGTH_SHORT).show();
         navController.popBackStack();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        new MenuInflater(this).inflate(R.menu.main_menu, menu);
-        return true;
-    }
 
     private void getChoice() {
         AlertDialog.Builder ab = new AlertDialog.Builder(this);
@@ -274,6 +266,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     }
 
+    @Override
+    public void onRequestSongNotFound(String songName) {
+        String command = "SFR " + songName;
+        if (!isHost) clientHelper.write(command);
+    }
+
 
     @Override
     public void onRequestFailed(String name) {
@@ -307,12 +305,10 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
-        } else if (item.getItemId() == R.id.menu_profile) {
-            navController.navigate(R.id.navigation_profile);
         }
-        ;
         return super.onOptionsItemSelected(item);
     }
+
     private void setupReceiver() {
         LocalBroadcastManager instance = LocalBroadcastManager.getInstance(this);
         if (requestReceiver != null)

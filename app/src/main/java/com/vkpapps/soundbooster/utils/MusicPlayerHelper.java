@@ -39,6 +39,8 @@ public class MusicPlayerHelper {
                 onMusicPlayerHelperListener.onSongChange(name);
             }
         } catch (IOException e) {
+            //TODO when no such file found
+            onMusicPlayerHelperListener.onRequestSongNotFound(name);
             e.printStackTrace();
         }
     }
@@ -69,5 +71,7 @@ public class MusicPlayerHelper {
 
     public interface OnMusicPlayerHelperListener {
         void onSongChange(String name);
+
+        void onRequestSongNotFound(String songName);
     }
 }
