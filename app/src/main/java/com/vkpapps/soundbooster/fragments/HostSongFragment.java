@@ -2,13 +2,14 @@ package com.vkpapps.soundbooster.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -16,10 +17,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.AudioAdapter;
+import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
+import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
+import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,16 +33,16 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
 
     private File song;
     private OnHostSongFragmentListener onHostSongFragmentListener;
-    private List<AudioModel> selectedSong, allSong;
+    private OnNavigationVisibilityListener onNavigationVisibilityListener;
+    private List<AudioModel> allSong;
     private AudioAdapter audioAdapter;
+    private File download;
 
-    public HostSongFragment(OnHostSongFragmentListener onHostSongFragmentListener) {
-        this.onHostSongFragmentListener = onHostSongFragmentListener;
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        download = container.getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         return inflater.inflate(R.layout.fragment_host_song, container, false);
     }
 
@@ -48,35 +53,22 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
         song = view.getContext().getDir("song", Context.MODE_PRIVATE);
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
             allSong = new ArrayList<>();
-            selectedSong = new ArrayList<>(allSong);
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
             refreshSong();
-            audioAdapter = new AudioAdapter(selectedSong, this);
+            audioAdapter = new AudioAdapter(allSong, this);
             recyclerView.setItemAnimator(new DefaultItemAnimator());
             recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-            recyclerView.setAdapter(audioAdapter);
-            audioAdapter.notifyDataSetChanged();
-
-            // searchView
-            SearchView searchView = view.findViewById(R.id.search_bar);
-            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
                 @Override
-                public boolean onQueryTextSubmit(String query) {
-                    return false;
-                }
-
-                @Override
-                public boolean onQueryTextChange(String newText) {
-                    selectedSong.clear();
-                    for (AudioModel audioModel : allSong) {
-                        if (audioModel.getName().toLowerCase().contains(newText.toLowerCase())) {
-                            selectedSong.add(audioModel);
-                        }
-                    }
-                    audioAdapter.notifyDataSetChanged();
+                public boolean onFling(int velocityX, int velocityY) {
+                    if (onNavigationVisibilityListener != null)
+                        onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
                     return false;
                 }
             });
+            recyclerView.setAdapter(audioAdapter);
+            audioAdapter.notifyDataSetChanged();
+
         } else {
             PermissionUtils.askStoragePermission(getActivity());
         }
@@ -86,24 +78,27 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
 
     @Override
     public void onAudioSelected(AudioModel audioMode) {
-        onHostSongFragmentListener.onSelectAudio(audioMode);
+        onHostSongFragmentListener.onHostAudioSelected(audioMode);
     }
 
     @Override
     public void onAudioLongSelected(AudioModel audioModel) {
-
+        try {
+            Utils.copyFromTo(new File(audioModel.getPath()), new File(download, audioModel.getName()));
+            Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public void refreshSong() {
+    private void refreshSong() {
         allSong.clear();
-        selectedSong.clear();
         for (File file : Objects.requireNonNull(song.listFiles())) {
             AudioModel audioModel = new AudioModel();
             audioModel.setName(file.getName());
             audioModel.setPath(file.getPath());
             allSong.add(audioModel);
         }
-        selectedSong.addAll(allSong);
         if (audioAdapter != null) {
             audioAdapter.notifyDataSetChanged();
         }
@@ -115,9 +110,23 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
         refreshSong();
     }
 
-    public interface OnHostSongFragmentListener {
-        void onSelectAudio(AudioModel name);
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof OnHostSongFragmentListener) {
+            onHostSongFragmentListener = (OnHostSongFragmentListener) context;
+        }
+        if (context instanceof OnNavigationVisibilityListener) {
+            onNavigationVisibilityListener = (OnNavigationVisibilityListener) context;
+        }
+
     }
 
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        onHostSongFragmentListener = null;
+        onNavigationVisibilityListener = null;
+    }
 }
-

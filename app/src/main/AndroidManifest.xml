@@ -16,7 +16,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore="GoogleAppIndexingWarning">
+        tools:ignore="GoogleAppIndexingWarning"
+        tools:targetApi="q">
+        <activity
+            android:name=".activity.MainActivity"
+            android:label="@string/title_activity_main2" />
 
         <service
             android:name=".connection.FileService"
@@ -25,18 +29,6 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-4043007075380826~2360517416" />
-
-        <activity
-            android:name=".activity.PartyActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppThemeNoAction"
-            tools:ignore="LockedOrientationActivity" />
-        <activity
-            android:name=".activity.UserDetailActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@style/UserDetail"
-            tools:ignore="LockedOrientationActivity" />
         <activity
             android:name=".activity.SplashActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
@@ -49,11 +41,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activity.MainActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppThemeNoAction"
-            tools:ignore="LockedOrientationActivity" />
     </application>
 
 </manifest>

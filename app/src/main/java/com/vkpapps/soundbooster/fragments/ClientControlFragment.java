@@ -1,5 +1,6 @@
 package com.vkpapps.soundbooster.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,25 +16,29 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.ClientAdapter;
+import com.vkpapps.soundbooster.interfaces.OnUserListRequestListener;
 import com.vkpapps.soundbooster.model.User;
 
 import java.util.ArrayList;
 
 public class ClientControlFragment extends Fragment {
 
-    private ClientAdapter clientAdapter;
     private ArrayList<User> users;
+    private OnUserListRequestListener onServerHelperObjectRequestListener;
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        users = new ArrayList<>();
-        clientAdapter = new ClientAdapter(users);
+
+        if (users == null) users = new ArrayList<>();
+        users.add(new User("Vijay Patidar", "hfsdjkhfk"));
+        ClientAdapter clientAdapter = new ClientAdapter(users);
         RecyclerView recyclerView = view.findViewById(R.id.clientList);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         recyclerView.setAdapter(clientAdapter);
         clientAdapter.notifyDataSetChanged();
+
         Log.d("TAG", "onViewCreated: ============================== ");
     }
 
@@ -45,18 +50,19 @@ public class ClientControlFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        if (clientAdapter != null) clientAdapter.notifyDataSetChanged();
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof OnUserListRequestListener) {
+            onServerHelperObjectRequestListener = (OnUserListRequestListener) context;
+            users = onServerHelperObjectRequestListener.onUserListRequest();
+        }
     }
 
-    public void addUser(User user) {
-        for (int i = 0; i < users.size(); i++) {
-            if (users.get(i).getUserId().equals(user.getUserId())) {
-                users.remove(i--);
-            }
-        }
-        users.add(user);
-        clientAdapter.notifyDataSetChanged();
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        onServerHelperObjectRequestListener = null;
     }
+
+
 }

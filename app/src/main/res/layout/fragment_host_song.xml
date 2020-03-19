@@ -6,14 +6,6 @@
     android:orientation="vertical"
     tools:context=".fragments.HostSongFragment">
 
-    <androidx.appcompat.widget.SearchView
-        android:id="@+id/search_bar"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:layout_margin="5dp"
-        android:background="@drawable/round_rectangle"
-        android:queryHint="enter" />
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"

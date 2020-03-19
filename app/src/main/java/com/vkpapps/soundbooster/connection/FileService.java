@@ -78,13 +78,13 @@ public class FileService extends IntentService {
         Socket socket;
         if (isHost) {
             try (ServerSocket serverSocket = new ServerSocket(15448)) {
-                serverSocket.setSoTimeout(5000);
+                serverSocket.setSoTimeout(3000);
                 socket = serverSocket.accept();
             }
         } else {
             socket = new Socket();
             String host = "192.168.43.1";
-            socket.connect(new InetSocketAddress(host, 15448), 5000);
+            socket.connect(new InetSocketAddress(host, 15448), 3000);
         }
         return socket;
     }
@@ -94,7 +94,9 @@ public class FileService extends IntentService {
             onAccepted(name, clientId, false);
             Socket socket = getSocket(isHost);
             InputStream in = socket.getInputStream();
-            OutputStream out = new FileOutputStream(new File(root, name));
+            File file = new File(root, name.trim());
+            file.createNewFile();
+            OutputStream out = new FileOutputStream(file);
             byte[] bytes = new byte[2 * 1024];
             int count;
             while ((count = in.read(bytes)) > 0) {
@@ -115,7 +117,8 @@ public class FileService extends IntentService {
         try {
             onAccepted(name, clientId, true);
             Socket socket = getSocket(isHost);
-            InputStream inputStream = new FileInputStream(new File(root, name));
+            File file = new File(root, name.trim());
+            InputStream inputStream = new FileInputStream(file);
             OutputStream outputStream = socket.getOutputStream();
             byte[] bytes = new byte[2 * 1024];
             int count;

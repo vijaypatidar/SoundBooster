@@ -15,7 +15,7 @@ public class MusicPlayerHelper {
     private File root;
     private OnMusicPlayerHelperListener onMusicPlayerHelperListener;
 
-    private MusicPlayerHelper(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
+    public MusicPlayerHelper(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
         this.root = context.getDir("song", Context.MODE_PRIVATE);
         this.onMusicPlayerHelperListener = onMusicPlayerHelperListener;
     }
@@ -30,7 +30,7 @@ public class MusicPlayerHelper {
 
     public void loadAndPlay(String name) {
         try {
-            Log.d("CONTROLS", "loadAndPlay:==========  " + new File(root, name).exists());
+            Log.d("CONTROLS", "loadAndPlay:==========  >" + name + "<");
             mediaPlayer.reset();
             mediaPlayer.setDataSource(new File(root, name).getAbsolutePath());
             mediaPlayer.prepare();
