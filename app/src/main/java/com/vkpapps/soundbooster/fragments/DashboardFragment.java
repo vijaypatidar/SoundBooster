@@ -18,24 +18,30 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.ClientAdapter;
+import com.vkpapps.soundbooster.connection.ClientHelper;
+import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.interfaces.OnUserListRequestListener;
+import com.vkpapps.soundbooster.interfaces.OnUsersUpdateListener;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.model.UserViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DashboardFragment extends Fragment {
+public class DashboardFragment extends Fragment implements OnUsersUpdateListener {
 
     private List<User> users;
     private OnUserListRequestListener onUserListRequestListener;
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
+    private ClientAdapter clientAdapter;
+    private OnFragmentAttachStatusListener onFragmentAttachStatusListener;
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        ClientAdapter clientAdapter = new ClientAdapter(users,view.getContext());
+        clientAdapter = new ClientAdapter(users, view.getContext());
         RecyclerView recyclerView = view.findViewById(R.id.clientList);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
@@ -65,15 +71,24 @@ public class DashboardFragment extends Fragment {
         super.onAttach(context);
         onNavigationVisibilityListener = (OnNavigationVisibilityListener) context;
         onUserListRequestListener = (OnUserListRequestListener) context;
+        onFragmentAttachStatusListener = (OnFragmentAttachStatusListener) context;
+        onFragmentAttachStatusListener.onFragmentAttached(this);
         users = onUserListRequestListener.onRequestUsers();
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
+        onFragmentAttachStatusListener.onFragmentDetached(this);
         onUserListRequestListener = null;
         onNavigationVisibilityListener = null;
+        onFragmentAttachStatusListener = null;
     }
 
 
+    @Override
+    public void onUserUpdated() {
+        if (clientAdapter != null)
+            clientAdapter.notifyDataSetChanged();
+    }
 }
