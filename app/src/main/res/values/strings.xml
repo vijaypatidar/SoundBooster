@@ -4,10 +4,11 @@
 
     <string name="save">save</string>
     <string name="hint_name">enter name</string>
-    <string name="searching_for_party">Searching for party…</string>
-    <string name="message_connect_host">please connect to host</string>
-    <string name="sync_devices">sync devices</string>
-    <string name="check_for_update">Check for update</string>
-    <string name="share">Share</string>
+    <string name="title_activity_main2">MainActivity</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="title_my_song">My Song</string>
+    <string name="title_profile">Profile</string>
 
 </resources>

@@ -1,68 +1,90 @@
 package com.vkpapps.soundbooster.handler;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.vkpapps.soundbooster.model.Control;
-import com.vkpapps.soundbooster.model.InformClient;
-import com.vkpapps.soundbooster.model.Reaction;
-import com.vkpapps.soundbooster.model.Request;
-import com.vkpapps.soundbooster.model.User;
+import java.util.Objects;
 
 
 public class SignalHandler extends Handler {
-    public static final int NEW_DEVICE_CONNECTED = 1;
-    public static final int NEW_SONG_REQUEST = 3;
-    public static final int NEW_CONTROL_REQUEST = 4;
-    public static final int HANDLE_REACTION = 11;
-    public static final int CONNECT_TO_HOST = 6;
-    public static final int HANDLE_REQUEST = 7;
 
     private final OnMessageHandlerListener onMessageHandlerListener;
+    private boolean isHost;
 
-    public SignalHandler(OnMessageHandlerListener onMessageHandlerListener) {
+    public SignalHandler(OnMessageHandlerListener onMessageHandlerListener, boolean isHost) {
         this.onMessageHandlerListener = onMessageHandlerListener;
+        this.isHost = isHost;
     }
 
     @Override
     public void handleMessage(@NonNull Message msg) {
-        int what = msg.what;
-        Bundle bundle = msg.getData();
-        switch (what) {
-            case CONNECT_TO_HOST:
-                onMessageHandlerListener.handleConnectToHost();
-                break;
-            case NEW_DEVICE_CONNECTED:
-                onMessageHandlerListener.handleNewClient((User) bundle.get("data"));
-                break;
-            case NEW_SONG_REQUEST:
-                onMessageHandlerListener.handelClientFileRequest((Request) bundle.getSerializable("data"));
-                break;
-            case NEW_CONTROL_REQUEST:
-                onMessageHandlerListener.handleControl((Control) bundle.getSerializable("data"));
-                break;
-            case HANDLE_REQUEST:
-                onMessageHandlerListener.handleRequest((InformClient) bundle.getSerializable("data"));
-                break;
-            case HANDLE_REACTION:
-                onMessageHandlerListener.handleReaction((Reaction) bundle.getSerializable("data"));
+        try {
+            String command = Objects.requireNonNull(msg.getData().getString("command"));
+            Log.d("CONTROLS", "handleMessage: " + command.substring(0, 3) + " t->" + command.substring(4) + "<");
+            if (isHost) {
+                onMessageHandlerListener.broadcastCommand(command);
+            }
+            switch (command.substring(0, 3)) {
+                case "PLY":
+                    onMessageHandlerListener.onPlayRequest(command.substring(4));
+                    break;
+                case "PAS":
+                    onMessageHandlerListener.onPauseRequest();
+                    break;
+                case "SKT":
+                    onMessageHandlerListener.onSeekToRequest(Integer.parseInt(command.substring(4)));
+                    break;
+                case "RFR":
+                    onMessageHandlerListener.onReceiveFileRequest(command.substring(3), msg.getData().getString("ID"));
+                    break;
+                case "SFR":
+                    onMessageHandlerListener.onSendFileRequest(command.substring(3), msg.getData().getString("ID"));
+                    break;
+                case "RFC":
+                    onMessageHandlerListener.onReceiveFileRequestAccepted(command.substring(3), msg.getData().getString("ID"));
+                    break;
+                case "SFC":
+                    onMessageHandlerListener.onSendFileRequestAccepted(command.substring(3), msg.getData().getString("ID"));
+                    break;
+                case "DCN":
+                    onMessageHandlerListener.onNewDeviceConnected(msg.getData().getString("ID"));
+                    break;
+                case "DDN":
+                    onMessageHandlerListener.onDeviceDisconnected(msg.getData().getString("ID"));
+                    break;
+                default:
+                    Log.d("CONTROLS", "handleMessage: =================================== invalid req " + command);
+            }
+        } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
+            e.printStackTrace();
         }
+
     }
 
     public interface OnMessageHandlerListener {
-        void handleNewClient(User user);
+        void onPlayRequest(String name);
 
-        void handleConnectToHost();
+        void onResumeRequest();
 
-        void handelClientFileRequest(Request request);
+        void onPauseRequest();
 
-        void handleControl(Control control);
+        void onSeekToRequest(int time);
 
-        void handleRequest(InformClient informClient);
+        void broadcastCommand(String command);
 
-        void handleReaction(Reaction data);
+        void onNewDeviceConnected(String id);
+
+        void onDeviceDisconnected(String id);
+
+        void onSendFileRequest(String name, String id);
+
+        void onReceiveFileRequest(String name, String id);
+
+        void onSendFileRequestAccepted(String name, String id);
+
+        void onReceiveFileRequestAccepted(String name, String id);
     }
 }

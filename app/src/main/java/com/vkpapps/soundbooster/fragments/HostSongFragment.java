@@ -1,9 +1,12 @@
 package com.vkpapps.soundbooster.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,83 +16,117 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.adapter.HostMusicAdapter;
-import com.vkpapps.soundbooster.model.HostSong;
+import com.vkpapps.soundbooster.adapter.AudioAdapter;
+import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
+import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
+import com.vkpapps.soundbooster.model.AudioModel;
+import com.vkpapps.soundbooster.utils.PermissionUtils;
+import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
-public class HostSongFragment extends Fragment implements HostMusicAdapter.OnItemClickListener {
+public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSelectedListener {
+
+    private File song;
+    private OnHostSongFragmentListener onHostSongFragmentListener;
+    private OnNavigationVisibilityListener onNavigationVisibilityListener;
+    private List<AudioModel> allSong;
+    private AudioAdapter audioAdapter;
+    private File download;
 
 
-    private ArrayList<HostSong> hostSongs;
-    private final OnHostSongFragmentListener onHostSongFragmentListener;
-    private final String root;
-    private HostMusicAdapter hostMusicAdapter;
-    private final ArrayList<String> hostSongList;
-    private int index = 0;
-
-    public HostSongFragment(OnHostSongFragmentListener onHostSongFragmentListener, String root, ArrayList<String> hostSongList) {
-        this.onHostSongFragmentListener = onHostSongFragmentListener;
-        this.root = root;
-        this.hostSongList = hostSongList;
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        download = container.getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+        return inflater.inflate(R.layout.fragment_host_song, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        RecyclerView recyclerView = (RecyclerView) view;
-        hostSongs = new ArrayList<>();
-        hostMusicAdapter = new HostMusicAdapter(hostSongs, this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(hostMusicAdapter);
-        refreshList();
+        song = view.getContext().getDir("song", Context.MODE_PRIVATE);
+        if (PermissionUtils.checkStoragePermission(view.getContext())) {
+            allSong = new ArrayList<>();
+            RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
+            refreshSong();
+            audioAdapter = new AudioAdapter(allSong, this);
+            recyclerView.setItemAnimator(new DefaultItemAnimator());
+            recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
+            recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
+                @Override
+                public boolean onFling(int velocityX, int velocityY) {
+                    if (onNavigationVisibilityListener != null)
+                        onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
+                    return false;
+                }
+            });
+            recyclerView.setAdapter(audioAdapter);
+            audioAdapter.notifyDataSetChanged();
+
+        } else {
+            PermissionUtils.askStoragePermission(getActivity());
+        }
+
 
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_host_song, container, false);
+    public void onAudioSelected(AudioModel audioMode) {
+        onHostSongFragmentListener.onHostAudioSelected(audioMode);
     }
 
     @Override
-    public void onLocalMusicSelect(int position) {
-        onHostSongFragmentListener.onMusicSelectToPlay(hostSongs.get(position));
-    }
-
-    public void refreshList() {
+    public void onAudioLongSelected(AudioModel audioModel) {
         try {
-            File[] allAudios = new File(root).listFiles();
-            assert allAudios != null;
-            hostSongs.clear();
-            hostSongList.clear();
-            for (File file : allAudios) {
-                hostSongs.add(new HostSong(file.getPath(), file.getName(), true));
-                hostSongList.add(file.getName());
-            }
-            hostMusicAdapter.notifyDataSetChanged();
-        } catch (Exception ignored) {
+            Utils.copyFromTo(new File(audioModel.getPath()), new File(download, audioModel.getName()));
+            Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public interface OnHostSongFragmentListener {
-        void onMusicSelectToPlay(HostSong hostSong);
-    }
-
-    public HostSong moveTo(int pos) {
-        index = index + pos;
-        if (index >= 0 && index < hostSongs.size()) {
-            return hostSongs.get(index);
+    private void refreshSong() {
+        allSong.clear();
+        for (File file : Objects.requireNonNull(song.listFiles())) {
+            AudioModel audioModel = new AudioModel();
+            audioModel.setName(file.getName());
+            audioModel.setPath(file.getPath());
+            allSong.add(audioModel);
         }
-        return null;
+        if (audioAdapter != null) {
+            audioAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        refreshList();
+        refreshSong();
+    }
+
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if (context instanceof OnHostSongFragmentListener) {
+            onHostSongFragmentListener = (OnHostSongFragmentListener) context;
+        }
+        if (context instanceof OnNavigationVisibilityListener) {
+            onNavigationVisibilityListener = (OnNavigationVisibilityListener) context;
+        }
+
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        onHostSongFragmentListener = null;
+        onNavigationVisibilityListener = null;
     }
 }

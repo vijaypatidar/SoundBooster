@@ -7,11 +7,13 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.VectorDrawable;
+import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
+import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
 
 import java.io.File;
@@ -20,39 +22,36 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class Utils {
-    public static User getUser(File root) {
+
+    public static File root;
+
+    public static User loadUser() {
         User user = null;
         try {
-            FileInputStream inputStream = new FileInputStream(new File(root, "user.txt"));
-            ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+            ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(new File(root, "user")));
             Object object = objectInputStream.readObject();
             if (object instanceof User) {
                 user = (User) object;
             }
             objectInputStream.close();
-            inputStream.close();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return user;
     }
 
-    public static void setUser(File root, User user) {
+    public static void setUser(User user) {
         try {
-            FileOutputStream os = new FileOutputStream(new File(root, "user.txt"));
-            ObjectOutputStream outputStream = new ObjectOutputStream(os);
+            File file = new File(root, "user");
+            if (!file.exists()) file.canExecute();
+            ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
             outputStream.writeObject(user);
             outputStream.flush();
             outputStream.close();
-            os.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -78,49 +77,49 @@ public class Utils {
         }
     }
 
-    public static Socket getSocket(boolean isHost, String host) throws IOException {
-        Log.d("vijay", "getSocket: ======================================== isHost = " + isHost + " host " + host);
-        Socket socket;
-        if (isHost) {
-            try (ServerSocket serverSocket = new ServerSocket(15448)) {
-                serverSocket.setSoTimeout(5000);
-                socket = serverSocket.accept();
+
+    public static List<AudioModel> getAllAudioFromDevice(final Context context) {
+        Log.d("control", "getAllAudioFromDevice: ========================");
+        final List<AudioModel> tempAudioList = new ArrayList<>();
+
+        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        String[] projection = {MediaStore.Audio.AudioColumns.DATA, MediaStore.Audio.AudioColumns.ALBUM, MediaStore.Audio.ArtistColumns.ARTIST,};
+        Cursor c = context.getContentResolver().query(uri, projection, null, null, null);
+
+        if (c != null) {
+            while (c.moveToNext()) {
+
+                AudioModel audioModel = new AudioModel();
+                String path = c.getString(c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
+                String album = c.getString(1);
+                String artist = c.getString(2);
+                String name = new File(path).getName();
+
+                audioModel.setName(name);
+                audioModel.setAlbum(album);
+                audioModel.setArtist(artist);
+                audioModel.setPath(path);
+
+                Log.e("Path :" + path, " Artist :" + artist);
+
+                tempAudioList.add(audioModel);
             }
-        } else {
-            socket = new Socket();
-            socket.connect(new InetSocketAddress(host, 15448), 5000);
+            c.close();
         }
-        return socket;
+//        Log.d("control", "getAllAudioFromDevice:  ================= " + tempAudioList.size());
+        return tempAudioList;
     }
 
-    public static void deleteFile(final String path) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (File file : Objects.requireNonNull(new File(path).listFiles())) {
-                    file.delete();
-                }
-            }
-        }).start();
-    }
-
-    public static List<File> getAllAudios(Context c) {
-        List<File> files = new ArrayList<>();
-        String[] projection = {MediaStore.Audio.AudioColumns.DATA, MediaStore.Audio.Media.DISPLAY_NAME};
-        Cursor cursor = c.getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, null, null, null);
-        try {
-            assert cursor != null;
-            cursor.moveToFirst();
-            do {
-                files.add((new File(cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)))));
-            } while (cursor.moveToNext());
-
-            cursor.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static void copyFromTo(File from, File to) throws IOException {
+        FileInputStream fileInputStream = new FileInputStream(from.getPath());
+        FileOutputStream fileOutputStream = new FileOutputStream(to);
+        byte[] bytes = new byte[1024 * 2];
+        int read;
+        while ((read = fileInputStream.read(bytes)) > 0) {
+            fileOutputStream.write(bytes, 0, read);
         }
-        return files;
+        fileOutputStream.flush();
+        fileOutputStream.close();
+        fileInputStream.close();
     }
-
-
 }

@@ -1,67 +1,63 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.vkpapps.soundbooster.connection;
 
-import android.os.Bundle;
-import android.os.Message;
-
 import com.vkpapps.soundbooster.handler.SignalHandler;
-import com.vkpapps.soundbooster.model.Control;
-import com.vkpapps.soundbooster.model.Reaction;
-import com.vkpapps.soundbooster.model.Request;
+import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
 import com.vkpapps.soundbooster.model.User;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
-class ServerHelper extends Thread {
-    private final Socket socket;
-    private final SignalHandler signalHandler;
+public class ServerHelper extends Thread {
+    private SignalHandler signalHandler;
+    private ArrayList<ClientHelper> clientHelpers;
+    private User user;
+    private OnClientConnectionStateListener onClientConnectionStateListener;
 
-    ServerHelper(Socket socket, SignalHandler signalHandler) {
-        this.socket = socket;
+    public ServerHelper(SignalHandler signalHandler, User user, OnClientConnectionStateListener onClientConnectionStateListener) {
         this.signalHandler = signalHandler;
+        this.user = user;
+        this.onClientConnectionStateListener = onClientConnectionStateListener;
+        clientHelpers = new ArrayList<>();
     }
 
     @Override
     public void run() {
-        while (socket.isConnected()) {
+        while (true) {
             try {
-                ObjectInputStream objectInputStream;
-                InputStream inputStream = socket.getInputStream();
-                objectInputStream = new ObjectInputStream(inputStream);
-                Object object = objectInputStream.readObject();
-                Message message = new Message();
-                Bundle bundle = new Bundle();
-                message.setData(bundle);
-                if (object instanceof Control) {
-                    message.what = SignalHandler.NEW_CONTROL_REQUEST;
-                    bundle.putSerializable("data", (Control) object);
-                    Server.getInstance().send(object, socket);
-                } else if (object instanceof Request) {
-                    message.what = SignalHandler.NEW_SONG_REQUEST;
-                    bundle.putSerializable("data", (Request) object);
-                } else if (object instanceof User) {
-                    User user = (User) object;
-                    message.what = SignalHandler.NEW_DEVICE_CONNECTED;
-                    bundle.putSerializable("data", user);
-                    Server.list.add(socket);
-                    Server.socketHashMap.put(user.getUserId(), socket);
-                } else if (object instanceof Reaction) {
-                    message.what = SignalHandler.HANDLE_REACTION;
-                    bundle.putSerializable("data", (Reaction) object);
-                }
-                signalHandler.sendMessage(message);
-            } catch (IOException | ClassNotFoundException ignored) {
+                ServerSocket serverSocket = new ServerSocket(1203);
+                Socket socket = serverSocket.accept();
+                ClientHelper commandHelper = new ClientHelper(socket, signalHandler, user, onClientConnectionStateListener);
+                clientHelpers.add(commandHelper);
+                new Thread(commandHelper).start();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-
         }
     }
 
+    public void sendCommand(String command) {
+        for (ClientHelper c : clientHelpers) {
+            c.write(command);
+        }
+    }
 
+    public void sendCommandToOnly(String command, String clientId) {
+        for (ClientHelper c : clientHelpers) {
+            if (c.id.equals(clientId)) c.write(command);
+        }
+    }
+
+    public void setUser(User tmp, String id) {
+        for (ClientHelper c : clientHelpers) {
+            if (c.id.equals(id)) {
+                c.user = tmp;
+            }
+        }
+    }
+
+    public ArrayList<ClientHelper> getClientHelpers() {
+        return clientHelpers;
+    }
 }

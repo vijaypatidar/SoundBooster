@@ -12,51 +12,35 @@
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        tools:ignore="GoogleAppIndexingWarning">
-
-        <service
-            android:name=".services.FileService"
-            android:exported="false" />
-        <service
-            android:name=".services.MusicPlayerService"
-            android:exported="false" />
-
+        tools:ignore="GoogleAppIndexingWarning"
+        tools:targetApi="q">
         <activity
-            android:name=".activity.MusicPlayerActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppThemeNoAction" />
+            android:name=".activity.MainActivity"
+            android:label="@string/title_activity_main2" />
+
+        <service
+            android:name=".connection.FileService"
+            android:exported="false" />
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-4043007075380826~2360517416" />
-
-        <activity
-            android:name=".activity.PartyActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppThemeNoAction" />
-
-        <activity
-            android:name=".activity.UserDetailActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:screenOrientation="portrait"
-            android:theme="@style/UserDetail" />
         <activity
             android:name=".activity.SplashActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="portrait"
-            android:theme="@style/SplashScreen">
+            android:theme="@style/SplashScreen"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".activity.MainActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppThemeNoAction" />
     </application>
 
 </manifest>

@@ -1,9 +1,9 @@
 package com.vkpapps.soundbooster.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -11,15 +11,23 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.connection.Server;
+import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
+import com.vkpapps.soundbooster.interfaces.OnClientControlChangeListener;
 import com.vkpapps.soundbooster.model.User;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> {
 
-    public static ArrayList<User> users = new ArrayList<>();
+    private List<User> users;
+    private OnClientControlChangeListener onClientConnectionStateListener;
 
+    public ClientAdapter(List<User> users, Context context) {
+        this.users = users;
+        if (context instanceof OnClientControlChangeListener)
+            onClientConnectionStateListener = (OnClientControlChangeListener) context;
+    }
 
     @NonNull
     @Override
@@ -32,13 +40,11 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
     public void onBindViewHolder(@NonNull MyHolder holder, int position) {
         final User user = users.get(position);
         holder.userName.setText(user.getName());
-        holder.switchAllow.setChecked(user.isSharingAllowed());
-        holder.switchAllow.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                user.setSharingAllowed(b);
-                Server.getInstance().sendRule(user);
-            }
+        holder.switchAllow.setChecked(user.isAccess());
+        holder.switchAllow.setOnCheckedChangeListener((compoundButton, b) -> {
+            if (onClientConnectionStateListener!=null)
+                onClientConnectionStateListener.OnClientControlChangeRequest(user);
+            //todo add permission manager
         });
     }
 
@@ -47,7 +53,7 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
         return users.size();
     }
 
-    class MyHolder extends RecyclerView.ViewHolder {
+    static class MyHolder extends RecyclerView.ViewHolder {
 
         private Switch switchAllow;
         private TextView userName;
