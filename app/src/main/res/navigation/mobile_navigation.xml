@@ -7,26 +7,47 @@
         android:id="@+id/navigation_home"
         android:name="com.vkpapps.soundbooster.fragments.HostSongFragment"
         android:label="@string/title_home"
-        tools:layout="@layout/fragment_local_song" />
+        tools:layout="@layout/fragment_host_song">
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_local"
+            app:destination="@id/navigation_profile"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_notifications"
+            app:destination="@id/navigation_notifications"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_dashboard"
+            app:destination="@id/navigation_dashboard"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"
+            app:popUpToInclusive="true" />
+    </fragment>
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.vkpapps.soundbooster.fragments.ClientControlFragment"
+        android:name="com.vkpapps.soundbooster.fragments.DashboardFragment"
         android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_client_control" />
+        tools:layout="@layout/fragment_dashboard" />
 
     <fragment
         android:id="@+id/navigation_notifications"
-        android:name="com.vkpapps.soundbooster.ui.notifications.NotificationsFragment"
+        android:name="com.vkpapps.soundbooster.fragments.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
     <fragment
         android:id="@+id/navigation_local"
         android:name="com.vkpapps.soundbooster.fragments.LocalSongFragment"
         android:label="@string/title_my_song"
-        tools:layout="@layout/fragment_local_song"></fragment>
+        tools:layout="@layout/fragment_local_song">
+
+    </fragment>
     <fragment
         android:id="@+id/navigation_profile"
         android:name="com.vkpapps.soundbooster.fragments.ProfileFragment"
         android:label="My Profile"
-        tools:layout="@layout/fragment_user_detail"></fragment>
+        tools:layout="@layout/fragment_user_detail" />
 </navigation>

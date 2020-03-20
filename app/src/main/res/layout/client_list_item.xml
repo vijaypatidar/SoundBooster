@@ -8,14 +8,13 @@
     android:orientation="horizontal"
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
-    app:cardBackgroundColor="@color/gray"
+    android:translationZ="3dp"
     app:cardCornerRadius="15dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@null">
-
         <androidx.cardview.widget.CardView
             android:id="@+id/cardView"
             android:layout_width="80dp"
@@ -23,7 +22,6 @@
             android:layout_centerVertical="true"
             android:layout_marginStart="5dp"
             android:overScrollMode="never"
-            android:translationZ="5dp"
             app:cardCornerRadius="40dp"
             app:cardElevation="0dp"
             app:cardPreventCornerOverlap="true">
@@ -32,7 +30,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:src="@mipmap/brand"
+                android:src="@drawable/ic_profile"
                 tools:ignore="ContentDescription" />
         </androidx.cardview.widget.CardView>
 
@@ -41,40 +39,39 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginEnd="10dp"
+            android:layout_centerVertical="true"
             android:layout_toEndOf="@+id/cardView"
             android:lines="1"
             android:padding="5dp"
-            android:textColor="@color/white"
-            android:textSize="14sp"
+            android:textAllCaps="true"
+            android:textColor="@color/gray"
+            android:textSize="20sp"
             tools:text="user name" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/userName"
             android:layout_marginStart="10dp"
-            android:layout_marginTop="25dp"
             android:layout_marginEnd="10dp"
             android:layout_toEndOf="@+id/cardView"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="5dp"
             android:orientation="horizontal">
-
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="10dp"
                 android:layout_weight="1"
                 android:gravity="end"
+                android:textColor="@color/gray"
+                android:alpha="100"
                 android:text="access"
                 android:textSize="12sp" />
-
             <Switch
                 android:id="@+id/switchAllow"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:enabled="true" />
-
         </LinearLayout>
     </RelativeLayout>
 </androidx.cardview.widget.CardView>

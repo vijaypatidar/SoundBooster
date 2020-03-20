@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.ui.notifications;
+package com.vkpapps.soundbooster.model;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;

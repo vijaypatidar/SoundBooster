@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.ui.notifications;
+package com.vkpapps.soundbooster.fragments;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -13,6 +13,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.vkpapps.soundbooster.R;
+import com.vkpapps.soundbooster.model.NotificationsViewModel;
 
 public class NotificationsFragment extends Fragment {
 

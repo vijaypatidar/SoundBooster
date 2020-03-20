@@ -7,14 +7,14 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -27,15 +27,20 @@ import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.connection.FileRequestReceiver;
 import com.vkpapps.soundbooster.connection.FileService;
 import com.vkpapps.soundbooster.connection.ServerHelper;
+import com.vkpapps.soundbooster.fragments.DashboardFragment;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
+import com.vkpapps.soundbooster.interfaces.OnClientControlChangeListener;
+import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentPopBackListener;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnLocalSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.interfaces.OnUserListRequestListener;
+import com.vkpapps.soundbooster.interfaces.OnUsersUpdateListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
+import com.vkpapps.soundbooster.model.UserViewModel;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.Utils;
 
@@ -44,9 +49,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
-        OnUserListRequestListener, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
+        OnUserListRequestListener, OnFragmentAttachStatusListener, OnClientControlChangeListener,OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
         FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener, OnFragmentPopBackListener {
     private BottomNavigationView navView;
     private ServerHelper serverHelper;
@@ -56,9 +62,10 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private boolean isHost;
     private User user;
     private File root;
-    private ArrayList<User> users = new ArrayList<>();
     private FileRequestReceiver requestReceiver;
     private NavController navController;
+    private List<User> users;
+    private OnUsersUpdateListener onUsersUpdateListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
+        users = new ArrayList<>();
         root = getDir("song", MODE_PRIVATE);
         user = Utils.loadUser();
         musicPlayer = new MusicPlayerHelper(this, this);
@@ -85,15 +93,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onPopBackStack() {
-        Toast.makeText(this, "pop back", Toast.LENGTH_SHORT).show();
         navController.popBackStack();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        new MenuInflater(this).inflate(R.menu.main_menu, menu);
-        return true;
-    }
 
     private void getChoice() {
         AlertDialog.Builder ab = new AlertDialog.Builder(this);
@@ -186,10 +188,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         }
     }
 
-    @Override
-    public ArrayList<User> onUserListRequest() {
-        return users;
-    }
+
 
     @Override
     public void onPlayRequest(String name) {
@@ -274,6 +273,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     }
 
+    @Override
+    public void onRequestSongNotFound(String songName) {
+        String command = "SFR " + songName;
+        if (!isHost) clientHelper.write(command);
+    }
+
 
     @Override
     public void onRequestFailed(String name) {
@@ -295,24 +300,28 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onClientConnected(ClientHelper clientHelper) {
-
+        users.add(clientHelper.user);
+        if (onUsersUpdateListener!=null){
+            runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
+        }
     }
 
     @Override
     public void onClientDisconnected(ClientHelper clientHelper) {
-
+        users.remove(clientHelper.user);
+        if (onUsersUpdateListener!=null){
+            runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
+        }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
-        } else if (item.getItemId() == R.id.menu_profile) {
-            navController.navigate(R.id.navigation_profile);
         }
-        ;
         return super.onOptionsItemSelected(item);
     }
+
     private void setupReceiver() {
         LocalBroadcastManager instance = LocalBroadcastManager.getInstance(this);
         if (requestReceiver != null)
@@ -325,5 +334,35 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             intentFilter.addAction(FileService.REQUEST_ACCEPTED);
         }
         instance.registerReceiver(requestReceiver, intentFilter);
+    }
+
+    @Override
+    public List<User> onRequestUsers() {
+        return users;
+    }
+
+    @Override
+    public void OnClientControlChangeRequest(User user) {
+        //for dashboard fragment
+        if (isHost){
+            user.setAccess(!user.isAccess());
+            serverHelper.sendCommandToOnly("CTR "+(user.isAccess()?"yes":"no"),user.getUserId());
+        }else {
+            Toast.makeText(this, "Only host of party can change controls of users", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onFragmentAttached(Fragment fragment) {
+        if (fragment instanceof DashboardFragment){
+            onUsersUpdateListener = (OnUsersUpdateListener) fragment;
+        }
+    }
+
+    @Override
+    public void onFragmentDetached(Fragment fragment) {
+        if (fragment instanceof DashboardFragment){
+            onUsersUpdateListener = null;
+        }
     }
 }
