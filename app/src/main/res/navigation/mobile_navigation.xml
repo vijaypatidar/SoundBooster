@@ -29,9 +29,9 @@
     </fragment>
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.vkpapps.soundbooster.fragments.ClientControlFragment"
+        android:name="com.vkpapps.soundbooster.fragments.DashboardFragment"
         android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_client_control" />
+        tools:layout="@layout/fragment_dashboard" />
 
     <fragment
         android:id="@+id/navigation_notifications"

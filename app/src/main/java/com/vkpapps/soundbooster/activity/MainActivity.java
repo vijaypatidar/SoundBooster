@@ -13,6 +13,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -27,6 +28,7 @@ import com.vkpapps.soundbooster.connection.FileService;
 import com.vkpapps.soundbooster.connection.ServerHelper;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
+import com.vkpapps.soundbooster.interfaces.OnClientControlChangeListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentPopBackListener;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnLocalSongFragmentListener;
@@ -34,6 +36,7 @@ import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.interfaces.OnUserListRequestListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
+import com.vkpapps.soundbooster.model.UserViewModel;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.Utils;
 
@@ -42,9 +45,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
-        OnUserListRequestListener, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
+        OnUserListRequestListener, OnClientControlChangeListener,OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
         FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener, OnFragmentPopBackListener {
     private BottomNavigationView navView;
     private ServerHelper serverHelper;
@@ -54,9 +58,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private boolean isHost;
     private User user;
     private File root;
-    private ArrayList<User> users = new ArrayList<>();
     private FileRequestReceiver requestReceiver;
     private NavController navController;
+    private List<User> users;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
+        users = new ArrayList<>();
         root = getDir("song", MODE_PRIVATE);
         user = Utils.loadUser();
         musicPlayer = new MusicPlayerHelper(this, this);
@@ -178,10 +183,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         }
     }
 
-    @Override
-    public ArrayList<User> onUserListRequest() {
-        return users;
-    }
+
 
     @Override
     public void onPlayRequest(String name) {
@@ -293,12 +295,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onClientConnected(ClientHelper clientHelper) {
-
+        users.add(clientHelper.user);
     }
 
     @Override
     public void onClientDisconnected(ClientHelper clientHelper) {
-
+        users.remove(clientHelper.user);
     }
 
     @Override
@@ -321,5 +323,21 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             intentFilter.addAction(FileService.REQUEST_ACCEPTED);
         }
         instance.registerReceiver(requestReceiver, intentFilter);
+    }
+
+    @Override
+    public List<User> onRequestUsers() {
+        return users;
+    }
+
+    @Override
+    public void OnClientControlChangeRequest(User user) {
+        //for dashboard fragment
+        if (isHost){
+            user.setAccess(!user.isAccess());
+            serverHelper.sendCommandToOnly("CTR "+(user.isAccess()?"yes":"no"),user.getUserId());
+        }else {
+            Toast.makeText(this, "Only host of party can change controls of users", Toast.LENGTH_SHORT).show();
+        }
     }
 }

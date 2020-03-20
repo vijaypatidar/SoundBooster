@@ -2,8 +2,8 @@ package com.vkpapps.soundbooster.interfaces;
 
 import com.vkpapps.soundbooster.model.User;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public interface OnUserListRequestListener {
-    ArrayList<User> onUserListRequest();
+    List<User> onRequestUsers();
 }

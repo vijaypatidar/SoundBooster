@@ -1,5 +1,6 @@
 package com.vkpapps.soundbooster.adapter;
 
+import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,16 +11,22 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
+import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
+import com.vkpapps.soundbooster.interfaces.OnClientControlChangeListener;
 import com.vkpapps.soundbooster.model.User;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> {
 
-    private ArrayList<User> users;
+    private List<User> users;
+    private OnClientControlChangeListener onClientConnectionStateListener;
 
-    public ClientAdapter(ArrayList<User> users) {
+    public ClientAdapter(List<User> users, Context context) {
         this.users = users;
+        if (context instanceof OnClientControlChangeListener)
+            onClientConnectionStateListener = (OnClientControlChangeListener) context;
     }
 
     @NonNull
@@ -35,7 +42,8 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
         holder.userName.setText(user.getName());
         holder.switchAllow.setChecked(user.isAccess());
         holder.switchAllow.setOnCheckedChangeListener((compoundButton, b) -> {
-            user.setAccess(b);
+            if (onClientConnectionStateListener!=null)
+                onClientConnectionStateListener.OnClientControlChangeRequest(user);
             //todo add permission manager
         });
     }
