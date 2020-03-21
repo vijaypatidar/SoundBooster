@@ -45,6 +45,7 @@ import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.Utils;
+import com.vkpapps.soundbooster.view.MiniMediaController;
 
 import java.io.File;
 import java.io.IOException;
@@ -69,11 +70,15 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private NavController navController;
     private List<User> users;
     private OnUsersUpdateListener onUsersUpdateListener;
+    private MiniMediaController miniMediaController;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        miniMediaController = findViewById(R.id.miniController);
         navView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
@@ -92,6 +97,10 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             navController.navigate(R.id.navigation_profile);
         } else
             getChoice();
+
+        miniMediaController.setOnClickListener(v -> {
+            navController.navigate(R.id.navigation_musicPlayer);
+        });
     }
 
     @Override
@@ -186,11 +195,16 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         if (visible) {
             navView.setAnimation(AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar));
             navView.setVisibility(View.VISIBLE);
+            miniMediaController.setAnimation(AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar));
+            miniMediaController.setVisibility(View.VISIBLE);
         } else {
             navView.setAnimation(AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar));
             navView.setVisibility(View.GONE);
+            miniMediaController.setAnimation(AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar));
+            miniMediaController.setVisibility(View.GONE);
         }
     }
+
 
 
 
@@ -279,7 +293,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onSongChange(String name) {
-        navController.navigate(R.id.navigation_musicPlayer);
+        miniMediaController.changeSong(name, root);
     }
 
     @Override
