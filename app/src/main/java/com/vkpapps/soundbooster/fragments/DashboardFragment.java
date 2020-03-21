@@ -10,31 +10,26 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.ClientAdapter;
-import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.interfaces.OnUserListRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnUsersUpdateListener;
 import com.vkpapps.soundbooster.model.User;
-import com.vkpapps.soundbooster.model.UserViewModel;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class DashboardFragment extends Fragment implements OnUsersUpdateListener {
 
     private List<User> users;
     private OnUserListRequestListener onUserListRequestListener;
-    private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private ClientAdapter clientAdapter;
+    private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private OnFragmentAttachStatusListener onFragmentAttachStatusListener;
 
     @Override

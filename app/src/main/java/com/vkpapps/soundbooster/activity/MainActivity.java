@@ -5,6 +5,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -14,7 +15,6 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
@@ -28,19 +28,21 @@ import com.vkpapps.soundbooster.connection.FileRequestReceiver;
 import com.vkpapps.soundbooster.connection.FileService;
 import com.vkpapps.soundbooster.connection.ServerHelper;
 import com.vkpapps.soundbooster.fragments.DashboardFragment;
+import com.vkpapps.soundbooster.fragments.MusicPlayerFragment;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
-import com.vkpapps.soundbooster.interfaces.OnClientControlChangeListener;
+import com.vkpapps.soundbooster.interfaces.OnClientControlChangeRequest;
+import com.vkpapps.soundbooster.interfaces.OnCommandListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentPopBackListener;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnLocalSongFragmentListener;
+import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.interfaces.OnUserListRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnUsersUpdateListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
-import com.vkpapps.soundbooster.model.UserViewModel;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.Utils;
 
@@ -52,8 +54,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
-        OnUserListRequestListener, OnFragmentAttachStatusListener, OnClientControlChangeListener,OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
-        FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener, OnFragmentPopBackListener {
+        OnUserListRequestListener, OnFragmentAttachStatusListener, OnClientControlChangeRequest, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
+        FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener, OnFragmentPopBackListener,
+        OnCommandListener {
     private BottomNavigationView navView;
     private ServerHelper serverHelper;
     private SignalHandler signalHandler;
@@ -179,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onNavVisibilityChange(boolean visible) {
+        if ((navView.getVisibility() == View.VISIBLE) == visible) return;
         if (visible) {
             navView.setAnimation(AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar));
             navView.setVisibility(View.VISIBLE);
@@ -262,6 +266,11 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
+    public void onVolumeChange(float vol) {
+        musicPlayer.setVolume(vol);
+    }
+
+    @Override
     public void onReceiveFileRequestAccepted(String name, String id) {
         // send requested file or client sent request
         Toast.makeText(this, "receive", Toast.LENGTH_SHORT).show();
@@ -270,7 +279,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onSongChange(String name) {
-
+        navController.navigate(R.id.navigation_musicPlayer);
     }
 
     @Override
@@ -356,6 +365,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onFragmentAttached(Fragment fragment) {
         if (fragment instanceof DashboardFragment){
             onUsersUpdateListener = (OnUsersUpdateListener) fragment;
+        } else if (fragment instanceof MusicPlayerFragment) {
+            musicPlayer.setPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
         }
     }
 
@@ -363,6 +374,23 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onFragmentDetached(Fragment fragment) {
         if (fragment instanceof DashboardFragment){
             onUsersUpdateListener = null;
+        } else if (fragment instanceof MusicPlayerFragment) {
+            musicPlayer.setPlayerChangeListener(null);
+        }
+    }
+
+    @Override
+    public void onCommandCreated(String command) {
+        if (isHost) {
+            serverHelper.sendCommand(command);
+            Message message = new Message();
+            Bundle bundle = new Bundle();
+            bundle.putString("ID", user.getUserId());
+            bundle.putString("command", command);
+            message.setData(bundle);
+            signalHandler.sendMessage(message);
+        } else {
+            clientHelper.write(command);
         }
     }
 }

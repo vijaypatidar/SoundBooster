@@ -16,7 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.adapter.AudioAdapter;
+import com.vkpapps.soundbooster.adapter.HostedAudioAdapter;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
@@ -26,16 +26,17 @@ import com.vkpapps.soundbooster.utils.Utils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSelectedListener {
+public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnAudioSelectedListener {
 
     private File song;
     private OnHostSongFragmentListener onHostSongFragmentListener;
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private List<AudioModel> allSong;
-    private AudioAdapter audioAdapter;
+    private HostedAudioAdapter audioAdapter;
     private File download;
 
 
@@ -55,7 +56,7 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
             allSong = new ArrayList<>();
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
             refreshSong();
-            audioAdapter = new AudioAdapter(allSong, this);
+            audioAdapter = new HostedAudioAdapter(allSong, this);
             recyclerView.setItemAnimator(new DefaultItemAnimator());
             recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
             recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
@@ -102,6 +103,11 @@ public class HostSongFragment extends Fragment implements AudioAdapter.OnAudioSe
         if (audioAdapter != null) {
             audioAdapter.notifyDataSetChanged();
         }
+        sort();
+    }
+
+    private void sort() {
+        Collections.sort(allSong, (o1, o2) -> o1.getName().compareTo(o2.getName()));
     }
 
     @Override
