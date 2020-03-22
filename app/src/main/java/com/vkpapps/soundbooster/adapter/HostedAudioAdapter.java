@@ -79,7 +79,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
         void onAudioLongSelected(AudioModel audioModel);
     }
 
-    class AudioViewHolder extends RecyclerView.ViewHolder {
+    static class AudioViewHolder extends RecyclerView.ViewHolder {
         TextView audioTitle, audioArtist;
         ImageView audioIcon;
 

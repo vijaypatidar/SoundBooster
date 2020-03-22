@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import static com.vkpapps.soundbooster.connection.FileService.LAST_REQUEST;
+
 public class FileRequestReceiver extends BroadcastReceiver {
 
     private OnFileRequestReceiverListener onFileRequestReceiverListener;
@@ -19,7 +21,7 @@ public class FileRequestReceiver extends BroadcastReceiver {
         String name = intent.getStringExtra(FileService.NAME);
         switch (action) {
             case FileService.STATUS_SUCCESS:
-                onFileRequestReceiverListener.onRequestSuccess(name);
+                onFileRequestReceiverListener.onRequestSuccess(name, intent.getBooleanExtra(LAST_REQUEST, false));
                 break;
             case FileService.STATUS_FAILED:
                 onFileRequestReceiverListener.onRequestFailed(name);
@@ -35,7 +37,8 @@ public class FileRequestReceiver extends BroadcastReceiver {
     public interface OnFileRequestReceiverListener {
         void onRequestFailed(String name);
         void onRequestAccepted(String name, boolean send, String clientId);
-        void onRequestSuccess(String name);
+
+        void onRequestSuccess(String name, boolean isLast);
     }
 
 }

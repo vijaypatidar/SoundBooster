@@ -28,6 +28,7 @@ public class FileService extends IntentService {
     public static final String NAME = "com.vkpapps.soundbooster.extra.NAME";
     public static final String CLIENT_ID = "com.vkpapps.soundbooster.extra.CLIENT_ID";
     private static final String IS_HOST = "com.vkpapps.soundbooster.extra.IS_HOST";
+    public static final String LAST_REQUEST = "com.vkpapps.soundbooster.action.IS_LAST_REQUEST";
 
     private File root;
 
@@ -35,12 +36,13 @@ public class FileService extends IntentService {
         super("FileService");
     }
 
-    public static void startActionSend(Context context, String name, String clientId, boolean isHost) {
+    public static void startActionSend(Context context, String name, String clientId, boolean isHost, boolean isLast) {
         Intent intent = new Intent(context, FileService.class);
         intent.setAction(ACTION_SEND);
         intent.putExtra(NAME, name);
         intent.putExtra(CLIENT_ID, clientId);
         intent.putExtra(IS_HOST, isHost);
+        intent.putExtra(LAST_REQUEST, isLast);
         context.startService(intent);
     }
 

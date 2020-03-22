@@ -1,31 +1,31 @@
 package com.vkpapps.soundbooster.utils;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.util.Log;
+
+import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 
 import java.io.File;
 import java.io.IOException;
 
 public class MusicPlayerHelper {
-    @SuppressLint("StaticFieldLeak")
-    private static MusicPlayerHelper musicPlayerHelper;
     private MediaPlayer mediaPlayer = new MediaPlayer();
     private File root;
     private OnMusicPlayerHelperListener onMusicPlayerHelperListener;
+    private OnMediaPlayerChangeListener playerChangeListener;
+    private String current;
+
+    public void setPlayerChangeListener(OnMediaPlayerChangeListener playerChangeListener) {
+        this.playerChangeListener = playerChangeListener;
+        if (playerChangeListener != null) {
+            playerChangeListener.onChangeSong(current, mediaPlayer);
+        }
+    }
 
     public MusicPlayerHelper(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
         this.root = context.getDir("song", Context.MODE_PRIVATE);
         this.onMusicPlayerHelperListener = onMusicPlayerHelperListener;
-    }
-
-    public static MusicPlayerHelper getInstance(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
-        if (musicPlayerHelper == null) {
-            musicPlayerHelper = new MusicPlayerHelper(context, onMusicPlayerHelperListener);
-        }
-
-        return musicPlayerHelper;
     }
 
     public void loadAndPlay(String name) {
@@ -35,8 +35,12 @@ public class MusicPlayerHelper {
             mediaPlayer.setDataSource(new File(root, name).getAbsolutePath());
             mediaPlayer.prepare();
             mediaPlayer.start();
+            current = name;
             if (onMusicPlayerHelperListener != null) {
                 onMusicPlayerHelperListener.onSongChange(name);
+            }
+            if (playerChangeListener != null) {
+                playerChangeListener.onChangeSong(name, mediaPlayer);
             }
         } catch (IOException e) {
             //TODO when no such file found
@@ -68,6 +72,17 @@ public class MusicPlayerHelper {
             e.printStackTrace();
         }
     }
+
+    public void setVolume(float vol) {
+        try {
+            mediaPlayer.setVolume(vol, vol);
+            if (playerChangeListener != null) {
+                playerChangeListener.onVolumeChange(vol);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
 
     public interface OnMusicPlayerHelperListener {
         void onSongChange(String name);
