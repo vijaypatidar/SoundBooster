@@ -2,7 +2,6 @@ package com.vkpapps.soundbooster.utils;
 
 import android.content.Context;
 import android.media.MediaPlayer;
-import android.util.Log;
 
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 
@@ -30,7 +29,6 @@ public class MusicPlayerHelper {
 
     public void loadAndPlay(String name) {
         try {
-            Log.d("CONTROLS", "loadAndPlay:==========  >" + name + "<");
             mediaPlayer.reset();
             mediaPlayer.setDataSource(new File(root, name).getAbsolutePath());
             mediaPlayer.prepare();
@@ -43,7 +41,6 @@ public class MusicPlayerHelper {
                 playerChangeListener.onChangeSong(name, mediaPlayer);
             }
         } catch (IOException e) {
-            //TODO when no such file found
             onMusicPlayerHelperListener.onRequestSongNotFound(name);
             e.printStackTrace();
         }
@@ -52,6 +49,9 @@ public class MusicPlayerHelper {
     public void resume() {
         try {
             mediaPlayer.start();
+            if (playerChangeListener != null) {
+                playerChangeListener.onPlayingStatusChange(mediaPlayer.isPlaying());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -60,6 +60,9 @@ public class MusicPlayerHelper {
     public void pause() {
         try {
             mediaPlayer.pause();
+            if (playerChangeListener != null) {
+                playerChangeListener.onPlayingStatusChange(mediaPlayer.isPlaying());
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

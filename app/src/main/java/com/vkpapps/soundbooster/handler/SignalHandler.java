@@ -48,12 +48,6 @@ public class SignalHandler extends Handler {
                 case "SFC":
                     onMessageHandlerListener.onSendFileRequestAccepted(command.substring(3), msg.getData().getString("ID"));
                     break;
-                case "DCN":
-                    onMessageHandlerListener.onNewDeviceConnected(msg.getData().getString("ID"));
-                    break;
-                case "DDN":
-                    onMessageHandlerListener.onDeviceDisconnected(msg.getData().getString("ID"));
-                    break;
                 case "VLM":
                     onMessageHandlerListener.onVolumeChange(Float.parseFloat(command.substring(3)));
                     break;
@@ -76,10 +70,6 @@ public class SignalHandler extends Handler {
         void onSeekToRequest(int time);
 
         void broadcastCommand(String command);
-
-        void onNewDeviceConnected(String id);
-
-        void onDeviceDisconnected(String id);
 
         void onSendFileRequest(String name, String id);
 

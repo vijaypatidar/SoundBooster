@@ -34,7 +34,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private OnFragmentAttachStatusListener onFragmentAttachStatusListener;
     private TextView audioTitle;
-    private ImageView audioCover;
+    private ImageView audioCover, btnPlay;
     private MediaPlayer mediaPlayer;
     private File root;
     private OnCommandListener commandListener;
@@ -50,7 +50,8 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         root = getActivity().getDir("song", Context.MODE_PRIVATE);
-        view.findViewById(R.id.btnPlay).setOnClickListener(this);
+        btnPlay = view.findViewById(R.id.btnPlay);
+        btnPlay.setOnClickListener(this);
         view.findViewById(R.id.btnNext).setOnClickListener(this);
         view.findViewById(R.id.btnPrevious).setOnClickListener(this);
         audioCover = view.findViewById(R.id.audioCover);
@@ -108,10 +109,8 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
             case R.id.btnPlay:
                 if (mediaPlayer.isPlaying()) {
                     com = "PAS";
-                    ((ImageView) v).setImageResource(R.drawable.ic_play);
                 } else {
                     com = "PLY " + audioTitle.getText().toString();
-                    ((ImageView) v).setImageResource(R.drawable.ic_pause);
                 }
                 commandListener.onCommandCreated(com);
                 break;
@@ -124,6 +123,12 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         audioTitle.setText(title);
         loadCover(title);
         this.mediaPlayer = mediaPlayer;
+        setPlayPauseButton();
+    }
+
+    @Override
+    public void onPlayingStatusChange(boolean isPlaying) {
+        setPlayPauseButton();
     }
 
     private void loadCover(String title) {
@@ -167,5 +172,9 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         onNavigationVisibilityListener = null;
         onFragmentAttachStatusListener = null;
         commandListener = null;
+    }
+
+    private void setPlayPauseButton() {
+        btnPlay.setImageResource(mediaPlayer.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
     }
 }

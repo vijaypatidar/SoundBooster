@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
@@ -75,7 +76,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private MiniMediaController miniMediaController;
     private HostSongFragment currentFragment;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications, R.id.navigation_local)
+                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_local)
                 .build();
         navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
@@ -147,10 +147,11 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 } catch (IOException e) {
                     runOnUiThread(() -> {
                         androidx.appcompat.app.AlertDialog.Builder ab = new androidx.appcompat.app.AlertDialog.Builder(this);
-                        ab.setTitle("no host found!");
-                        ab.setMessage("there is no host on this wifi");
+                        ab.setTitle("No host found!");
+                        ab.setMessage("There is no host on this wifi");
                         ab.setCancelable(false);
                         ab.setPositiveButton("retry", (dialog, which) -> setup(false));
+                        ab.setNegativeButton("Host Party", (dialog, which) -> getChoice());
                         ab.create().show();
                     });
                     e.printStackTrace();
@@ -190,7 +191,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             serverHelper.sendCommand(command);
             musicPlayer.loadAndPlay(audioModel.getName());
         } else {
-            //TODo check client control permission before transmitting signal
             clientHelper.write(command);
         }
     }
@@ -199,16 +199,16 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onNavVisibilityChange(boolean visible) {
         if ((navView.getVisibility() == View.VISIBLE) == visible) return;
         if (visible) {
-            navView.setAnimation(AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar));
-            navView.setVisibility(View.VISIBLE);
-            miniMediaController.setAnimation(AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar));
-            miniMediaController.setVisibility(View.VISIBLE);
+            Animation animation = AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar);
+            navView.setAnimation(animation);
+            miniMediaController.setAnimation(animation);
         } else {
-            navView.setAnimation(AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar));
-            navView.setVisibility(View.GONE);
-            miniMediaController.setAnimation(AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar));
-            miniMediaController.setVisibility(View.GONE);
+            Animation animation = AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar);
+            navView.setAnimation(animation);
+            miniMediaController.setAnimation(animation);
         }
+        navView.setVisibility(visible ? View.VISIBLE : View.GONE);
+        miniMediaController.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
 
@@ -216,36 +216,23 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onPlayRequest(String name) {
         //triggered by hosted Song fragment
         musicPlayer.loadAndPlay(name);
-        Toast.makeText(this, "onPlayRequest " + name, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onResumeRequest() {
         musicPlayer.resume();
-        Toast.makeText(this, "onResumeRequest", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onPauseRequest() {
         musicPlayer.pause();
-        Toast.makeText(this, "onPauseRequest ", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onSeekToRequest(int time) {
         musicPlayer.seekTo(time);
-        Toast.makeText(this, "onSeekToRequest " + time, Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onNewDeviceConnected(String id) {
-        Toast.makeText(this, "onNewDeviceConnected " + id, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onDeviceDisconnected(String id) {
-        Toast.makeText(this, "onDeviceDisconnected " + id, Toast.LENGTH_SHORT).show();
-    }
 
     @Override
     public void broadcastCommand(String command) {
@@ -397,6 +384,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         if (fragment instanceof DashboardFragment) {
             onUsersUpdateListener = (OnUsersUpdateListener) fragment;
         } else if (fragment instanceof MusicPlayerFragment) {
+            miniMediaController.setEnableVisibilityChanges(false);
             musicPlayer.setPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = (HostSongFragment) fragment;
@@ -409,6 +397,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             onUsersUpdateListener = null;
         } else if (fragment instanceof MusicPlayerFragment) {
             musicPlayer.setPlayerChangeListener(null);
+            miniMediaController.setEnableVisibilityChanges(true);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = null;
         }
