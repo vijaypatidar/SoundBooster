@@ -28,6 +28,7 @@ import com.vkpapps.soundbooster.connection.FileRequestReceiver;
 import com.vkpapps.soundbooster.connection.FileService;
 import com.vkpapps.soundbooster.connection.ServerHelper;
 import com.vkpapps.soundbooster.fragments.DashboardFragment;
+import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.MusicPlayerFragment;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
@@ -53,6 +54,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
         OnUserListRequestListener, OnFragmentAttachStatusListener, OnClientControlChangeRequest, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
@@ -71,6 +73,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private List<User> users;
     private OnUsersUpdateListener onUsersUpdateListener;
     private MiniMediaController miniMediaController;
+    private HostSongFragment currentFragment;
 
 
     @Override
@@ -115,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         ab.setView(view);
         ab.setCancelable(false);
         AlertDialog alertDialog = ab.create();
-        alertDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        Objects.requireNonNull(alertDialog.getWindow()).setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
         alertDialog.show();
         view.findViewById(R.id.btnCreateParty).setOnClickListener(v -> {
             setup(true);
@@ -168,9 +171,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             return;
         }
         if (isHost) {
-            for (ClientHelper chr : serverHelper.getClientHelpers()) {
+            ArrayList<ClientHelper> clientHelpers = serverHelper.getClientHelpers();
+            int N = clientHelpers.size() - 1;
+            for (int i = 0; i <= N; i++) {
+                ClientHelper chr = clientHelpers.get(i);
                 String cid = chr.user.getUserId();
-                FileService.startActionSend(this, audio.getName(), cid, isHost);
+                FileService.startActionSend(this, audio.getName(), cid, isHost, i == N);
             }
         } else {
             clientHelper.write("RFR " + audio.getName());
@@ -204,8 +210,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             miniMediaController.setVisibility(View.GONE);
         }
     }
-
-
 
 
     @Override
@@ -252,7 +256,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onSendFileRequest(String name, String id) {
         // only host wil response this method
         if (isHost) {
-            FileService.startActionSend(this, name, id, true);
+            FileService.startActionSend(this, name, id, true, true);
         }
     }
 
@@ -263,10 +267,13 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             // prepare file receive from client
             FileService.startActionReceive(this, name, id, true);
             // prepare send request for all other client except the sender of that file
-            for (ClientHelper chr : serverHelper.getClientHelpers()) {
+            ArrayList<ClientHelper> clientHelpers = serverHelper.getClientHelpers();
+            int N = clientHelpers.size() - 1;
+            for (int i = 0; i <= N; i++) {
+                ClientHelper chr = clientHelpers.get(i);
                 String cid = chr.user.getUserId();
                 if (!cid.equals(id)) {
-                    FileService.startActionSend(this, name, chr.user.getUserId(), isHost);
+                    FileService.startActionSend(this, name, chr.user.getUserId(), isHost, i == N);
                     Toast.makeText(this, "onReceiveFileRequest " + name, Toast.LENGTH_SHORT).show();
                 }
             }
@@ -286,9 +293,10 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onReceiveFileRequestAccepted(String name, String id) {
-        // send requested file or client sent request
+        //only client need to handle this , not for host
+        // send requested file to client sent request
         Toast.makeText(this, "receive", Toast.LENGTH_SHORT).show();
-        FileService.startActionSend(this, name, id, isHost);
+        FileService.startActionSend(this, name, id, isHost, false);
     }
 
     @Override
@@ -316,15 +324,19 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
-    public void onRequestSuccess(String name) {
-
-
+    public void onRequestSuccess(String name, boolean isLastRequest) {
+        if (isLastRequest) {
+            // update host song list
+            if (currentFragment != null) {
+                currentFragment.refreshSong();
+            }
+        }
     }
 
     @Override
     public void onClientConnected(ClientHelper clientHelper) {
         users.add(clientHelper.user);
-        if (onUsersUpdateListener!=null){
+        if (onUsersUpdateListener != null) {
             runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
         }
     }
@@ -332,8 +344,13 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     @Override
     public void onClientDisconnected(ClientHelper clientHelper) {
         users.remove(clientHelper.user);
-        if (onUsersUpdateListener!=null){
+        if (onUsersUpdateListener != null) {
             runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
+        }
+
+        //prompt client when disconnect to a party to create or rejoin the party
+        if (!isHost) {
+            getChoice();
         }
     }
 
@@ -367,29 +384,33 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     @Override
     public void OnClientControlChangeRequest(User user) {
         //for dashboard fragment
-        if (isHost){
+        if (isHost) {
             user.setAccess(!user.isAccess());
-            serverHelper.sendCommandToOnly("CTR "+(user.isAccess()?"yes":"no"),user.getUserId());
-        }else {
+            serverHelper.sendCommandToOnly("CTR " + (user.isAccess() ? "yes" : "no"), user.getUserId());
+        } else {
             Toast.makeText(this, "Only host of party can change controls of users", Toast.LENGTH_SHORT).show();
         }
     }
 
     @Override
     public void onFragmentAttached(Fragment fragment) {
-        if (fragment instanceof DashboardFragment){
+        if (fragment instanceof DashboardFragment) {
             onUsersUpdateListener = (OnUsersUpdateListener) fragment;
         } else if (fragment instanceof MusicPlayerFragment) {
             musicPlayer.setPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
+        } else if (fragment instanceof HostSongFragment) {
+            currentFragment = (HostSongFragment) fragment;
         }
     }
 
     @Override
     public void onFragmentDetached(Fragment fragment) {
-        if (fragment instanceof DashboardFragment){
+        if (fragment instanceof DashboardFragment) {
             onUsersUpdateListener = null;
         } else if (fragment instanceof MusicPlayerFragment) {
             musicPlayer.setPlayerChangeListener(null);
+        } else if (fragment instanceof HostSongFragment) {
+            currentFragment = null;
         }
     }
 

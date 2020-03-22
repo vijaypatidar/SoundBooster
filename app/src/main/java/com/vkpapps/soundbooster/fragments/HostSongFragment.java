@@ -92,7 +92,7 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         }
     }
 
-    private void refreshSong() {
+    public void refreshSong() {
         allSong.clear();
         for (File file : Objects.requireNonNull(song.listFiles())) {
             AudioModel audioModel = new AudioModel();
@@ -100,10 +100,11 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
             audioModel.setPath(file.getPath());
             allSong.add(audioModel);
         }
+        sort();
         if (audioAdapter != null) {
             audioAdapter.notifyDataSetChanged();
         }
-        sort();
+
     }
 
     private void sort() {
@@ -135,4 +136,6 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         onHostSongFragmentListener = null;
         onNavigationVisibilityListener = null;
     }
+
+
 }
