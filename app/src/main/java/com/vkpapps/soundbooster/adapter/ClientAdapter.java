@@ -11,22 +11,20 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
-import com.vkpapps.soundbooster.interfaces.OnClientControlChangeListener;
+import com.vkpapps.soundbooster.interfaces.OnClientControlChangeRequest;
 import com.vkpapps.soundbooster.model.User;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> {
 
     private List<User> users;
-    private OnClientControlChangeListener onClientConnectionStateListener;
+    private OnClientControlChangeRequest onClientConnectionStateListener;
 
     public ClientAdapter(List<User> users, Context context) {
         this.users = users;
-        if (context instanceof OnClientControlChangeListener)
-            onClientConnectionStateListener = (OnClientControlChangeListener) context;
+        if (context instanceof OnClientControlChangeRequest)
+            onClientConnectionStateListener = (OnClientControlChangeRequest) context;
     }
 
     @NonNull

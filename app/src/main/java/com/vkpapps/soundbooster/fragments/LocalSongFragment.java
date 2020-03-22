@@ -21,6 +21,7 @@ import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.Utils;
 
+import java.util.Collections;
 import java.util.List;
 
 public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioSelectedListener {
@@ -44,6 +45,7 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
             allSong = Utils.getAllAudioFromDevice(view.getContext());
+            sort();
             AudioAdapter audioAdapter = new AudioAdapter(allSong, this);
             recyclerView.setItemAnimator(new DefaultItemAnimator());
             recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
@@ -91,5 +93,9 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
         super.onDetach();
         onLocalSongFragmentListener = null;
         onNavigationVisibilityListener = null;
+    }
+
+    private void sort() {
+        Collections.sort(allSong, (o1, o2) -> o1.getName().compareTo(o2.getName()));
     }
 }

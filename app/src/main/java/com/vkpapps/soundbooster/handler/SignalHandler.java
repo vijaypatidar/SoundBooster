@@ -23,7 +23,6 @@ public class SignalHandler extends Handler {
     public void handleMessage(@NonNull Message msg) {
         try {
             String command = Objects.requireNonNull(msg.getData().getString("command"));
-            Log.d("CONTROLS", "handleMessage: " + command.substring(0, 3) + " t->" + command.substring(4) + "<");
             if (isHost) {
                 onMessageHandlerListener.broadcastCommand(command);
             }
@@ -55,6 +54,9 @@ public class SignalHandler extends Handler {
                 case "DDN":
                     onMessageHandlerListener.onDeviceDisconnected(msg.getData().getString("ID"));
                     break;
+                case "VLM":
+                    onMessageHandlerListener.onVolumeChange(Float.parseFloat(command.substring(3)));
+                    break;
                 default:
                     Log.d("CONTROLS", "handleMessage: =================================== invalid req " + command);
             }
@@ -84,6 +86,8 @@ public class SignalHandler extends Handler {
         void onReceiveFileRequest(String name, String id);
 
         void onSendFileRequestAccepted(String name, String id);
+
+        void onVolumeChange(float vol);
 
         void onReceiveFileRequestAccepted(String name, String id);
     }
