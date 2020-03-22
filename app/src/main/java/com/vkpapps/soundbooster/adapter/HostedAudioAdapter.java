@@ -1,8 +1,6 @@
 package com.vkpapps.soundbooster.adapter;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,7 +12,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.AudioModel;
+import com.vkpapps.soundbooster.utils.Utils;
 
+import java.io.File;
 import java.util.List;
 
 public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.AudioViewHolder> {
@@ -47,25 +47,9 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
         });
 
         ImageView audioIcon = holder.audioIcon;
-
-        try {
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(audioModel.getPath());
-
-            byte[] data = mmr.getEmbeddedPicture();
-
-            // convert the byte array to a bitmap
-            if (data != null) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                audioIcon.setImageBitmap(bitmap); //associated cover art in bitmap
-            }
-
-            audioIcon.setAdjustViewBounds(true);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        File file = new File(Utils.imageRoot, audioModel.getName());
+        if (file.exists())
+            audioIcon.setImageURI(Uri.fromFile(file));
     }
 
     @Override

@@ -98,9 +98,4 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
         Collections.sort(allSong, (o1, o2) -> o1.getName().compareTo(o2.getName()));
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        //todo
-    }
 }

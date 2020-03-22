@@ -56,6 +56,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
         OnUserListRequestListener, OnFragmentAttachStatusListener, OnClientControlChangeRequest, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
@@ -75,6 +77,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private OnUsersUpdateListener onUsersUpdateListener;
     private MiniMediaController miniMediaController;
     private HostSongFragment currentFragment;
+    private Queue<String> queue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,11 +140,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         if (isHost) {
             serverHelper = new ServerHelper(signalHandler, user, this);
             serverHelper.start();
+            queue = new ConcurrentLinkedQueue<>();
         } else {
             new Thread(() -> {
                 Socket socket = new Socket();
                 try {
-                    socket.connect(new InetSocketAddress("192.168.43.1", 1203), 5000);
+                    socket.connect(new InetSocketAddress(FileService.HOST_ADDRESS, 1203), 5000);
                     clientHelper = new ClientHelper(socket, signalHandler, user, this);
                     clientHelper.start();
                 } catch (IOException e) {
@@ -180,7 +184,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 FileService.startActionSend(this, audio.getName(), cid, isHost, i == N);
             }
         } else {
-            clientHelper.write("RFR " + audio.getName());
+            sendCommand("RFR " + audio.getName());
         }
     }
 
@@ -191,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             serverHelper.sendCommand(command);
             musicPlayer.loadAndPlay(audioModel.getName());
         } else {
-            clientHelper.write(command);
+            sendCommand(command);
         }
     }
 
@@ -261,7 +265,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 String cid = chr.user.getUserId();
                 if (!cid.equals(id)) {
                     FileService.startActionSend(this, name, chr.user.getUserId(), isHost, i == N);
-                    Toast.makeText(this, "onReceiveFileRequest " + name, Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -282,8 +285,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onReceiveFileRequestAccepted(String name, String id) {
         //only client need to handle this , not for host
         // send requested file to client sent request
-        Toast.makeText(this, "receive", Toast.LENGTH_SHORT).show();
         FileService.startActionSend(this, name, id, isHost, false);
+    }
+
+    @Override
+    public void onControlAccessChange(boolean access) {
+        user.setAccess(access);
     }
 
     @Override
@@ -294,7 +301,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     @Override
     public void onRequestSongNotFound(String songName) {
         String command = "SFR " + songName;
-        if (!isHost) clientHelper.write(command);
+        if (!isHost) sendCommand(command);
     }
 
 
@@ -414,7 +421,16 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             message.setData(bundle);
             signalHandler.sendMessage(message);
         } else {
-            clientHelper.write(command);
+            sendCommand(command);
         }
+    }
+
+    private void sendCommand(String command) {
+        if (user.isAccess()) {
+            clientHelper.write(command);
+        } else {
+            Toast.makeText(this, "host denied", Toast.LENGTH_SHORT).show();
+        }
+
     }
 }

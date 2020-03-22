@@ -89,7 +89,6 @@ public class MusicPlayerHelper {
 
     public interface OnMusicPlayerHelperListener {
         void onSongChange(String name);
-
         void onRequestSongNotFound(String songName);
     }
 }

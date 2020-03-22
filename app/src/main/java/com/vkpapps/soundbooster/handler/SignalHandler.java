@@ -37,19 +37,22 @@ public class SignalHandler extends Handler {
                     onMessageHandlerListener.onSeekToRequest(Integer.parseInt(command.substring(4)));
                     break;
                 case "RFR":
-                    onMessageHandlerListener.onReceiveFileRequest(command.substring(3), msg.getData().getString("ID"));
+                    onMessageHandlerListener.onReceiveFileRequest(command.substring(4), msg.getData().getString("ID"));
                     break;
                 case "SFR":
-                    onMessageHandlerListener.onSendFileRequest(command.substring(3), msg.getData().getString("ID"));
+                    onMessageHandlerListener.onSendFileRequest(command.substring(4), msg.getData().getString("ID"));
                     break;
                 case "RFC":
-                    onMessageHandlerListener.onReceiveFileRequestAccepted(command.substring(3), msg.getData().getString("ID"));
+                    onMessageHandlerListener.onReceiveFileRequestAccepted(command.substring(4), msg.getData().getString("ID"));
                     break;
                 case "SFC":
-                    onMessageHandlerListener.onSendFileRequestAccepted(command.substring(3), msg.getData().getString("ID"));
+                    onMessageHandlerListener.onSendFileRequestAccepted(command.substring(4), msg.getData().getString("ID"));
                     break;
                 case "VLM":
-                    onMessageHandlerListener.onVolumeChange(Float.parseFloat(command.substring(3)));
+                    onMessageHandlerListener.onVolumeChange(Float.parseFloat(command.substring(4)));
+                    break;
+                case "CTR":
+                    onMessageHandlerListener.onControlAccessChange(command.substring(4).equals("yes"));
                     break;
                 default:
                     Log.d("CONTROLS", "handleMessage: =================================== invalid req " + command);
@@ -80,5 +83,7 @@ public class SignalHandler extends Handler {
         void onVolumeChange(float vol);
 
         void onReceiveFileRequestAccepted(String name, String id);
+
+        void onControlAccessChange(boolean access);
     }
 }

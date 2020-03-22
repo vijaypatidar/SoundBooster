@@ -1,10 +1,8 @@
 package com.vkpapps.soundbooster.fragments;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,6 +22,7 @@ import com.vkpapps.soundbooster.interfaces.OnCommandListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
+import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
 import java.util.Timer;
@@ -132,22 +131,10 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     }
 
     private void loadCover(String title) {
-        try {
-            android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(new File(root, title).getAbsolutePath());
+        File file = new File(Utils.imageRoot, title);
+        if (file.exists())
+            audioCover.setImageURI(Uri.fromFile(file));
 
-            byte[] data = mmr.getEmbeddedPicture();
-
-            // convert the byte array to a bitmap
-            if (data != null) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                audioCover.setImageBitmap(bitmap); //associated cover art in bitmap
-            }
-            audioCover.setAdjustViewBounds(true);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Override

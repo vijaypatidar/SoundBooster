@@ -29,7 +29,8 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
     @NonNull
     @Override
     public AudioViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.local_list_item, parent, false);
+        View
+                inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.local_list_item, parent, false);
         return new AudioViewHolder(inflate);
     }
 
@@ -51,21 +52,16 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
         try {
             android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             mmr.setDataSource(audioModel.getPath());
-
             byte[] data = mmr.getEmbeddedPicture();
-
             // convert the byte array to a bitmap
             if (data != null) {
                 Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                 audioIcon.setImageBitmap(bitmap); //associated cover art in bitmap
             }
-
             audioIcon.setAdjustViewBounds(true);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     @Override
@@ -79,7 +75,7 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
         void onAudioLongSelected(AudioModel audioModel);
     }
 
-    class AudioViewHolder extends RecyclerView.ViewHolder {
+    static class AudioViewHolder extends RecyclerView.ViewHolder {
         TextView audioTitle, audioArtist;
         ImageView audioIcon;
 
