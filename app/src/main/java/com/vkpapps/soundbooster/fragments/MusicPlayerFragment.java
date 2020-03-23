@@ -1,10 +1,8 @@
 package com.vkpapps.soundbooster.fragments;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -24,6 +22,7 @@ import com.vkpapps.soundbooster.interfaces.OnCommandListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
+import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
 import java.util.Timer;
@@ -34,7 +33,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private OnFragmentAttachStatusListener onFragmentAttachStatusListener;
     private TextView audioTitle;
-    private ImageView audioCover;
+    private ImageView audioCover, btnPlay;
     private MediaPlayer mediaPlayer;
     private File root;
     private OnCommandListener commandListener;
@@ -50,7 +49,8 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         root = getActivity().getDir("song", Context.MODE_PRIVATE);
-        view.findViewById(R.id.btnPlay).setOnClickListener(this);
+        btnPlay = view.findViewById(R.id.btnPlay);
+        btnPlay.setOnClickListener(this);
         view.findViewById(R.id.btnNext).setOnClickListener(this);
         view.findViewById(R.id.btnPrevious).setOnClickListener(this);
         audioCover = view.findViewById(R.id.audioCover);
@@ -108,15 +108,17 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
             case R.id.btnPlay:
                 if (mediaPlayer.isPlaying()) {
                     com = "PAS";
-                    ((ImageView) v).setImageResource(R.drawable.ic_play);
                 } else {
                     com = "PLY " + audioTitle.getText().toString();
-                    ((ImageView) v).setImageResource(R.drawable.ic_pause);
                 }
-                commandListener.onCommandCreated(com);
                 break;
-
+            case R.id.btnNext:
+                com = "NXT 1";
+                break;
+            default:
+                com = "NXT -1";
         }
+        commandListener.onCommandCreated(com);
     }
 
     @Override
@@ -124,25 +126,19 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         audioTitle.setText(title);
         loadCover(title);
         this.mediaPlayer = mediaPlayer;
+        setPlayPauseButton();
+    }
+
+    @Override
+    public void onPlayingStatusChange(boolean isPlaying) {
+        setPlayPauseButton();
     }
 
     private void loadCover(String title) {
-        try {
-            android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(new File(root, title).getAbsolutePath());
+        File file = new File(Utils.imageRoot, title);
+        if (file.exists())
+            audioCover.setImageURI(Uri.fromFile(file));
 
-            byte[] data = mmr.getEmbeddedPicture();
-
-            // convert the byte array to a bitmap
-            if (data != null) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                audioCover.setImageBitmap(bitmap); //associated cover art in bitmap
-            }
-            audioCover.setAdjustViewBounds(true);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -167,5 +163,9 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         onNavigationVisibilityListener = null;
         onFragmentAttachStatusListener = null;
         commandListener = null;
+    }
+
+    private void setPlayPauseButton() {
+        btnPlay.setImageResource(mediaPlayer.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
     }
 }

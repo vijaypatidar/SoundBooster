@@ -17,6 +17,11 @@ import java.io.File;
 public class MiniMediaController extends FrameLayout {
     private ImageView audioCover;
     private TextView audioTitle;
+    private boolean enableVisibilityChanges = true;
+
+    public void setEnableVisibilityChanges(boolean enableVisibilityChanges) {
+        this.enableVisibilityChanges = enableVisibilityChanges;
+    }
 
     public MiniMediaController(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -41,7 +46,9 @@ public class MiniMediaController extends FrameLayout {
     }
 
     public void changeSong(String name, File root) {
-        setVisibility(VISIBLE);
+        if (enableVisibilityChanges) {
+            setVisibility(VISIBLE);
+        }
         audioTitle.setText(name);
         try {
             MediaMetadataRetriever mmr = new MediaMetadataRetriever();

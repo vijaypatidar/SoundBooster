@@ -3,6 +3,9 @@ package com.vkpapps.soundbooster.connection;
 import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadataRetriever;
 import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -29,8 +32,9 @@ public class FileService extends IntentService {
     public static final String CLIENT_ID = "com.vkpapps.soundbooster.extra.CLIENT_ID";
     private static final String IS_HOST = "com.vkpapps.soundbooster.extra.IS_HOST";
     public static final String LAST_REQUEST = "com.vkpapps.soundbooster.action.IS_LAST_REQUEST";
-
+    public static String HOST_ADDRESS;
     private File root;
+    private File imageRoot;
 
     public FileService() {
         super("FileService");
@@ -59,6 +63,7 @@ public class FileService extends IntentService {
     public void onCreate() {
         super.onCreate();
         root = getDir("song", MODE_PRIVATE);
+        imageRoot = getDir("image", MODE_PRIVATE);
     }
 
     @Override
@@ -85,8 +90,7 @@ public class FileService extends IntentService {
             }
         } else {
             socket = new Socket();
-            String host = "192.168.43.1";
-            socket.connect(new InetSocketAddress(host, 15448), 3000);
+            socket.connect(new InetSocketAddress(HOST_ADDRESS, 15448), 3000);
         }
         return socket;
     }
@@ -109,6 +113,7 @@ public class FileService extends IntentService {
             out.close();
             socket.close();
             onSuccess(name);
+            saveCover(name);
         } catch (IOException e) {
             onFailed(name);
             e.printStackTrace();
@@ -159,5 +164,25 @@ public class FileService extends IntentService {
         intent.putExtra(CLIENT_ID, clientID);
         Log.d("CONTROLS", "onAccepted: ========== " + name + "   " + send);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+    }
+
+    private void saveCover(String name) {
+        try {
+            android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(new File(root, name).getAbsolutePath());
+
+            byte[] data = mmr.getEmbeddedPicture();
+
+            // convert the byte array to a bitmap
+            if (data != null) {
+                File file = new File(imageRoot, name);
+                file.createNewFile();
+                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                FileOutputStream fos = new FileOutputStream(file);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

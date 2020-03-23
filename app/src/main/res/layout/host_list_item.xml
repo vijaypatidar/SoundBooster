@@ -20,7 +20,8 @@
             android:id="@+id/audio_icon"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:src="@mipmap/ic_launcher_round" />
+            android:background="@drawable/music_icon_background"
+            android:src="@drawable/ic_default_audio_icon" />
     </androidx.cardview.widget.CardView>
 
     <LinearLayout
