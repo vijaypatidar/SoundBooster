@@ -42,7 +42,6 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
         holder.switchAllow.setOnCheckedChangeListener((compoundButton, b) -> {
             if (onClientConnectionStateListener!=null)
                 onClientConnectionStateListener.OnClientControlChangeRequest(user);
-            //todo add permission manager
         });
     }
 

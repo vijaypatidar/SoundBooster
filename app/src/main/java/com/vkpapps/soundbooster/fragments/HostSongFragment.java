@@ -104,7 +104,9 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         if (audioAdapter != null) {
             audioAdapter.notifyDataSetChanged();
         }
-
+        for (int i = 5; i < allSong.size(); i = i + 17) {
+            allSong.add(i, null);
+        }
     }
 
     private void sort() {

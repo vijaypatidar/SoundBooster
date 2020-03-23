@@ -3,10 +3,12 @@ package com.vkpapps.soundbooster.utils;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.VectorDrawable;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -28,6 +30,7 @@ import java.util.List;
 public class Utils {
 
     public static File root;
+    public static File imageRoot;
 
     public static User loadUser() {
         User user = null;
@@ -121,5 +124,22 @@ public class Utils {
         fileOutputStream.flush();
         fileOutputStream.close();
         fileInputStream.close();
+        try {
+            android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(to.getAbsolutePath());
+
+            byte[] data = mmr.getEmbeddedPicture();
+
+            // convert the byte array to a bitmap
+            if (data != null) {
+                File file = new File(imageRoot, to.getName());
+                file.createNewFile();
+                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                FileOutputStream fos = new FileOutputStream(file);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

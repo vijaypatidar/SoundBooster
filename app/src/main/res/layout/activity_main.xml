@@ -31,6 +31,7 @@
         app:navGraph="@navigation/mobile_navigation"
         tools:ignore="FragmentTagUsage" />
 
+
     <com.vkpapps.soundbooster.view.MiniMediaController
         android:id="@+id/miniController"
         android:layout_width="match_parent"

@@ -1,6 +1,7 @@
 package com.vkpapps.soundbooster.activity;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -8,8 +9,10 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
@@ -50,6 +53,7 @@ import com.vkpapps.soundbooster.view.MiniMediaController;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -65,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private SignalHandler signalHandler;
     private ClientHelper clientHelper;
     private MusicPlayerHelper musicPlayer;
-    private boolean isHost;
+    private boolean isHost, initPlayer;
     private User user;
     private File root;
     private FileRequestReceiver requestReceiver;
@@ -74,7 +78,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private OnUsersUpdateListener onUsersUpdateListener;
     private MiniMediaController miniMediaController;
     private HostSongFragment currentFragment;
-
+    private ArrayList<String> queue;
+    private int position = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications, R.id.navigation_local)
+                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_local)
                 .build();
         navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
@@ -133,6 +138,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     private void setup(boolean host) {
         isHost = host;
+        queue = new ArrayList<>();
         signalHandler = new SignalHandler(this, isHost);
         if (isHost) {
             serverHelper = new ServerHelper(signalHandler, user, this);
@@ -141,16 +147,19 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             new Thread(() -> {
                 Socket socket = new Socket();
                 try {
-                    socket.connect(new InetSocketAddress("192.168.43.1", 1203), 5000);
+                    String address = InetAddress.getLocalHost().getHostAddress();
+                    FileService.HOST_ADDRESS = address.substring(0, address.lastIndexOf(".") + 1) + "1";
+                    socket.connect(new InetSocketAddress(FileService.HOST_ADDRESS, 1203), 5000);
                     clientHelper = new ClientHelper(socket, signalHandler, user, this);
                     clientHelper.start();
                 } catch (IOException e) {
                     runOnUiThread(() -> {
                         androidx.appcompat.app.AlertDialog.Builder ab = new androidx.appcompat.app.AlertDialog.Builder(this);
-                        ab.setTitle("no host found!");
-                        ab.setMessage("there is no host on this wifi");
+                        ab.setTitle("No host found!");
+                        ab.setMessage("There is no host on this wifi");
                         ab.setCancelable(false);
                         ab.setPositiveButton("retry", (dialog, which) -> setup(false));
+                        ab.setNegativeButton("Host Party", (dialog, which) -> getChoice());
                         ab.create().show();
                     });
                     e.printStackTrace();
@@ -163,6 +172,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     @Override
     public void onLocalSongSelected(AudioModel audio) {
 
+        queue.add(audio.getName());
         // triggered by local song fragment after copying song to private storage
         try {
             Utils.copyFromTo(new File(audio.getPath()), new File(root, audio.getName()));
@@ -179,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 FileService.startActionSend(this, audio.getName(), cid, isHost, i == N);
             }
         } else {
-            clientHelper.write("RFR " + audio.getName());
+            sendCommand("RFR " + audio.getName());
         }
     }
 
@@ -190,8 +200,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             serverHelper.sendCommand(command);
             musicPlayer.loadAndPlay(audioModel.getName());
         } else {
-            //TODo check client control permission before transmitting signal
-            clientHelper.write(command);
+            sendCommand(command);
         }
     }
 
@@ -199,16 +208,17 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onNavVisibilityChange(boolean visible) {
         if ((navView.getVisibility() == View.VISIBLE) == visible) return;
         if (visible) {
-            navView.setAnimation(AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar));
-            navView.setVisibility(View.VISIBLE);
-            miniMediaController.setAnimation(AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar));
-            miniMediaController.setVisibility(View.VISIBLE);
+            Animation animation = AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar);
+            navView.setAnimation(animation);
+            miniMediaController.setAnimation(animation);
         } else {
-            navView.setAnimation(AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar));
-            navView.setVisibility(View.GONE);
-            miniMediaController.setAnimation(AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar));
-            miniMediaController.setVisibility(View.GONE);
+            Animation animation = AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar);
+            navView.setAnimation(animation);
+            miniMediaController.setAnimation(animation);
         }
+        navView.setVisibility(visible ? View.VISIBLE : View.GONE);
+        if (initPlayer)
+            miniMediaController.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
 
@@ -216,36 +226,23 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onPlayRequest(String name) {
         //triggered by hosted Song fragment
         musicPlayer.loadAndPlay(name);
-        Toast.makeText(this, "onPlayRequest " + name, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onResumeRequest() {
         musicPlayer.resume();
-        Toast.makeText(this, "onResumeRequest", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onPauseRequest() {
         musicPlayer.pause();
-        Toast.makeText(this, "onPauseRequest ", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onSeekToRequest(int time) {
         musicPlayer.seekTo(time);
-        Toast.makeText(this, "onSeekToRequest " + time, Toast.LENGTH_SHORT).show();
     }
 
-    @Override
-    public void onNewDeviceConnected(String id) {
-        Toast.makeText(this, "onNewDeviceConnected " + id, Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onDeviceDisconnected(String id) {
-        Toast.makeText(this, "onDeviceDisconnected " + id, Toast.LENGTH_SHORT).show();
-    }
 
     @Override
     public void broadcastCommand(String command) {
@@ -274,7 +271,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 String cid = chr.user.getUserId();
                 if (!cid.equals(id)) {
                     FileService.startActionSend(this, name, chr.user.getUserId(), isHost, i == N);
-                    Toast.makeText(this, "onReceiveFileRequest " + name, Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -295,19 +291,36 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onReceiveFileRequestAccepted(String name, String id) {
         //only client need to handle this , not for host
         // send requested file to client sent request
-        Toast.makeText(this, "receive", Toast.LENGTH_SHORT).show();
         FileService.startActionSend(this, name, id, isHost, false);
+    }
+
+    @Override
+    public void onControlAccessChange(boolean access) {
+        user.setAccess(access);
+    }
+
+    @Override
+    public void onMoveToRequest(int change) {
+        position += change;
+        if (position >= queue.size() || position < 0) position = 0;
+        if (isHost) {
+            String name = queue.get(position);
+            serverHelper.sendCommand("PLY " + name);
+            musicPlayer.loadAndPlay(name);
+        }
     }
 
     @Override
     public void onSongChange(String name) {
         miniMediaController.changeSong(name, root);
+        position = queue.indexOf(name);
+        initPlayer = true;
     }
 
     @Override
     public void onRequestSongNotFound(String songName) {
         String command = "SFR " + songName;
-        if (!isHost) clientHelper.write(command);
+        if (!isHost) sendCommand(command);
     }
 
 
@@ -358,6 +371,15 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
+        } else if (R.id.menu_share == item.getItemId()) {
+            Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+            String shareBody = "Sound Booster in a free android app for playing music on multiple devices simultaneously to make the sound louder" +
+                    ".\nDownload the app now and make party with friends any where any time without mobile data usage. " +
+                    "\nhttps://vkp.page.link/soundbooster";
+            sharingIntent.putExtra(Intent.EXTRA_SUBJECT, "Sound Booster");
+            sharingIntent.putExtra(Intent.EXTRA_TEXT, shareBody);
+            startActivity(Intent.createChooser(sharingIntent, "Share via"));
         }
         return super.onOptionsItemSelected(item);
     }
@@ -397,6 +419,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         if (fragment instanceof DashboardFragment) {
             onUsersUpdateListener = (OnUsersUpdateListener) fragment;
         } else if (fragment instanceof MusicPlayerFragment) {
+            miniMediaController.setEnableVisibilityChanges(false);
             musicPlayer.setPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = (HostSongFragment) fragment;
@@ -409,6 +432,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             onUsersUpdateListener = null;
         } else if (fragment instanceof MusicPlayerFragment) {
             musicPlayer.setPlayerChangeListener(null);
+            miniMediaController.setEnableVisibilityChanges(true);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = null;
         }
@@ -425,7 +449,24 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             message.setData(bundle);
             signalHandler.sendMessage(message);
         } else {
-            clientHelper.write(command);
+            sendCommand(command);
         }
     }
+
+    private void sendCommand(String command) {
+        if (user.isAccess()) {
+            clientHelper.write(command);
+        } else {
+            Toast.makeText(this, "host denied", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
 }
