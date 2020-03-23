@@ -51,6 +51,7 @@ import com.vkpapps.soundbooster.view.MiniMediaController;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -145,6 +146,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             new Thread(() -> {
                 Socket socket = new Socket();
                 try {
+                    String address = InetAddress.getLocalHost().getHostAddress();
+                    FileService.HOST_ADDRESS = address.substring(0, address.lastIndexOf(".") + 1) + "1";
                     socket.connect(new InetSocketAddress(FileService.HOST_ADDRESS, 1203), 5000);
                     clientHelper = new ClientHelper(socket, signalHandler, user, this);
                     clientHelper.start();

@@ -32,7 +32,7 @@ public class FileService extends IntentService {
     public static final String CLIENT_ID = "com.vkpapps.soundbooster.extra.CLIENT_ID";
     private static final String IS_HOST = "com.vkpapps.soundbooster.extra.IS_HOST";
     public static final String LAST_REQUEST = "com.vkpapps.soundbooster.action.IS_LAST_REQUEST";
-    public static final String HOST_ADDRESS = "192.168.60.1";
+    public static String HOST_ADDRESS;
     private File root;
     private File imageRoot;
 
