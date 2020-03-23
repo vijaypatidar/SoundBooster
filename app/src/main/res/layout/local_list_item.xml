@@ -19,7 +19,7 @@
             android:id="@+id/audio_icon"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/music_player_background"
+            android:background="@drawable/music_icon_background"
             android:src="@drawable/ic_default_audio_icon" />
     </androidx.cardview.widget.CardView>
 

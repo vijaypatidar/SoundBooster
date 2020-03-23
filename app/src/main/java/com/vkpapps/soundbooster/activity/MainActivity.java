@@ -1,6 +1,7 @@
 package com.vkpapps.soundbooster.activity;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -8,6 +9,7 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
@@ -57,8 +59,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
         OnUserListRequestListener, OnFragmentAttachStatusListener, OnClientControlChangeRequest, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
@@ -69,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private SignalHandler signalHandler;
     private ClientHelper clientHelper;
     private MusicPlayerHelper musicPlayer;
-    private boolean isHost;
+    private boolean isHost, initPlayer;
     private User user;
     private File root;
     private FileRequestReceiver requestReceiver;
@@ -78,7 +78,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private OnUsersUpdateListener onUsersUpdateListener;
     private MiniMediaController miniMediaController;
     private HostSongFragment currentFragment;
-    private Queue<String> queue;
+    private ArrayList<String> queue;
+    private int position = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -137,11 +138,11 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     private void setup(boolean host) {
         isHost = host;
+        queue = new ArrayList<>();
         signalHandler = new SignalHandler(this, isHost);
         if (isHost) {
             serverHelper = new ServerHelper(signalHandler, user, this);
             serverHelper.start();
-            queue = new ConcurrentLinkedQueue<>();
         } else {
             new Thread(() -> {
                 Socket socket = new Socket();
@@ -171,6 +172,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     @Override
     public void onLocalSongSelected(AudioModel audio) {
 
+        queue.add(audio.getName());
         // triggered by local song fragment after copying song to private storage
         try {
             Utils.copyFromTo(new File(audio.getPath()), new File(root, audio.getName()));
@@ -215,7 +217,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             miniMediaController.setAnimation(animation);
         }
         navView.setVisibility(visible ? View.VISIBLE : View.GONE);
-        miniMediaController.setVisibility(visible ? View.VISIBLE : View.GONE);
+        if (initPlayer)
+            miniMediaController.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
 
@@ -297,8 +300,21 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
+    public void onMoveToRequest(int change) {
+        position += change;
+        if (position >= queue.size() || position < 0) position = 0;
+        if (isHost) {
+            String name = queue.get(position);
+            serverHelper.sendCommand("PLY " + name);
+            musicPlayer.loadAndPlay(name);
+        }
+    }
+
+    @Override
     public void onSongChange(String name) {
         miniMediaController.changeSong(name, root);
+        position = queue.indexOf(name);
+        initPlayer = true;
     }
 
     @Override
@@ -355,6 +371,15 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
+        } else if (R.id.menu_share == item.getItemId()) {
+            Intent sharingIntent = new Intent(Intent.ACTION_SEND);
+            sharingIntent.setType("text/plain");
+            String shareBody = "Sound Booster in a free android app for playing music on multiple devices simultaneously to make the sound louder" +
+                    ".\nDownload the app now and make party with friends any where any time without mobile data usage. " +
+                    "\nhttps://vkp.page.link/soundbooster";
+            sharingIntent.putExtra(Intent.EXTRA_SUBJECT, "Sound Booster");
+            sharingIntent.putExtra(Intent.EXTRA_TEXT, shareBody);
+            startActivity(Intent.createChooser(sharingIntent, "Share via"));
         }
         return super.onOptionsItemSelected(item);
     }
@@ -436,4 +461,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         }
 
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
 }

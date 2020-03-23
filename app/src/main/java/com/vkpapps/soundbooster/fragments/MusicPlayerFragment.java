@@ -111,10 +111,14 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
                 } else {
                     com = "PLY " + audioTitle.getText().toString();
                 }
-                commandListener.onCommandCreated(com);
                 break;
-
+            case R.id.btnNext:
+                com = "NXT 1";
+                break;
+            default:
+                com = "NXT -1";
         }
+        commandListener.onCommandCreated(com);
     }
 
     @Override

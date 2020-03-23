@@ -36,6 +36,9 @@ public class SignalHandler extends Handler {
                 case "SKT":
                     onMessageHandlerListener.onSeekToRequest(Integer.parseInt(command.substring(4)));
                     break;
+                case "NXT":
+                    onMessageHandlerListener.onMoveToRequest(Integer.parseInt(command.substring(4)));
+                    break;
                 case "RFR":
                     onMessageHandlerListener.onReceiveFileRequest(command.substring(4), msg.getData().getString("ID"));
                     break;
@@ -85,5 +88,7 @@ public class SignalHandler extends Handler {
         void onReceiveFileRequestAccepted(String name, String id);
 
         void onControlAccessChange(boolean access);
+
+        void onMoveToRequest(int parseInt);
     }
 }

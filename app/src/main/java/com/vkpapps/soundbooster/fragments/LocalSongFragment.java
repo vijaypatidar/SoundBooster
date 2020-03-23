@@ -96,7 +96,7 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
 
     private void sort() {
         Collections.sort(allSong, (o1, o2) -> o1.getName().compareTo(o2.getName()));
-        for (int i = 5; i < allSong.size(); i += 10) {
+        for (int i = 5; i < allSong.size(); i += 20) {
             allSong.add(i, null);
         }
     }

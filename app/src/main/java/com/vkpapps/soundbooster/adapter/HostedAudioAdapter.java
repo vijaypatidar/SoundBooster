@@ -10,8 +10,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.ads.AdView;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.AudioModel;
+import com.vkpapps.soundbooster.utils.FirebaseUtils;
 import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
@@ -29,27 +31,44 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
     @NonNull
     @Override
     public AudioViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.host_list_item, parent, false);
+        View inflate;
+        if (viewType == 1) {
+            inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.host_list_item, parent, false);
+        } else {
+            inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.host_list_item_ad_view, parent, false);
+        }
         return new AudioViewHolder(inflate);
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return audioModels.get(position) == null ? 0 : 1;
     }
 
     @Override
     public void onBindViewHolder(@NonNull AudioViewHolder holder, int position) {
         AudioModel audioModel = audioModels.get(position);
-        holder.audioTitle.setText(audioModel.getName());
-        holder.audioArtist.setText(audioModel.getArtist());
-        holder.itemView.setOnClickListener(v -> {
-            onAudioSelectedListener.onAudioSelected(audioModel);
-        });
-        holder.itemView.setOnLongClickListener(v -> {
-            onAudioSelectedListener.onAudioLongSelected(audioModel);
-            return true;
-        });
+        if (audioModel == null) {
+            AdView adView = (AdView) holder.itemView;
+            adView.loadAd(FirebaseUtils.getAdRequest());
+        } else {
 
-        ImageView audioIcon = holder.audioIcon;
-        File file = new File(Utils.imageRoot, audioModel.getName());
-        if (file.exists())
-            audioIcon.setImageURI(Uri.fromFile(file));
+            holder.audioTitle.setText(audioModel.getName());
+            holder.audioArtist.setText(audioModel.getArtist());
+            holder.itemView.setOnClickListener(v -> {
+                onAudioSelectedListener.onAudioSelected(audioModel);
+            });
+            holder.itemView.setOnLongClickListener(v -> {
+                onAudioSelectedListener.onAudioLongSelected(audioModel);
+                return true;
+            });
+
+            ImageView audioIcon = holder.audioIcon;
+            File file = new File(Utils.imageRoot, audioModel.getName());
+            if (file.exists()) {
+                audioIcon.setImageURI(Uri.fromFile(file));
+            }
+        }
     }
 
     @Override
