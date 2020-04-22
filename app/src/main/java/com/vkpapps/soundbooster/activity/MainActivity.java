@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.DhcpInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
@@ -53,7 +55,6 @@ import com.vkpapps.soundbooster.view.MiniMediaController;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -147,7 +148,10 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             new Thread(() -> {
                 Socket socket = new Socket();
                 try {
-                    String address = InetAddress.getLocalHost().getHostAddress();
+                    WifiManager manager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+                    DhcpInfo dhcpInfo = manager.getDhcpInfo();
+                    String address = Utils.intToIp(dhcpInfo.gateway);
+                    Log.d("vijay", "setup: -================ " + address + "  " + manager.isP2pSupported() + "  " + manager.isWifiEnabled());
                     FileService.HOST_ADDRESS = address.substring(0, address.lastIndexOf(".") + 1) + "1";
                     socket.connect(new InetSocketAddress(FileService.HOST_ADDRESS, 1203), 5000);
                     clientHelper = new ClientHelper(socket, signalHandler, user, this);

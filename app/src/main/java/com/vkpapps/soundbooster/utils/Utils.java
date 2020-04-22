@@ -5,15 +5,11 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.VectorDrawable;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
-
-import androidx.core.content.ContextCompat;
 
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
@@ -68,18 +64,6 @@ public class Utils {
         vectorDrawable.draw(canvas);
         return bitmap;
     }
-
-    public static Bitmap getBitmap(Context context, int drawableId) {
-        Drawable drawable = ContextCompat.getDrawable(context, drawableId);
-        if (drawable instanceof BitmapDrawable) {
-            return ((BitmapDrawable) drawable).getBitmap();
-        } else if (drawable instanceof VectorDrawable) {
-            return getBitmap((VectorDrawable) drawable);
-        } else {
-            return null;
-        }
-    }
-
 
     public static List<AudioModel> getAllAudioFromDevice(final Context context) {
         Log.d("control", "getAllAudioFromDevice: ========================");
@@ -141,5 +125,13 @@ public class Utils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static String intToIp(int i) {
+
+        return (i & 0xFF) + "." +
+                ((i >> 8) & 0xFF) + "." +
+                ((i >> 16) & 0xFF) + "." +
+                ((i >> 24) & 0xFF);
     }
 }
