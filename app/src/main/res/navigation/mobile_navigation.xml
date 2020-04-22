@@ -9,6 +9,11 @@
         android:label="@string/title_home"
         tools:layout="@layout/fragment_host_song">
 
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_musicPlayer"
+            app:destination="@id/navigation_musicPlayer"
+            app:enterAnim="@anim/slide_in_bottom"
+            app:exitAnim="@anim/slide_out_bottom" />
     </fragment>
     <fragment
         android:id="@+id/navigation_dashboard"
