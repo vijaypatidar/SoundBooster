@@ -21,7 +21,7 @@ import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
-import com.vkpapps.soundbooster.utils.Utils;
+import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,6 +38,7 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
     private List<AudioModel> allSong;
     private HostedAudioAdapter audioAdapter;
     private File download;
+    private StorageManager storageManager;
 
 
     @Override
@@ -45,18 +46,21 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
                              Bundle savedInstanceState) {
         download = container.getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         return inflater.inflate(R.layout.fragment_host_song, container, false);
+
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        song = view.getContext().getDir("song", Context.MODE_PRIVATE);
+        storageManager = StorageManager.getInstance(view.getContext());
+        song = storageManager.getSongDir();
+
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
             allSong = new ArrayList<>();
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
             refreshSong();
-            audioAdapter = new HostedAudioAdapter(allSong, this);
+            audioAdapter = new HostedAudioAdapter(allSong, this, view.getContext());
             recyclerView.setItemAnimator(new DefaultItemAnimator());
             recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
             recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
@@ -85,7 +89,7 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
     @Override
     public void onAudioLongSelected(AudioModel audioModel) {
         try {
-            Utils.copyFromTo(new File(audioModel.getPath()), new File(download, audioModel.getName()));
+            storageManager.download(audioModel.getName());
             Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show();
         } catch (IOException e) {
             e.printStackTrace();

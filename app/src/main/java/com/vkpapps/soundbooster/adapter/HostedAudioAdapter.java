@@ -1,5 +1,6 @@
 package com.vkpapps.soundbooster.adapter;
 
+import android.content.Context;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,7 +15,7 @@ import com.google.android.gms.ads.AdView;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.FirebaseUtils;
-import com.vkpapps.soundbooster.utils.Utils;
+import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
 import java.util.List;
@@ -22,10 +23,12 @@ import java.util.List;
 public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.AudioViewHolder> {
     private List<AudioModel> audioModels;
     private OnAudioSelectedListener onAudioSelectedListener;
+    private StorageManager storageManager;
 
-    public HostedAudioAdapter(List<AudioModel> audioModels, OnAudioSelectedListener onAudioSelectedListener) {
+    public HostedAudioAdapter(List<AudioModel> audioModels, OnAudioSelectedListener onAudioSelectedListener, Context context) {
         this.audioModels = audioModels;
         this.onAudioSelectedListener = onAudioSelectedListener;
+        this.storageManager = StorageManager.getInstance(context);
     }
 
     @NonNull
@@ -50,7 +53,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
         AudioModel audioModel = audioModels.get(position);
         if (audioModel == null) {
             AdView adView = (AdView) holder.itemView;
-            adView.loadAd(FirebaseUtils.getAdRequest());
+            FirebaseUtils.getAdRequest(adView);
         } else {
 
             holder.audioTitle.setText(audioModel.getName());
@@ -64,7 +67,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
             });
 
             ImageView audioIcon = holder.audioIcon;
-            File file = new File(Utils.imageRoot, audioModel.getName());
+            File file = new File(storageManager.getImageDir(), audioModel.getName());
             if (file.exists()) {
                 audioIcon.setImageURI(Uri.fromFile(file));
             }

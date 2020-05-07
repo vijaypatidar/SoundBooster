@@ -1,11 +1,16 @@
 package com.vkpapps.soundbooster.utils;
 
 import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.InterstitialAd;
 
 
 public class FirebaseUtils {
-    public static AdRequest getAdRequest() {
-//        return new AdRequest.Builder().addTestDevice("A3D3C06CAE345382164A7ED2ADAAD374").build();
-        return new AdRequest.Builder().build();
+    public static void getAdRequest(AdView adView) {
+        adView.loadAd(new AdRequest.Builder().build());
+    }
+
+    public static void getAdRequest(InterstitialAd adView) {
+        adView.loadAd(new AdRequest.Builder().build());
     }
 }

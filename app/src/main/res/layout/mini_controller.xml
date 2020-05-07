@@ -18,8 +18,10 @@
             android:id="@+id/audioCover"
             android:layout_width="50dp"
             android:layout_height="50dp"
+            android:scaleType="centerCrop"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
+            tools:ignore="ContentDescription"
             tools:src="@drawable/ic_profile" />
 
         <TextView

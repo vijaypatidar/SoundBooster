@@ -50,7 +50,7 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
         AudioModel audioModel = audioModels.get(position);
         if (audioModel == null) {
             AdView adView = (AdView) holder.itemView;
-            adView.loadAd(FirebaseUtils.getAdRequest());
+            FirebaseUtils.getAdRequest(adView);
         } else {
 
             holder.audioTitle.setText(audioModel.getName());
