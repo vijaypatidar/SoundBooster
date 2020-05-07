@@ -49,6 +49,7 @@ import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.IPManager;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
+import com.vkpapps.soundbooster.utils.StorageManager;
 import com.vkpapps.soundbooster.utils.UpdateManager;
 import com.vkpapps.soundbooster.utils.Utils;
 import com.vkpapps.soundbooster.view.MiniMediaController;
@@ -81,12 +82,14 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private HostSongFragment currentFragment;
     private ArrayList<String> queue;
     private int position = 0;
+    private StorageManager storageManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        storageManager = StorageManager.getInstance(this);
         miniMediaController = findViewById(R.id.miniController);
         navView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
@@ -100,7 +103,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
         users = new ArrayList<>();
         root = getDir("song", MODE_PRIVATE);
-        user = Utils.loadUser();
+        user = Utils.loadUser(this);
         musicPlayer = new MusicPlayerHelper(this, this);
         if (user == null) {
             navController.navigate(R.id.navigation_profile);
@@ -180,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         queue.add(audio.getName());
         // triggered by local song fragment after copying song to private storage
         try {
-            Utils.copyFromTo(new File(audio.getPath()), new File(root, audio.getName()));
+            storageManager.copySong(new File(audio.getPath()));
         } catch (IOException e) {
             e.printStackTrace();
             return;

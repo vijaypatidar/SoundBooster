@@ -21,7 +21,7 @@ import com.vkpapps.soundbooster.interfaces.OnCommandListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
-import com.vkpapps.soundbooster.utils.Utils;
+import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
 import java.util.Timer;
@@ -35,6 +35,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     private ImageView audioCover, btnPlay;
     private MediaPlayer mediaPlayer;
     private OnCommandListener commandListener;
+    private StorageManager storageManager;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -46,6 +47,9 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        storageManager = StorageManager.getInstance(view.getContext());
+
         btnPlay = view.findViewById(R.id.btnPlay);
         btnPlay.setOnClickListener(this);
         view.findViewById(R.id.btnNext).setOnClickListener(this);
@@ -131,7 +135,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     }
 
     private void loadCover(String title) {
-        File file = new File(Utils.imageRoot, title);
+        File file = new File(storageManager.getImageDir(), title);
         if (file.exists())
             audioCover.setImageURI(Uri.fromFile(file));
 

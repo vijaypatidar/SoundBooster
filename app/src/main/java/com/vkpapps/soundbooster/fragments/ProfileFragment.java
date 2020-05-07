@@ -38,7 +38,7 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        user = Utils.loadUser();
+        user = Utils.loadUser(view.getContext());
         imageView = view.findViewById(R.id.userPic);
         final EditText editTextName = view.findViewById(R.id.userName);
 
@@ -49,7 +49,7 @@ public class ProfileFragment extends Fragment {
             user.setName("RockStar");
             user.setUserId(String.valueOf(System.currentTimeMillis()));
             user.setAccess(true);
-            Utils.setUser(user);
+            Utils.setUser(user, view.getContext());
         }
 
         Button btnSave = view.findViewById(R.id.btnSave);
@@ -62,7 +62,7 @@ public class ProfileFragment extends Fragment {
             } else {
                 editTextName.setError("name required!");
             }
-            Utils.setUser(user);
+            Utils.setUser(user, v.getContext());
         });
     }
 
