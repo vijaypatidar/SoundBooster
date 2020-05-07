@@ -21,6 +21,7 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
         MobileAds.initialize(this);
+
         Utils.root = getDir("userData", MODE_PRIVATE);
         Utils.imageRoot = getDir("image", MODE_PRIVATE);
 
@@ -45,7 +46,6 @@ public class SplashActivity extends AppCompatActivity {
                 s.delete();
             }
         } catch (Exception ignored) {
-            ignored.printStackTrace();
         }
     }
 }

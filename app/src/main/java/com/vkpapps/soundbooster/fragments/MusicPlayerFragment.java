@@ -4,7 +4,6 @@ import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +34,6 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     private TextView audioTitle;
     private ImageView audioCover, btnPlay;
     private MediaPlayer mediaPlayer;
-    private File root;
     private OnCommandListener commandListener;
 
     @Override
@@ -48,7 +46,6 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        root = getActivity().getDir("song", Context.MODE_PRIVATE);
         btnPlay = view.findViewById(R.id.btnPlay);
         btnPlay.setOnClickListener(this);
         view.findViewById(R.id.btnNext).setOnClickListener(this);
@@ -81,7 +78,6 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
-                    Log.d("seekto", "onProgressChanged: " + progress + " " + fromUser);
                     int time = progress * mediaPlayer.getDuration() / 100;
                     String command = "SKT " + time;
                     commandListener.onCommandCreated(command);

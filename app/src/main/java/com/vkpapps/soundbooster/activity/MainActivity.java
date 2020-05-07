@@ -5,8 +5,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.net.DhcpInfo;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Message;
 import android.util.Log;
@@ -49,7 +47,9 @@ import com.vkpapps.soundbooster.interfaces.OnUserListRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnUsersUpdateListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
+import com.vkpapps.soundbooster.utils.IPManager;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
+import com.vkpapps.soundbooster.utils.UpdateManager;
 import com.vkpapps.soundbooster.utils.Utils;
 import com.vkpapps.soundbooster.view.MiniMediaController;
 
@@ -110,6 +110,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         miniMediaController.setOnClickListener(v -> {
             navController.navigate(R.id.navigation_musicPlayer);
         });
+
+        new UpdateManager(true).checkForUpdate(true, this);
     }
 
     @Override
@@ -148,10 +150,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             new Thread(() -> {
                 Socket socket = new Socket();
                 try {
-                    WifiManager manager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-                    DhcpInfo dhcpInfo = manager.getDhcpInfo();
-                    String address = Utils.intToIp(dhcpInfo.gateway);
-                    Log.d("vijay", "setup: -================ " + address + "  " + manager.isP2pSupported() + "  " + manager.isWifiEnabled());
+                    IPManager ipManager = new IPManager(this);
+                    String address = ipManager.hostIp();
+                    Log.d("vijay", "setup: -================ " + address);
                     FileService.HOST_ADDRESS = address.substring(0, address.lastIndexOf(".") + 1) + "1";
                     socket.connect(new InetSocketAddress(FileService.HOST_ADDRESS, 1203), 5000);
                     clientHelper = new ClientHelper(socket, signalHandler, user, this);

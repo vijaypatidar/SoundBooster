@@ -4,8 +4,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.drawable.VectorDrawable;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -56,14 +54,7 @@ public class Utils {
         }
     }
 
-    private static Bitmap getBitmap(VectorDrawable vectorDrawable) {
-        Bitmap bitmap = Bitmap.createBitmap(vectorDrawable.getIntrinsicWidth(),
-                vectorDrawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        vectorDrawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        vectorDrawable.draw(canvas);
-        return bitmap;
-    }
+
 
     public static List<AudioModel> getAllAudioFromDevice(final Context context) {
         Log.d("control", "getAllAudioFromDevice: ========================");
@@ -108,30 +99,25 @@ public class Utils {
         fileOutputStream.flush();
         fileOutputStream.close();
         fileInputStream.close();
+
+        //extract image from mp3
         try {
             android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
             mmr.setDataSource(to.getAbsolutePath());
-
             byte[] data = mmr.getEmbeddedPicture();
 
             // convert the byte array to a bitmap
             if (data != null) {
                 File file = new File(imageRoot, to.getName());
-                file.createNewFile();
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                FileOutputStream fos = new FileOutputStream(file);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+                if (file.createNewFile()) {
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                    FileOutputStream fos = new FileOutputStream(file);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static String intToIp(int i) {
-
-        return (i & 0xFF) + "." +
-                ((i >> 8) & 0xFF) + "." +
-                ((i >> 16) & 0xFF) + "." +
-                ((i >> 24) & 0xFF);
-    }
 }

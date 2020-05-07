@@ -53,7 +53,6 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
             recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
                 @Override
                 public boolean onFling(int velocityX, int velocityY) {
-                    if (onNavigationVisibilityListener != null)
                         onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
                     return false;
                 }
@@ -66,7 +65,6 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
 
     @Override
     public void onAudioSelected(AudioModel audioMode) {
-        if (onLocalSongFragmentListener != null)
             onLocalSongFragmentListener.onLocalSongSelected(audioMode);
     }
 
