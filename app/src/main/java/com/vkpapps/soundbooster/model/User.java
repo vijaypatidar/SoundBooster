@@ -15,12 +15,6 @@ public class User implements Serializable {
         this.access = access;
     }
 
-    public User(String name, String userId) {
-        this.name = name;
-        this.userId = userId;
-        this.access = true;
-    }
-
     public User() {
 
     }
@@ -46,4 +40,5 @@ public class User implements Serializable {
     public void setUserId(String userId) {
         this.userId = userId;
     }
+
 }

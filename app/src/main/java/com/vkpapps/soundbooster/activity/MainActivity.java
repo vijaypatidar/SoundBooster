@@ -35,7 +35,6 @@ import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.MusicPlayerFragment;
 import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
-import com.vkpapps.soundbooster.interfaces.OnClientControlChangeRequest;
 import com.vkpapps.soundbooster.interfaces.OnCommandListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentPopBackListener;
@@ -47,6 +46,8 @@ import com.vkpapps.soundbooster.interfaces.OnUserListRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnUsersUpdateListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
+import com.vkpapps.soundbooster.model.control.ControlFile;
+import com.vkpapps.soundbooster.model.control.ControlPlayer;
 import com.vkpapps.soundbooster.utils.IPManager;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.StorageManager;
@@ -63,7 +64,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
-        OnUserListRequestListener, OnFragmentAttachStatusListener, OnClientControlChangeRequest, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
+        OnUserListRequestListener, OnFragmentAttachStatusListener, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
         FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener, OnFragmentPopBackListener,
         OnCommandListener {
     private BottomNavigationView navView;
@@ -76,7 +77,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private File root;
     private FileRequestReceiver requestReceiver;
     private NavController navController;
-    private List<User> users;
     private OnUsersUpdateListener onUsersUpdateListener;
     private MiniMediaController miniMediaController;
     private HostSongFragment currentFragment;
@@ -101,7 +101,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
-        users = new ArrayList<>();
         root = getDir("song", MODE_PRIVATE);
         user = Utils.loadUser(this);
         musicPlayer = new MusicPlayerHelper(this, this);
@@ -145,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private void setup(boolean host) {
         isHost = host;
         queue = new ArrayList<>();
-        signalHandler = new SignalHandler(this, isHost);
+        signalHandler = new SignalHandler(this);
         if (isHost) {
             serverHelper = new ServerHelper(signalHandler, user, this);
             serverHelper.start();
@@ -197,18 +196,17 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 FileService.startActionSend(this, audio.getName(), cid, isHost, i == N);
             }
         } else {
-            sendCommand("RFR " + audio.getName());
+            sendCommand(new ControlFile(ControlFile.ACTION_RECEIVE_REQUEST, audio.getName()));
         }
     }
 
     @Override
     public void onHostAudioSelected(AudioModel audioModel) {
-        String command = "PLY " + audioModel.getName();
         if (isHost) {
-            serverHelper.sendCommand(command);
+            serverHelper.sendCommand(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
             musicPlayer.loadAndPlay(audioModel.getName());
         } else {
-            sendCommand(command);
+            sendCommand(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
         }
     }
 
@@ -303,17 +301,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
-    public void onControlAccessChange(boolean access) {
-        user.setAccess(access);
-    }
-
-    @Override
     public void onMoveToRequest(int change) {
         position += change;
         if (position >= queue.size() || position < 0) position = 0;
         if (isHost) {
             String name = queue.get(position);
-            serverHelper.sendCommand("PLY " + name);
+            serverHelper.sendCommand(new ControlPlayer(ControlPlayer.ACTION_PLAY, name));
             musicPlayer.loadAndPlay(name);
         }
     }
@@ -327,8 +320,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onRequestSongNotFound(String songName) {
-        String command = "SFR " + songName;
-        if (!isHost) sendCommand(command);
+        if (!isHost) sendCommand(new ControlFile(ControlFile.ACTION_SEND_REQUEST, songName));
     }
 
 
@@ -339,9 +331,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onRequestAccepted(String name, boolean send, String clientId) {
-        String command = (send ? "SFC" : "RFC") + " " + name.trim();
-        Log.d("CONTROLS", "onRequestAccepted:  = " + command + "  " + clientId);
-        serverHelper.sendCommandToOnly(command, clientId);
+        ControlFile controlFile = new ControlFile(send ? ControlFile.ACTION_SEND_CONFIRM : ControlFile.ACTION_RECEIVE_CONFIRM, name.trim());
+        serverHelper.sendCommandToOnly(controlFile, clientId);
     }
 
     @Override
@@ -356,22 +347,19 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onClientConnected(ClientHelper clientHelper) {
-        users.add(clientHelper.user);
-        if (onUsersUpdateListener != null) {
+        if (onUsersUpdateListener != null && isHost) {
             runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
         }
     }
 
     @Override
     public void onClientDisconnected(ClientHelper clientHelper) {
-        users.remove(clientHelper.user);
-        if (onUsersUpdateListener != null) {
-            runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
-        }
 
         //prompt client when disconnect to a party to create or rejoin the party
         if (!isHost) {
             getChoice();
+        } else if (onUsersUpdateListener != null) {
+            runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
         }
     }
 
@@ -407,19 +395,11 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
-    public List<User> onRequestUsers() {
-        return users;
-    }
-
-    @Override
-    public void OnClientControlChangeRequest(User user) {
-        //for dashboard fragment
-        if (isHost) {
-            user.setAccess(!user.isAccess());
-            serverHelper.sendCommandToOnly("CTR " + (user.isAccess() ? "yes" : "no"), user.getUserId());
-        } else {
-            Toast.makeText(this, "Only host of party can change controls of users", Toast.LENGTH_SHORT).show();
+    public List<ClientHelper> onRequestUsers() {
+        if (serverHelper != null) {
+            return serverHelper.getClientHelpers();
         }
+        return null;
     }
 
     @Override
@@ -461,7 +441,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         }
     }
 
-    private void sendCommand(String command) {
+    private void sendCommand(Object command) {
         if (user.isAccess()) {
             clientHelper.write(command);
         } else {

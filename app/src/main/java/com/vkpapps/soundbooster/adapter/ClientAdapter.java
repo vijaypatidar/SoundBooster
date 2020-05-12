@@ -11,20 +11,17 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.interfaces.OnClientControlChangeRequest;
+import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.model.User;
 
 import java.util.List;
 
 public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> {
 
-    private List<User> users;
-    private OnClientControlChangeRequest onClientConnectionStateListener;
+    private List<ClientHelper> users;
 
-    public ClientAdapter(List<User> users, Context context) {
+    public ClientAdapter(List<ClientHelper> users, Context context) {
         this.users = users;
-        if (context instanceof OnClientControlChangeRequest)
-            onClientConnectionStateListener = (OnClientControlChangeRequest) context;
     }
 
     @NonNull
@@ -36,12 +33,14 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull MyHolder holder, int position) {
-        final User user = users.get(position);
+        final ClientHelper clientHelper = users.get(position);
+        final User user = clientHelper.user;
         holder.userName.setText(user.getName());
         holder.switchAllow.setChecked(user.isAccess());
         holder.switchAllow.setOnCheckedChangeListener((compoundButton, b) -> {
-            if (onClientConnectionStateListener!=null)
-                onClientConnectionStateListener.OnClientControlChangeRequest(user);
+            user.setAccess(!user.isAccess());
+            clientHelper.writeIfClient(user, user.getUserId());
+            notifyDataSetChanged();
         });
     }
 

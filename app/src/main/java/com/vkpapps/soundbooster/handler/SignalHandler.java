@@ -1,10 +1,14 @@
 package com.vkpapps.soundbooster.handler;
 
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+
+import com.vkpapps.soundbooster.model.control.ControlFile;
+import com.vkpapps.soundbooster.model.control.ControlPlayer;
 
 import java.util.Objects;
 
@@ -12,50 +16,43 @@ import java.util.Objects;
 public class SignalHandler extends Handler {
 
     private final OnMessageHandlerListener onMessageHandlerListener;
-    private boolean isHost;
 
-    public SignalHandler(OnMessageHandlerListener onMessageHandlerListener, boolean isHost) {
+    public SignalHandler(OnMessageHandlerListener onMessageHandlerListener) {
         this.onMessageHandlerListener = onMessageHandlerListener;
-        this.isHost = isHost;
     }
 
     @Override
     public void handleMessage(@NonNull Message msg) {
         try {
+            Bundle data = msg.getData();
             String command = Objects.requireNonNull(msg.getData().getString("command"));
-            if (isHost) {
-                onMessageHandlerListener.broadcastCommand(command);
-            }
-            switch (command.substring(0, 3)) {
-                case "PLY":
-                    onMessageHandlerListener.onPlayRequest(command.substring(4));
+            switch (data.getInt("action")) {
+                case ControlPlayer.ACTION_PLAY:
+                    onMessageHandlerListener.onPlayRequest(data.getString("data"));
                     break;
-                case "PAS":
+                case ControlPlayer.ACTION_PAUSE:
                     onMessageHandlerListener.onPauseRequest();
                     break;
-                case "SKT":
-                    onMessageHandlerListener.onSeekToRequest(Integer.parseInt(command.substring(4)));
+                case ControlPlayer.ACTION_SEEK_TO:
+                    onMessageHandlerListener.onSeekToRequest(data.getInt("intData"));
                     break;
-                case "NXT":
-                    onMessageHandlerListener.onMoveToRequest(Integer.parseInt(command.substring(4)));
+                case ControlPlayer.ACTION_NEXT:
+                    onMessageHandlerListener.onMoveToRequest(data.getInt("intData"));
                     break;
-                case "RFR":
-                    onMessageHandlerListener.onReceiveFileRequest(command.substring(4), msg.getData().getString("ID"));
+                case ControlFile.ACTION_RECEIVE_REQUEST:
+                    onMessageHandlerListener.onReceiveFileRequest(data.getString("data"), data.getString("ID"));
                     break;
-                case "SFR":
-                    onMessageHandlerListener.onSendFileRequest(command.substring(4), msg.getData().getString("ID"));
+                case ControlFile.ACTION_SEND_REQUEST:
+                    onMessageHandlerListener.onSendFileRequest(data.getString("data"), data.getString("ID"));
                     break;
-                case "RFC":
-                    onMessageHandlerListener.onReceiveFileRequestAccepted(command.substring(4), msg.getData().getString("ID"));
+                case ControlFile.ACTION_RECEIVE_CONFIRM:
+                    onMessageHandlerListener.onReceiveFileRequestAccepted(data.getString("data"), data.getString("ID"));
                     break;
-                case "SFC":
-                    onMessageHandlerListener.onSendFileRequestAccepted(command.substring(4), msg.getData().getString("ID"));
+                case ControlFile.ACTION_SEND_CONFIRM:
+                    onMessageHandlerListener.onSendFileRequestAccepted(data.getString("data"), data.getString("ID"));
                     break;
-                case "VLM":
-                    onMessageHandlerListener.onVolumeChange(Float.parseFloat(command.substring(4)));
-                    break;
-                case "CTR":
-                    onMessageHandlerListener.onControlAccessChange(command.substring(4).equals("yes"));
+                case ControlPlayer.ACTION_CHANGE_VOLUME:
+                    onMessageHandlerListener.onVolumeChange(data.getInt("intData"));
                     break;
                 default:
                     Log.d("CONTROLS", "handleMessage: =================================== invalid req " + command);
@@ -86,8 +83,6 @@ public class SignalHandler extends Handler {
         void onVolumeChange(float vol);
 
         void onReceiveFileRequestAccepted(String name, String id);
-
-        void onControlAccessChange(boolean access);
 
         void onMoveToRequest(int parseInt);
     }

@@ -1,8 +1,8 @@
 package com.vkpapps.soundbooster.fragments;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -37,14 +37,12 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private List<AudioModel> allSong;
     private HostedAudioAdapter audioAdapter;
-    private File download;
     private StorageManager storageManager;
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        download = container.getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         return inflater.inflate(R.layout.fragment_host_song, container, false);
 
     }
@@ -88,12 +86,19 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
 
     @Override
     public void onAudioLongSelected(AudioModel audioModel) {
-        try {
-            storageManager.download(audioModel.getName());
-            Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Save to downloads");
+        builder.setMessage(audioModel.getName());
+        builder.setPositiveButton("SAVE", (dialog, which) -> {
+            try {
+                storageManager.download(audioModel.getName());
+                Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.create().show();
     }
 
     public void refreshSong() {
@@ -133,7 +138,6 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         if (context instanceof OnNavigationVisibilityListener) {
             onNavigationVisibilityListener = (OnNavigationVisibilityListener) context;
         }
-
     }
 
     @Override

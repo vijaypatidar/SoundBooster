@@ -3,10 +3,10 @@ package com.vkpapps.soundbooster.model.control;
 import java.io.Serializable;
 
 public class ControlFile implements Serializable {
-    public static final int ACTION_SEND = 1;
-    public static final int ACTION_RECEIVE = 2;
-    public static final int ACTION_NEXT = 3;
-    public static final int ACTION_PREVIOUS = 4;
+    public static final int ACTION_SEND_REQUEST = 12;
+    public static final int ACTION_RECEIVE_REQUEST = 13;
+    public static final int ACTION_SEND_CONFIRM = 14;
+    public static final int ACTION_RECEIVE_CONFIRM = 15;
 
     private int action;
     private String data;
