@@ -10,8 +10,6 @@ import androidx.annotation.NonNull;
 import com.vkpapps.soundbooster.model.control.ControlFile;
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
 
-import java.util.Objects;
-
 
 public class SignalHandler extends Handler {
 
@@ -25,7 +23,7 @@ public class SignalHandler extends Handler {
     public void handleMessage(@NonNull Message msg) {
         try {
             Bundle data = msg.getData();
-            String command = Objects.requireNonNull(msg.getData().getString("command"));
+            Log.d("CONTROLS", "handleMessage: =================================== req " + data.getInt("action"));
             switch (data.getInt("action")) {
                 case ControlPlayer.ACTION_PLAY:
                     onMessageHandlerListener.onPlayRequest(data.getString("data"));
@@ -55,7 +53,7 @@ public class SignalHandler extends Handler {
                     onMessageHandlerListener.onVolumeChange(data.getInt("intData"));
                     break;
                 default:
-                    Log.d("CONTROLS", "handleMessage: =================================== invalid req " + command);
+                    Log.d("CONTROLS", "handleMessage: =================================== invalid req ");
             }
         } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
             e.printStackTrace();
