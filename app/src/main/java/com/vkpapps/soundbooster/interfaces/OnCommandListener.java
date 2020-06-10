@@ -1,5 +1,7 @@
 package com.vkpapps.soundbooster.interfaces;
 
+import com.vkpapps.soundbooster.model.control.ControlPlayer;
+
 public interface OnCommandListener {
-    void onCommandCreated(String command);
+    void onCommandCreated(ControlPlayer controlPlayer);
 }

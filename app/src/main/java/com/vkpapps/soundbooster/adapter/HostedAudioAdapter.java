@@ -28,7 +28,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
     public HostedAudioAdapter(List<AudioModel> audioModels, OnAudioSelectedListener onAudioSelectedListener, Context context) {
         this.audioModels = audioModels;
         this.onAudioSelectedListener = onAudioSelectedListener;
-        this.storageManager = StorageManager.getInstance(context);
+        this.storageManager = new StorageManager(context);
     }
 
     @NonNull
@@ -58,9 +58,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
 
             holder.audioTitle.setText(audioModel.getName());
             holder.audioArtist.setText(audioModel.getArtist());
-            holder.itemView.setOnClickListener(v -> {
-                onAudioSelectedListener.onAudioSelected(audioModel);
-            });
+            holder.itemView.setOnClickListener(v -> onAudioSelectedListener.onAudioSelected(audioModel));
             holder.itemView.setOnLongClickListener(v -> {
                 onAudioSelectedListener.onAudioLongSelected(audioModel);
                 return true;

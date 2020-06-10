@@ -12,9 +12,9 @@ public class PermissionUtils {
         return ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED;
     }
 
-    public static void askStoragePermission(Activity activity) {
+    public static void askStoragePermission(Activity activity, int code) {
         ActivityCompat.requestPermissions(activity, new String[]{
                 Manifest.permission.READ_EXTERNAL_STORAGE
-        }, 101);
+        }, code);
     }
 }

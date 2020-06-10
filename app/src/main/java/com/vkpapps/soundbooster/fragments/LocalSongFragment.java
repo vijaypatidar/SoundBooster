@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,8 +20,11 @@ import com.vkpapps.soundbooster.interfaces.OnLocalSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
+import com.vkpapps.soundbooster.utils.StorageManager;
 import com.vkpapps.soundbooster.utils.Utils;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,10 +33,12 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
     private OnLocalSongFragmentListener onLocalSongFragmentListener;
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private List<AudioModel> allSong;
+    private StorageManager storageManager;
 
     public LocalSongFragment() {
 
     }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -42,6 +48,9 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        storageManager = new StorageManager(view.getContext());
+
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
             allSong = Utils.getAllAudioFromDevice(view.getContext());
@@ -53,19 +62,26 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
             recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
                 @Override
                 public boolean onFling(int velocityX, int velocityY) {
-                        onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
+                    onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
                     return false;
                 }
             });
             audioAdapter.notifyDataSetChanged();
         } else {
-            PermissionUtils.askStoragePermission(getActivity());
+            Navigation.findNavController(view).popBackStack();
+            PermissionUtils.askStoragePermission(getActivity(), 101);
         }
     }
 
     @Override
     public void onAudioSelected(AudioModel audioMode) {
-            onLocalSongFragmentListener.onLocalSongSelected(audioMode);
+        try {
+            storageManager.copySong(new File(audioMode.getPath()));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+        onLocalSongFragmentListener.onLocalSongSelected(audioMode);
     }
 
     @Override
@@ -82,7 +98,6 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
         if (context instanceof OnNavigationVisibilityListener) {
             onNavigationVisibilityListener = (OnNavigationVisibilityListener) context;
         }
-
     }
 
     @Override

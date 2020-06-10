@@ -3,6 +3,7 @@ package com.vkpapps.soundbooster.activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
@@ -27,8 +29,6 @@ import androidx.navigation.ui.NavigationUI;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.connection.ClientHelper;
-import com.vkpapps.soundbooster.connection.FileRequestReceiver;
-import com.vkpapps.soundbooster.connection.FileService;
 import com.vkpapps.soundbooster.connection.ServerHelper;
 import com.vkpapps.soundbooster.fragments.DashboardFragment;
 import com.vkpapps.soundbooster.fragments.HostSongFragment;
@@ -48,6 +48,8 @@ import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.model.control.ControlFile;
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
+import com.vkpapps.soundbooster.receivers.FileRequestReceiver;
+import com.vkpapps.soundbooster.service.FileService;
 import com.vkpapps.soundbooster.utils.IPManager;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.StorageManager;
@@ -55,7 +57,6 @@ import com.vkpapps.soundbooster.utils.UpdateManager;
 import com.vkpapps.soundbooster.utils.Utils;
 import com.vkpapps.soundbooster.view.MiniMediaController;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -74,7 +75,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private MusicPlayerHelper musicPlayer;
     private boolean isHost, initPlayer;
     private User user;
-    private File root;
     private FileRequestReceiver requestReceiver;
     private NavController navController;
     private OnUsersUpdateListener onUsersUpdateListener;
@@ -89,8 +89,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        storageManager = StorageManager.getInstance(this);
-        miniMediaController = findViewById(R.id.miniController);
+        storageManager = new StorageManager(this);
         navView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
@@ -101,17 +100,13 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
-        root = getDir("song", MODE_PRIVATE);
         user = Utils.loadUser(this);
-        musicPlayer = new MusicPlayerHelper(this, this);
-        if (user == null) {
-            navController.navigate(R.id.navigation_profile);
-        } else
-            getChoice();
+        musicPlayer = MusicPlayerHelper.getInstance(this, this);
 
-        miniMediaController.setOnClickListener(v -> {
-            navController.navigate(R.id.navigation_musicPlayer);
-        });
+        miniMediaController = findViewById(R.id.miniController);
+        miniMediaController.setOnClickListener(v -> navController.navigate(R.id.navigation_musicPlayer));
+
+        getChoice();
 
         new UpdateManager(true).checkForUpdate(true, this);
     }
@@ -181,19 +176,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
         queue.add(audio.getName());
         // triggered by local song fragment after copying song to private storage
-        try {
-            storageManager.copySong(new File(audio.getPath()));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
         if (isHost) {
             ArrayList<ClientHelper> clientHelpers = serverHelper.getClientHelpers();
             int N = clientHelpers.size() - 1;
             for (int i = 0; i <= N; i++) {
                 ClientHelper chr = clientHelpers.get(i);
-                String cid = chr.user.getUserId();
-                FileService.startActionSend(this, audio.getName(), cid, isHost, i == N);
+                FileService.startActionSend(this, audio.getName(), chr.user.getUserId(), isHost, i == N);
             }
         } else {
             sendCommand(new ControlFile(ControlFile.ACTION_RECEIVE_REQUEST, audio.getName()));
@@ -313,7 +301,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onSongChange(String name) {
-        miniMediaController.changeSong(name, root);
+        miniMediaController.changeSong(name);
         position = queue.indexOf(name);
         initPlayer = true;
     }
@@ -427,17 +415,17 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
-    public void onCommandCreated(String command) {
+    public void onCommandCreated(ControlPlayer control) {
         if (isHost) {
-            serverHelper.sendCommand(command);
+            serverHelper.sendCommand(control);
             Message message = new Message();
             Bundle bundle = new Bundle();
             bundle.putString("ID", user.getUserId());
-            bundle.putString("command", command);
+            control.copyToBundle(bundle);
             message.setData(bundle);
             signalHandler.sendMessage(message);
         } else {
-            sendCommand(command);
+            sendCommand(control);
         }
     }
 
@@ -457,4 +445,20 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         return true;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        // request made by local Song fragment
+        if (requestCode == 101 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            navController.navigate(R.id.navigation_local);
+        } else {
+            Toast.makeText(this, "Storage permission required!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        new StorageManager(this).deleteMedia();
+    }
 }

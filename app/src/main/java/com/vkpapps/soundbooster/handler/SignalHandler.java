@@ -35,7 +35,10 @@ public class SignalHandler extends Handler {
                     onMessageHandlerListener.onSeekToRequest(data.getInt("intData"));
                     break;
                 case ControlPlayer.ACTION_NEXT:
-                    onMessageHandlerListener.onMoveToRequest(data.getInt("intData"));
+                    onMessageHandlerListener.onMoveToRequest(+1);
+                    break;
+                case ControlPlayer.ACTION_PREVIOUS:
+                    onMessageHandlerListener.onMoveToRequest(-1);
                     break;
                 case ControlFile.ACTION_RECEIVE_REQUEST:
                     onMessageHandlerListener.onReceiveFileRequest(data.getString("data"), data.getString("ID"));

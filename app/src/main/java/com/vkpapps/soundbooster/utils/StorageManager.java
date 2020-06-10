@@ -6,8 +6,6 @@ import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.os.Environment;
 
-import androidx.annotation.NonNull;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -16,19 +14,12 @@ import java.io.IOException;
 import static android.content.Context.MODE_PRIVATE;
 
 public class StorageManager {
-    private static StorageManager storageManager;
     private Context context;
 
-    private StorageManager(Context context) {
+    public StorageManager(Context context) {
         this.context = context;
     }
 
-    public static StorageManager getInstance(@NonNull Context context) {
-        if (storageManager == null) {
-            storageManager = new StorageManager(context);
-        }
-        return storageManager;
-    }
 
     public File getUserDir() {
         return context.getDir("userData", MODE_PRIVATE);

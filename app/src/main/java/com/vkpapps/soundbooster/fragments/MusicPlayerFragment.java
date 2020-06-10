@@ -21,6 +21,7 @@ import com.vkpapps.soundbooster.interfaces.OnCommandListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
+import com.vkpapps.soundbooster.model.control.ControlPlayer;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
@@ -36,6 +37,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     private MediaPlayer mediaPlayer;
     private OnCommandListener commandListener;
     private StorageManager storageManager;
+    private Timer timer;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -48,7 +50,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        storageManager = StorageManager.getInstance(view.getContext());
+        storageManager = new StorageManager(view.getContext());
 
         btnPlay = view.findViewById(R.id.btnPlay);
         btnPlay.setOnClickListener(this);
@@ -60,7 +62,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
             onFragmentAttachStatusListener.onFragmentAttached(this);
 
         AppCompatSeekBar appCompatSeekBar = view.findViewById(R.id.seekBar);
-        Timer timer = new Timer();
+        timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -78,13 +80,16 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
                 }
             }
         }, 0, 1000);
+
+        ControlPlayer controlPlayer = new ControlPlayer();
+        controlPlayer.setAction(ControlPlayer.ACTION_SEEK_TO);
         appCompatSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
                     int time = progress * mediaPlayer.getDuration() / 100;
-                    String command = "SKT " + time;
-                    commandListener.onCommandCreated(command);
+                    controlPlayer.setIntData(time);
+                    commandListener.onCommandCreated(controlPlayer);
                 }
             }
 
@@ -103,22 +108,23 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onClick(View v) {
-        String com;
+        ControlPlayer controlPlayer = new ControlPlayer();
         switch (v.getId()) {
             case R.id.btnPlay:
                 if (mediaPlayer.isPlaying()) {
-                    com = "PAS";
+                    controlPlayer.setAction(ControlPlayer.ACTION_PAUSE);
                 } else {
-                    com = "PLY " + audioTitle.getText().toString();
+                    controlPlayer.setAction(ControlPlayer.ACTION_PLAY);
+                    controlPlayer.setData(audioTitle.getText().toString());
                 }
                 break;
             case R.id.btnNext:
-                com = "NXT 1";
+                controlPlayer.setAction(ControlPlayer.ACTION_NEXT);
                 break;
             default:
-                com = "NXT -1";
+                controlPlayer.setAction(ControlPlayer.ACTION_PREVIOUS);
         }
-        commandListener.onCommandCreated(com);
+        commandListener.onCommandCreated(controlPlayer);
     }
 
     @Override
@@ -163,6 +169,8 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         onNavigationVisibilityListener = null;
         onFragmentAttachStatusListener = null;
         commandListener = null;
+        if (timer != null)
+            timer.cancel();
     }
 
     private void setPlayPauseButton() {

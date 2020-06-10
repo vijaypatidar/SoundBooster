@@ -25,7 +25,7 @@ public class Utils {
         try {
             ObjectInputStream objectInputStream = new ObjectInputStream(
                     new FileInputStream(
-                            new File(StorageManager.getInstance(context).getUserDir(), "user")
+                            new File(new StorageManager(context).getUserDir(), "user")
                     )
             );
 
@@ -42,8 +42,7 @@ public class Utils {
 
     public static void setUser(User user, Context context) {
         try {
-            File file = new File(StorageManager.getInstance(context).getUserDir(), "user");
-            if (!file.exists()) file.canExecute();
+            File file = new File(new StorageManager(context).getUserDir(), "user");
             ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
             outputStream.writeObject(user);
             outputStream.flush();

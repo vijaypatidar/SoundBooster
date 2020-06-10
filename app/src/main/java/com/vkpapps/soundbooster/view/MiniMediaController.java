@@ -1,9 +1,7 @@
 package com.vkpapps.soundbooster.view;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaMetadataRetriever;
+import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -11,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.vkpapps.soundbooster.R;
+import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
 
@@ -18,6 +17,7 @@ public class MiniMediaController extends FrameLayout {
     private ImageView audioCover;
     private TextView audioTitle;
     private boolean enableVisibilityChanges = true;
+    private File imageRoot;
 
     public void setEnableVisibilityChanges(boolean enableVisibilityChanges) {
         this.enableVisibilityChanges = enableVisibilityChanges;
@@ -40,34 +40,23 @@ public class MiniMediaController extends FrameLayout {
     }
 
     private void initView() {
+        // this is passed as root param ,so that view is attached to FrameLayout i.e MiniMediaController
         View inflate = inflate(getContext(), R.layout.mini_controller, this);
         audioCover = inflate.findViewById(R.id.audioCover);
         audioTitle = inflate.findViewById(R.id.audioTitle);
+        imageRoot = new StorageManager(getContext()).getImageDir();
     }
 
-    public void changeSong(String name, File root) {
+    public void changeSong(String name) {
         if (enableVisibilityChanges) {
             setVisibility(VISIBLE);
         }
         audioTitle.setText(name);
-        try {
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(new File(root, name).getAbsolutePath());
-
-            byte[] data = mmr.getEmbeddedPicture();
-
-            // convert the byte array to a bitmap
-            if (data != null) {
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                audioCover.setImageBitmap(bitmap); //associated cover art in bitmap
-            }
-
-            audioCover.setAdjustViewBounds(true);
-
-        } catch (Exception e) {
-            e.printStackTrace();
+        File file = new File(imageRoot, name);
+        if (file.exists()) {
+            audioCover.setImageURI(Uri.fromFile(file));
         }
-
     }
+
 
 }

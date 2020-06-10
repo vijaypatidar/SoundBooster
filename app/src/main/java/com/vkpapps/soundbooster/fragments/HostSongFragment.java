@@ -1,7 +1,9 @@
 package com.vkpapps.soundbooster.fragments;
 
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,7 +22,6 @@ import com.vkpapps.soundbooster.adapter.HostedAudioAdapter;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
-import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
@@ -51,30 +52,25 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        storageManager = StorageManager.getInstance(view.getContext());
+        storageManager = new StorageManager(view.getContext());
         song = storageManager.getSongDir();
 
-        if (PermissionUtils.checkStoragePermission(view.getContext())) {
-            allSong = new ArrayList<>();
-            RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
-            refreshSong();
-            audioAdapter = new HostedAudioAdapter(allSong, this, view.getContext());
-            recyclerView.setItemAnimator(new DefaultItemAnimator());
-            recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-            recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
-                @Override
-                public boolean onFling(int velocityX, int velocityY) {
-                    if (onNavigationVisibilityListener != null)
-                        onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
-                    return false;
-                }
-            });
-            recyclerView.setAdapter(audioAdapter);
-            audioAdapter.notifyDataSetChanged();
-
-        } else {
-            PermissionUtils.askStoragePermission(getActivity());
-        }
+        allSong = new ArrayList<>();
+        RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
+        refreshSong();
+        audioAdapter = new HostedAudioAdapter(allSong, this, view.getContext());
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
+        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
+            @Override
+            public boolean onFling(int velocityX, int velocityY) {
+                if (onNavigationVisibilityListener != null)
+                    onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
+                return false;
+            }
+        });
+        recyclerView.setAdapter(audioAdapter);
+        audioAdapter.notifyDataSetChanged();
 
 
     }
@@ -87,9 +83,9 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
     @Override
     public void onAudioLongSelected(AudioModel audioModel) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-        builder.setTitle("Save to downloads");
+        builder.setTitle("Save to download");
         builder.setMessage(audioModel.getName());
-        builder.setPositiveButton("SAVE", (dialog, which) -> {
+        builder.setPositiveButton("Save", (dialog, which) -> {
             try {
                 storageManager.download(audioModel.getName());
                 Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show();
@@ -147,5 +143,13 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         onNavigationVisibilityListener = null;
     }
 
+    class UpdateList extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+        }
+    }
 
 }

@@ -1,5 +1,9 @@
 package com.vkpapps.soundbooster.model.control;
 
+import android.os.Bundle;
+
+import androidx.annotation.NonNull;
+
 import java.io.Serializable;
 
 public class ControlPlayer implements Serializable {
@@ -46,5 +50,11 @@ public class ControlPlayer implements Serializable {
 
     public void setIntData(int intData) {
         this.intData = intData;
+    }
+
+    public void copyToBundle(@NonNull Bundle bundle) {
+        bundle.putInt("action", action);
+        bundle.putString("data", data);
+        bundle.putInt("intData", intData);
     }
 }

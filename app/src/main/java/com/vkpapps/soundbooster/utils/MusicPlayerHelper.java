@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class MusicPlayerHelper {
+    private static MusicPlayerHelper musicPlayerHelper;
     private MediaPlayer mediaPlayer = new MediaPlayer();
     private File root;
     private OnMusicPlayerHelperListener onMusicPlayerHelperListener;
@@ -22,9 +23,17 @@ public class MusicPlayerHelper {
         }
     }
 
-    public MusicPlayerHelper(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
+    private MusicPlayerHelper(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
         this.root = context.getDir("song", Context.MODE_PRIVATE);
         this.onMusicPlayerHelperListener = onMusicPlayerHelperListener;
+    }
+
+    public static MusicPlayerHelper getInstance(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
+        if (musicPlayerHelper == null) {
+            musicPlayerHelper = new MusicPlayerHelper(context, onMusicPlayerHelperListener);
+        }
+        musicPlayerHelper.onMusicPlayerHelperListener = onMusicPlayerHelperListener;
+        return musicPlayerHelper;
     }
 
     public void loadAndPlay(String name) {

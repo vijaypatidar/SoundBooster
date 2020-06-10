@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.connection;
+package com.vkpapps.soundbooster.service;
 
 import android.app.IntentService;
 import android.content.Context;
@@ -85,7 +85,7 @@ public class FileService extends IntentService {
         Socket socket;
         if (isHost) {
             try (ServerSocket serverSocket = new ServerSocket(15448)) {
-                serverSocket.setSoTimeout(3000);
+                serverSocket.setSoTimeout(2000);
                 socket = serverSocket.accept();
             }
         } else {
@@ -101,7 +101,6 @@ public class FileService extends IntentService {
             Socket socket = getSocket(isHost);
             InputStream in = socket.getInputStream();
             File file = new File(root, name.trim());
-            file.createNewFile();
             OutputStream out = new FileOutputStream(file);
             byte[] bytes = new byte[2 * 1024];
             int count;
@@ -176,7 +175,6 @@ public class FileService extends IntentService {
             // convert the byte array to a bitmap
             if (data != null) {
                 File file = new File(imageRoot, name);
-                file.createNewFile();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                 FileOutputStream fos = new FileOutputStream(file);
                 bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);

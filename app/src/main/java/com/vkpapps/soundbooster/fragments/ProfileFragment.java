@@ -44,12 +44,6 @@ public class ProfileFragment extends Fragment {
 
         if (user != null) {
             editTextName.setText(user.getName());
-        } else {
-            user = new User();
-            user.setName("RockStar");
-            user.setUserId(String.valueOf(System.currentTimeMillis()));
-            user.setAccess(true);
-            Utils.setUser(user, view.getContext());
         }
 
         Button btnSave = view.findViewById(R.id.btnSave);

@@ -43,12 +43,9 @@ public class ClientHelper extends Thread {
             outputStream.writeObject(user);
             outputStream.flush();
 
-            // wait for end device to send identity
-            Thread.sleep(1000);
-
             ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
             Object object = inputStream.readObject();
-            Log.d(TAG, "run: ==================================== connect ");
+            Log.d(TAG, "run: ==================================== connect " + user);
             if (object instanceof User) {
 
                 user = (User) object;
@@ -63,9 +60,7 @@ public class ClientHelper extends Thread {
                     if (object instanceof ControlPlayer) {
                         ControlPlayer controlPlayer = (ControlPlayer) object;
                         Message message = new Message();
-                        bundle.putInt("action", controlPlayer.getAction());
-                        bundle.putString("data", controlPlayer.getData());
-                        bundle.putInt("intData", controlPlayer.getIntData());
+                        controlPlayer.copyToBundle(bundle);
                         message.setData(bundle);
                         signalHandler.sendMessage(message);
                     } else if (object instanceof ControlFile) {
