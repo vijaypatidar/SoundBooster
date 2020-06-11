@@ -8,6 +8,9 @@ import com.vkpapps.soundbooster.model.control.ControlPlayer;
 
 import java.io.File;
 import java.io.IOException;
+/*
+ * @author VIJAY PATIDAR
+ * */
 
 public class MusicPlayerHelper {
     private static MusicPlayerHelper musicPlayerHelper;
@@ -98,7 +101,6 @@ public class MusicPlayerHelper {
 
 
     public void handleControl(ControlPlayer control) {
-        // todo add next and previous
         switch (control.getAction()) {
             case ControlPlayer.ACTION_PLAY:
                 loadAndPlay(control.getData());

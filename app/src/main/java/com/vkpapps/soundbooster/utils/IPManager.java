@@ -6,6 +6,9 @@ import android.net.wifi.WifiManager;
 
 import static android.content.Context.WIFI_SERVICE;
 
+/*
+ * @author VIJAY PATIDAR
+ * */
 public class IPManager {
     private WifiManager manager;
 
@@ -14,10 +17,8 @@ public class IPManager {
     }
 
     private String intToIp(int i) {
-        return (i & 0xFF) + "." +
-                ((i >> 8) & 0xFF) + "." +
-                ((i >> 16) & 0xFF) + "." +
-                ((i >> 24) & 0xFF);
+        return (i & 0xFF) + "." + ((i >> 8) & 0xFF) + "." +
+                ((i >> 16) & 0xFF) + "." + ((i >> 24) & 0xFF);
     }
 
     public String hostIp() {

@@ -17,6 +17,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
+/*
+ * @author VIJAY PATIDAR
+ * */
 public class ClientHelper extends Thread {
     public User user;
     private ObjectOutputStream outputStream;
@@ -57,24 +60,28 @@ public class ClientHelper extends Thread {
                 }
 
                 while (socket.isConnected()) {
-                    object = inputStream.readObject();
-                    if (object instanceof ControlPlayer) {
-                        ControlPlayer controlPlayer = (ControlPlayer) object;
-                        handleControl(controlPlayer);
-                    } else if (object instanceof ControlFile) {
-                        ControlFile control = (ControlFile) object;
-                        handleFileControl(control);
-                    } else if (object instanceof User) {
-                        User u = (User) object;
-                        if (u.getUserId().equals(user.getUserId())) {
-                            user.setAccess(u.isAccess());
-                            user.setName(u.getName());
+                    try {
+                        object = inputStream.readObject();
+                        if (object instanceof ControlPlayer) {
+                            ControlPlayer controlPlayer = (ControlPlayer) object;
+                            handleControl(controlPlayer);
+                        } else if (object instanceof ControlFile) {
+                            ControlFile control = (ControlFile) object;
+                            handleFileControl(control);
+                        } else if (object instanceof User) {
+                            User u = (User) object;
+                            if (u.getUserId().equals(user.getUserId())) {
+                                user.setAccess(u.isAccess());
+                                user.setName(u.getName());
+                            }
+                        } else {
+                            System.err.println("invalid " + object);
                         }
-                    } else {
-                        System.err.println("invalid " + object);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 }
-
             } else {
                 return;
             }

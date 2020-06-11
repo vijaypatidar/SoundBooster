@@ -13,6 +13,9 @@ import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
+/*
+ * @author VIJAY PATIDAR
+ * */
 
 public class MiniMediaController extends FrameLayout {
     private ImageView audioCover;

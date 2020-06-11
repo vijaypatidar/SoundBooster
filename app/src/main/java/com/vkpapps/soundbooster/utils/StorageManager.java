@@ -13,6 +13,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import static android.content.Context.MODE_PRIVATE;
+/*
+ * @author VIJAY PATIDAR
+ * */
 
 public class StorageManager {
     private Context context;
@@ -38,7 +41,12 @@ public class StorageManager {
     }
 
     public File getDownloadDir() {
-        return context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+
+        File sound_booster = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "Sound Booster");
+        if (!sound_booster.exists()) {
+            sound_booster.mkdirs();
+        }
+        return sound_booster;
     }
 
     public void deleteMedia() {

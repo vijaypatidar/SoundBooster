@@ -1,11 +1,10 @@
 package com.vkpapps.soundbooster.model.control;
 
-import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-
 import java.io.Serializable;
 
+/*
+ * @author VIJAY PATIDAR
+ * */
 public class ControlPlayer implements Serializable {
     public static final int ACTION_PLAY = 1;
     public static final int ACTION_PAUSE = 2;
@@ -52,9 +51,4 @@ public class ControlPlayer implements Serializable {
         this.intData = intData;
     }
 
-    public void copyToBundle(@NonNull Bundle bundle) {
-        bundle.putInt("action", action);
-        bundle.putString("data", data);
-        bundle.putInt("intData", intData);
-    }
 }

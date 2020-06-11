@@ -2,6 +2,9 @@ package com.vkpapps.soundbooster.interfaces;
 
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
 
+/*
+ * @author VIJAY PATIDAR
+ * */
 public interface OnControlRequestListener {
     void onMusicPlayerControl(ControlPlayer controlPlayer);
 

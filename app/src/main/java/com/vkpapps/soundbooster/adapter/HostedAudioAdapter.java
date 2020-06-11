@@ -20,6 +20,9 @@ import com.vkpapps.soundbooster.utils.StorageManager;
 import java.io.File;
 import java.util.List;
 
+/*
+ * @author VIJAY PATIDAR
+ * */
 public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.AudioViewHolder> {
     private List<AudioModel> audioModels;
     private OnAudioSelectedListener onAudioSelectedListener;

@@ -1,7 +1,5 @@
 package com.vkpapps.soundbooster.connection;
 
-import android.util.Log;
-
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
 import com.vkpapps.soundbooster.interfaces.OnControlRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnObjectReceiveListener;
@@ -11,7 +9,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-
+/*
+ * @author VIJAY PATIDAR
+ * */
 public class ServerHelper extends Thread implements OnClientConnectionStateListener, OnObjectReceiveListener {
     private OnControlRequestListener onControlRequestListener;
     private ArrayList<ClientHelper> clientHelpers;
@@ -64,7 +64,6 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
     @Override
     public void onClientConnected(ClientHelper clientHelper) {
         clientHelpers.add(clientHelper);
-        Log.d("vijay", "onClientConnected: " + clientHelper + "  " + clientHelpers.size());
         if (onClientConnectionStateListener != null) {
             onClientConnectionStateListener.onClientConnected(clientHelper);
         }
@@ -72,7 +71,6 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
 
     @Override
     public void onClientDisconnected(ClientHelper clientHelper) {
-        Log.d("vijay", "onClientDisconnected: " + clientHelper + "  " + clientHelpers.size());
         clientHelpers.remove(clientHelper);
         if (onClientConnectionStateListener != null) {
             onClientConnectionStateListener.onClientDisconnected(clientHelper);

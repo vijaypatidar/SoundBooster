@@ -19,6 +19,9 @@ import com.vkpapps.soundbooster.utils.FirebaseUtils;
 
 import java.util.List;
 
+/*
+ * @author VIJAY PATIDAR
+ * */
 public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHolder> {
     private List<AudioModel> audioModels;
     private OnAudioSelectedListener onAudioSelectedListener;

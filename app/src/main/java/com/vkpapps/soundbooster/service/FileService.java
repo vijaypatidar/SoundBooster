@@ -10,6 +10,8 @@ import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.vkpapps.soundbooster.utils.StorageManager;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -20,6 +22,10 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/*
+ * @author VIJAY PATIDAR
+ *
+ * */
 public class FileService extends IntentService {
     // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
     public static final String ACTION_SEND = "com.vkpapps.soundbooster.action.SEND";
@@ -62,8 +68,8 @@ public class FileService extends IntentService {
     @Override
     public void onCreate() {
         super.onCreate();
-        root = getDir("song", MODE_PRIVATE);
-        imageRoot = getDir("image", MODE_PRIVATE);
+        root = new StorageManager(this).getSongDir();
+        imageRoot = new StorageManager(this).getImageDir();
     }
 
     @Override
@@ -73,6 +79,7 @@ public class FileService extends IntentService {
             final String name = intent.getStringExtra(NAME);
             final String clientId = intent.getStringExtra(CLIENT_ID);
             final boolean isHost = intent.getBooleanExtra(IS_HOST, false);
+            Log.d("CONTROLS", "onHandleIntent: " + action + "  " + clientId + "  " + isHost);
             if (ACTION_SEND.equals(action)) {
                 handleActionSend(name, clientId, isHost);
             } else if (ACTION_RECEIVE.equals(action)) {
@@ -90,13 +97,14 @@ public class FileService extends IntentService {
             }
         } else {
             socket = new Socket();
-            socket.connect(new InetSocketAddress(HOST_ADDRESS, 15448), 3000);
+            socket.connect(new InetSocketAddress(HOST_ADDRESS, 15448), 4000);
         }
         return socket;
     }
 
     private void handleActionReceive(String name, String clientId, boolean isHost) {
         try {
+            Log.d("CONTROLS", "handleActionReceive: " + name + " " + isHost);
             onAccepted(name, clientId, false);
             Socket socket = getSocket(isHost);
             InputStream in = socket.getInputStream();
@@ -121,6 +129,7 @@ public class FileService extends IntentService {
 
     private void handleActionSend(String name, String clientId, boolean isHost) {
         try {
+            Log.d("CONTROLS", "handleActionSend: " + name + "  " + clientId + "  " + isHost);
             onAccepted(name, clientId, true);
             Socket socket = getSocket(isHost);
             File file = new File(root, name.trim());
@@ -143,25 +152,25 @@ public class FileService extends IntentService {
     }
 
     private void onSuccess(String name) {
+        Log.d("CONTROLS", "onSuccess: ============ " + name);
         Intent intent = new Intent(STATUS_SUCCESS);
         intent.putExtra(NAME, name);
-        Log.d("CONTROLS", "onSuccess: ============ " + name);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void onFailed(String name) {
+        Log.d("CONTROLS", "onFailed: ============ " + name);
         Intent intent = new Intent(STATUS_FAILED);
         intent.putExtra(NAME, name);
-        Log.d("CONTROLS", "onFailed: ============ " + name);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void onAccepted(String name, String clientID, boolean send) {
+        Log.d("CONTROLS", "onAccepted: ========== " + name + "   " + send);
         Intent intent = new Intent(REQUEST_ACCEPTED);
         intent.putExtra(NAME, name);
         intent.putExtra(ACTION_SEND, send);
         intent.putExtra(CLIENT_ID, clientID);
-        Log.d("CONTROLS", "onAccepted: ========== " + name + "   " + send);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 

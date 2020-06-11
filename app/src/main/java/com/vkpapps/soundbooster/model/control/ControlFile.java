@@ -2,6 +2,9 @@ package com.vkpapps.soundbooster.model.control;
 
 import java.io.Serializable;
 
+/*
+ * @author VIJAY PATIDAR
+ * */
 public class ControlFile implements Serializable {
     public static final int UPLOAD_REQUEST = 12;
     public static final int DOWNLOAD_REQUEST = 13;

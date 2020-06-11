@@ -28,6 +28,9 @@ import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/*
+ * @author VIJAY PATIDAR
+ * */
 public class MusicPlayerFragment extends Fragment implements View.OnClickListener, OnMediaPlayerChangeListener {
 
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
@@ -121,7 +124,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
             case R.id.btnNext:
                 controlPlayer.setAction(ControlPlayer.ACTION_NEXT);
                 break;
-            default:
+            case R.id.btnPrevious:
                 controlPlayer.setAction(ControlPlayer.ACTION_PREVIOUS);
         }
         objectCallbackListener.onObjectCreated(controlPlayer);
@@ -129,10 +132,12 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onChangeSong(String title, MediaPlayer mediaPlayer) {
-        audioTitle.setText(title);
-        loadCover(title);
-        this.mediaPlayer = mediaPlayer;
-        setPlayPauseButton();
+        getActivity().runOnUiThread(() -> {
+            audioTitle.setText(title);
+            loadCover(title);
+            this.mediaPlayer = mediaPlayer;
+            setPlayPauseButton();
+        });
     }
 
     @Override

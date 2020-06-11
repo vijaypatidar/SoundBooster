@@ -10,6 +10,9 @@ import com.vkpapps.soundbooster.R;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/*
+ * @author VIJAY PATIDAR
+ * */
 public class SplashActivity extends AppCompatActivity {
 
     @Override

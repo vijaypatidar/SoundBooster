@@ -63,6 +63,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/*
+ * @author VIJAY PATIDAR
+ * */
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
         OnUserListRequestListener, OnFragmentAttachStatusListener, OnHostSongFragmentListener, OnControlRequestListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
         FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener, OnFragmentPopBackListener,
@@ -269,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onSongChange(String name) {
-        miniMediaController.changeSong(name);
+        runOnUiThread(() -> miniMediaController.changeSong(name));
         position = queue.indexOf(name);
         initPlayer = true;
     }
@@ -312,10 +315,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onClientDisconnected(ClientHelper clientHelper) {
-
         //prompt client when disconnect to a party to create or rejoin the party
         if (!isHost) {
-            getChoice();
+            runOnUiThread(this::getChoice);
         } else if (onUsersUpdateListener != null) {
             runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
         }
