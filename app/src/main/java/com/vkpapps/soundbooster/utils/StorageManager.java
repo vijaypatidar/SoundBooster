@@ -1,5 +1,6 @@
 package com.vkpapps.soundbooster.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -29,11 +30,11 @@ public class StorageManager {
      * @Return directory of thumbnails of song
      * */
     public File getImageDir() {
-        return context.getDir("image", MODE_PRIVATE);
+        return context.getDir("images", MODE_PRIVATE);
     }
 
     public File getSongDir() {
-        return context.getDir("song", MODE_PRIVATE);
+        return context.getDir("songs", MODE_PRIVATE);
     }
 
     public File getDownloadDir() {
@@ -55,22 +56,21 @@ public class StorageManager {
                 }
             }
         } catch (Exception ignored) {
+
         }
     }
 
-    public void copySong(File from) throws IOException {
-        File to = new File(getSongDir(), from.getName());
-        copyFile(from, to);
-
+    public void copySong(File from, OnStorageManagerListener onStorageManagerListener) {
+        File to = new File(getSongDir(), from.getName().trim());
         //extract image from mp3
         try {
             android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(to.getAbsolutePath());
+            mmr.setDataSource(from.getAbsolutePath());
             byte[] data = mmr.getEmbeddedPicture();
 
             // convert the byte array to a bitmap
             if (data != null) {
-                File file = new File(getImageDir(), to.getName());
+                File file = new File(getImageDir(), from.getName().trim());
                 if (file.createNewFile()) {
                     Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                     FileOutputStream fos = new FileOutputStream(file);
@@ -80,25 +80,47 @@ public class StorageManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        copyFile(from, to, onStorageManagerListener);
     }
 
-    public void download(String name) throws IOException {
+    public void download(String name, OnStorageManagerListener onStorageManagerListener) {
         File file = new File(getSongDir(), name);
         File out = new File(getDownloadDir(), name);
-        copyFile(file, out);
+        copyFile(file, out, onStorageManagerListener);
     }
 
-    private void copyFile(File source, File destination) throws IOException {
-        FileInputStream fileInputStream = new FileInputStream(source);
-        FileOutputStream fileOutputStream = new FileOutputStream(destination);
-        byte[] bytes = new byte[1024 * 2];
-        int read;
-        while ((read = fileInputStream.read(bytes)) > 0) {
-            fileOutputStream.write(bytes, 0, read);
-        }
-        fileOutputStream.flush();
-        fileOutputStream.close();
-        fileInputStream.close();
+    private void copyFile(File source, File destination, final OnStorageManagerListener onStorageManagerListener) {
+        new Thread(() -> {
+            try {
+                FileInputStream fileInputStream = new FileInputStream(source);
+                FileOutputStream fileOutputStream = new FileOutputStream(destination);
+                byte[] bytes = new byte[2048];
+                int read;
+                while ((read = fileInputStream.read(bytes)) > 0) {
+                    fileOutputStream.write(bytes, 0, read);
+                }
+                fileOutputStream.flush();
+                fileOutputStream.close();
+                fileInputStream.close();
 
+                // run on ui if context is activity
+                if (onStorageManagerListener != null) {
+                    if (context instanceof Activity) {
+                        Activity activity = (Activity) context;
+                        activity.runOnUiThread(() -> onStorageManagerListener.onCopyComplete(source));
+                    } else {
+                        // else on this thread
+                        onStorageManagerListener.onCopyComplete(source);
+                    }
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
+    public interface OnStorageManagerListener {
+        void onCopyComplete(File source);
     }
 }

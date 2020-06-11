@@ -24,7 +24,6 @@ import com.vkpapps.soundbooster.utils.StorageManager;
 import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -49,7 +48,7 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        storageManager = new StorageManager(view.getContext());
+        storageManager = new StorageManager(getActivity());
 
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
@@ -75,13 +74,8 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
 
     @Override
     public void onAudioSelected(AudioModel audioMode) {
-        try {
-            storageManager.copySong(new File(audioMode.getPath()));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        onLocalSongFragmentListener.onLocalSongSelected(audioMode);
+        storageManager.copySong(new File(audioMode.getPath()), source ->
+                onLocalSongFragmentListener.onLocalSongSelected(audioMode));
     }
 
     @Override

@@ -2,8 +2,9 @@ package com.vkpapps.soundbooster.connection;
 
 import android.util.Log;
 
-import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
+import com.vkpapps.soundbooster.interfaces.OnControlRequestListener;
+import com.vkpapps.soundbooster.interfaces.OnObjectReceiveListener;
 import com.vkpapps.soundbooster.model.User;
 
 import java.io.IOException;
@@ -11,15 +12,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class ServerHelper extends Thread implements OnClientConnectionStateListener {
-    private SignalHandler signalHandler;
+public class ServerHelper extends Thread implements OnClientConnectionStateListener, OnObjectReceiveListener {
+    private OnControlRequestListener onControlRequestListener;
     private ArrayList<ClientHelper> clientHelpers;
     private User user;
     private OnClientConnectionStateListener onClientConnectionStateListener;
 
-    public ServerHelper(SignalHandler signalHandler, User user, OnClientConnectionStateListener onClientConnectionStateListener) {
+    public ServerHelper(OnControlRequestListener onControlRequestListener, User user, OnClientConnectionStateListener onClientConnectionStateListener) {
         clientHelpers = new ArrayList<>();
-        this.signalHandler = signalHandler;
+        this.onControlRequestListener = onControlRequestListener;
         this.user = user;
         this.onClientConnectionStateListener = onClientConnectionStateListener;
     }
@@ -30,7 +31,8 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
             try {
                 ServerSocket serverSocket = new ServerSocket(1203);
                 Socket socket = serverSocket.accept();
-                ClientHelper commandHelper = new ClientHelper(socket, signalHandler, user, this);
+                ClientHelper commandHelper = new ClientHelper(socket, onControlRequestListener, user, this);
+                commandHelper.setOnObjectReceiveListener(this);
                 new Thread(commandHelper).start();
                 try {
                     Thread.sleep(2000);
@@ -43,7 +45,7 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
         }
     }
 
-    public void sendCommand(Object command) {
+    public void broadcast(Object command) {
         for (ClientHelper c : clientHelpers) {
             c.write(command);
         }
@@ -75,5 +77,10 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
         if (onClientConnectionStateListener != null) {
             onClientConnectionStateListener.onClientDisconnected(clientHelper);
         }
+    }
+
+    @Override
+    public void onObjectReceive(Object object) {
+        broadcast(object);
     }
 }

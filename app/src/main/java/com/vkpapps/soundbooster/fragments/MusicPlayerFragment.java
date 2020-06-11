@@ -17,10 +17,10 @@ import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.fragment.app.Fragment;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.interfaces.OnCommandListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
+import com.vkpapps.soundbooster.interfaces.OnObjectCallbackListener;
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
@@ -35,7 +35,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     private TextView audioTitle;
     private ImageView audioCover, btnPlay;
     private MediaPlayer mediaPlayer;
-    private OnCommandListener commandListener;
+    private OnObjectCallbackListener objectCallbackListener;
     private StorageManager storageManager;
     private Timer timer;
 
@@ -89,7 +89,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
                 if (fromUser) {
                     int time = progress * mediaPlayer.getDuration() / 100;
                     controlPlayer.setIntData(time);
-                    commandListener.onCommandCreated(controlPlayer);
+                    objectCallbackListener.onObjectCreated(controlPlayer);
                 }
             }
 
@@ -124,7 +124,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
             default:
                 controlPlayer.setAction(ControlPlayer.ACTION_PREVIOUS);
         }
-        commandListener.onCommandCreated(controlPlayer);
+        objectCallbackListener.onObjectCreated(controlPlayer);
     }
 
     @Override
@@ -157,7 +157,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         super.onAttach(context);
         onNavigationVisibilityListener = (OnNavigationVisibilityListener) context;
         onFragmentAttachStatusListener = (OnFragmentAttachStatusListener) context;
-        commandListener = (OnCommandListener) context;
+        objectCallbackListener = (OnObjectCallbackListener) context;
         onNavigationVisibilityListener.onNavVisibilityChange(false);
     }
 
@@ -168,7 +168,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         onNavigationVisibilityListener.onNavVisibilityChange(true);
         onNavigationVisibilityListener = null;
         onFragmentAttachStatusListener = null;
-        commandListener = null;
+        objectCallbackListener = null;
         if (timer != null)
             timer.cancel();
     }

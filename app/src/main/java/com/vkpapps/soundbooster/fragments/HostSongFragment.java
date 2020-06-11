@@ -1,9 +1,7 @@
 package com.vkpapps.soundbooster.fragments;
 
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,7 +23,6 @@ import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -86,12 +83,9 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         builder.setTitle("Save to download");
         builder.setMessage(audioModel.getName());
         builder.setPositiveButton("Save", (dialog, which) -> {
-            try {
-                storageManager.download(audioModel.getName());
+            storageManager.download(audioModel.getName(), source -> {
                 Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            });
         });
         builder.setNegativeButton("Cancel", null);
         builder.create().show();
@@ -141,15 +135,6 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         super.onDetach();
         onHostSongFragmentListener = null;
         onNavigationVisibilityListener = null;
-    }
-
-    class UpdateList extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-
-        }
     }
 
 }

@@ -1,13 +1,13 @@
 package com.vkpapps.soundbooster.connection;
 
 import android.os.Bundle;
-import android.os.Message;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
+import com.vkpapps.soundbooster.interfaces.OnControlRequestListener;
+import com.vkpapps.soundbooster.interfaces.OnObjectReceiveListener;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.model.control.ControlFile;
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
@@ -18,17 +18,17 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 public class ClientHelper extends Thread {
-    private final String TAG = "ClientHelper";
     public User user;
     private ObjectOutputStream outputStream;
-    private SignalHandler signalHandler;
     private Socket socket;
+    private OnControlRequestListener onControlRequestListener;
     private OnClientConnectionStateListener onClientConnectionStateListener;
+    private OnObjectReceiveListener onObjectReceiveListener;
 
-    public ClientHelper(Socket socket, @NonNull SignalHandler signalHandler, User user, OnClientConnectionStateListener onClientConnectionStateListener) {
+    public ClientHelper(Socket socket, OnControlRequestListener onControlRequestListener, User user, OnClientConnectionStateListener onClientConnectionStateListener) {
         this.socket = socket;
-        this.signalHandler = signalHandler;
         this.user = user;
+        this.onControlRequestListener = onControlRequestListener;
         this.onClientConnectionStateListener = onClientConnectionStateListener;
     }
 
@@ -36,6 +36,7 @@ public class ClientHelper extends Thread {
     public void run() {
         Bundle bundle = new Bundle();
         bundle.putString("ID", user.getUserId());
+        String TAG = "ClientHelper";
         try {
             Log.d(TAG, "run: ==================================== connecting...to istream ");
             outputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -59,17 +60,10 @@ public class ClientHelper extends Thread {
                     object = inputStream.readObject();
                     if (object instanceof ControlPlayer) {
                         ControlPlayer controlPlayer = (ControlPlayer) object;
-                        Message message = new Message();
-                        controlPlayer.copyToBundle(bundle);
-                        message.setData(bundle);
-                        signalHandler.sendMessage(message);
+                        handleControl(controlPlayer);
                     } else if (object instanceof ControlFile) {
-                        ControlFile controlPlayer = (ControlFile) object;
-                        Message message = new Message();
-                        bundle.putInt("action", controlPlayer.getAction());
-                        bundle.putString("data", controlPlayer.getData());
-                        message.setData(bundle);
-                        signalHandler.sendMessage(message);
+                        ControlFile control = (ControlFile) object;
+                        handleFileControl(control);
                     } else if (object instanceof User) {
                         User u = (User) object;
                         if (u.getUserId().equals(user.getUserId())) {
@@ -118,4 +112,40 @@ public class ClientHelper extends Thread {
         }).start();
     }
 
+    private void handleControl(ControlPlayer control) {
+
+        if (onObjectReceiveListener != null) {
+            onObjectReceiveListener.onObjectReceive(control);
+        }
+        Log.d("CONTROLS", "handleMessage: =================================== req " + control.getAction());
+        onControlRequestListener.onMusicPlayerControl(control);
+    }
+
+    private void handleFileControl(ControlFile control) {
+        try {
+            Log.d("CONTROLS", "handleMessage: =================================== req " + control.getAction());
+            switch (control.getAction()) {
+                case ControlFile.DOWNLOAD_REQUEST:
+                    onControlRequestListener.onDownloadRequest(control.getData(), control.getId());
+                    break;
+                case ControlFile.UPLOAD_REQUEST:
+                    onControlRequestListener.onUploadRequest(control.getData(), control.getId());
+                    break;
+                case ControlFile.DOWNLOAD_REQUEST_CONFIRM:
+                    onControlRequestListener.onDownloadRequestAccepted(control.getData(), control.getId());
+                    break;
+                case ControlFile.UPLOAD_REQUEST_CONFIRM:
+                    onControlRequestListener.onUploadRequestAccepted(control.getData(), control.getId());
+                    break;
+                default:
+                    Log.d("CONTROLS", "handleMessage: =================================== invalid req ");
+            }
+        } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setOnObjectReceiveListener(OnObjectReceiveListener onObjectReceiveListener) {
+        this.onObjectReceiveListener = onObjectReceiveListener;
+    }
 }

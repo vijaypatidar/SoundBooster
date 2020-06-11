@@ -3,17 +3,35 @@ package com.vkpapps.soundbooster.model.control;
 import java.io.Serializable;
 
 public class ControlFile implements Serializable {
-    public static final int ACTION_SEND_REQUEST = 12;
-    public static final int ACTION_RECEIVE_REQUEST = 13;
-    public static final int ACTION_SEND_CONFIRM = 14;
-    public static final int ACTION_RECEIVE_CONFIRM = 15;
+    public static final int UPLOAD_REQUEST = 12;
+    public static final int DOWNLOAD_REQUEST = 13;
+    public static final int UPLOAD_REQUEST_CONFIRM = 14;
+    public static final int DOWNLOAD_REQUEST_CONFIRM = 15;
 
     private int action;
-    private String data;
+    private String fileName;
+    private String id;
 
-    public ControlFile(int action, String data) {
+    public ControlFile(int action, String fileName, String id) {
         this.action = action;
-        this.data = data;
+        this.fileName = fileName;
+        this.id = id;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public int getAction() {
@@ -25,10 +43,10 @@ public class ControlFile implements Serializable {
     }
 
     public String getData() {
-        return data;
+        return fileName;
     }
 
-    public void setData(String data) {
-        this.data = data;
+    public void setData(String fileName) {
+        this.fileName = fileName;
     }
 }

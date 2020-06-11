@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.MediaPlayer;
 
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
+import com.vkpapps.soundbooster.model.control.ControlPlayer;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,7 +25,7 @@ public class MusicPlayerHelper {
     }
 
     private MusicPlayerHelper(Context context, OnMusicPlayerHelperListener onMusicPlayerHelperListener) {
-        this.root = context.getDir("song", Context.MODE_PRIVATE);
+        this.root = new StorageManager(context).getSongDir();
         this.onMusicPlayerHelperListener = onMusicPlayerHelperListener;
     }
 
@@ -96,8 +97,43 @@ public class MusicPlayerHelper {
     }
 
 
+    public void handleControl(ControlPlayer control) {
+        // todo add next and previous
+        switch (control.getAction()) {
+            case ControlPlayer.ACTION_PLAY:
+                loadAndPlay(control.getData());
+                break;
+            case ControlPlayer.ACTION_PAUSE:
+                pause();
+                break;
+            case ControlPlayer.ACTION_SEEK_TO:
+                seekTo(control.getIntData());
+                break;
+            case ControlPlayer.ACTION_CHANGE_VOLUME:
+                setVolume(control.getIntData());
+                break;
+            case ControlPlayer.ACTION_NEXT:
+                String next = onMusicPlayerHelperListener.getNextSong(1);
+                if (next != null) {
+                    loadAndPlay(next);
+                }
+                break;
+            case ControlPlayer.ACTION_PREVIOUS:
+                next = onMusicPlayerHelperListener.getNextSong(-1);
+                if (next != null) {
+                    loadAndPlay(next);
+                }
+                break;
+        }
+    }
+
+
     public interface OnMusicPlayerHelperListener {
         void onSongChange(String name);
+
         void onRequestSongNotFound(String songName);
+
+        String getNextSong(int change);
     }
+
 }

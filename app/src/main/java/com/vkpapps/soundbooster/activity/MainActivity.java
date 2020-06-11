@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -33,15 +32,15 @@ import com.vkpapps.soundbooster.connection.ServerHelper;
 import com.vkpapps.soundbooster.fragments.DashboardFragment;
 import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.MusicPlayerFragment;
-import com.vkpapps.soundbooster.handler.SignalHandler;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
-import com.vkpapps.soundbooster.interfaces.OnCommandListener;
+import com.vkpapps.soundbooster.interfaces.OnControlRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentPopBackListener;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnLocalSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
+import com.vkpapps.soundbooster.interfaces.OnObjectCallbackListener;
 import com.vkpapps.soundbooster.interfaces.OnUserListRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnUsersUpdateListener;
 import com.vkpapps.soundbooster.model.AudioModel;
@@ -65,12 +64,11 @@ import java.util.List;
 import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
-        OnUserListRequestListener, OnFragmentAttachStatusListener, OnHostSongFragmentListener, SignalHandler.OnMessageHandlerListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
+        OnUserListRequestListener, OnFragmentAttachStatusListener, OnHostSongFragmentListener, OnControlRequestListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
         FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener, OnFragmentPopBackListener,
-        OnCommandListener {
+        OnObjectCallbackListener {
     private BottomNavigationView navView;
     private ServerHelper serverHelper;
-    private SignalHandler signalHandler;
     private ClientHelper clientHelper;
     private MusicPlayerHelper musicPlayer;
     private boolean isHost, initPlayer;
@@ -139,9 +137,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private void setup(boolean host) {
         isHost = host;
         queue = new ArrayList<>();
-        signalHandler = new SignalHandler(this);
         if (isHost) {
-            serverHelper = new ServerHelper(signalHandler, user, this);
+            serverHelper = new ServerHelper(this, user, this);
             serverHelper.start();
         } else {
             new Thread(() -> {
@@ -152,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                     Log.d("vijay", "setup: -================ " + address);
                     FileService.HOST_ADDRESS = address.substring(0, address.lastIndexOf(".") + 1) + "1";
                     socket.connect(new InetSocketAddress(FileService.HOST_ADDRESS, 1203), 5000);
-                    clientHelper = new ClientHelper(socket, signalHandler, user, this);
+                    clientHelper = new ClientHelper(socket, this, user, this);
                     clientHelper.start();
                 } catch (IOException e) {
                     runOnUiThread(() -> {
@@ -184,14 +181,14 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 FileService.startActionSend(this, audio.getName(), chr.user.getUserId(), isHost, i == N);
             }
         } else {
-            sendCommand(new ControlFile(ControlFile.ACTION_RECEIVE_REQUEST, audio.getName()));
+            sendCommand(new ControlFile(ControlFile.DOWNLOAD_REQUEST, audio.getName(), user.getUserId()));
         }
     }
 
     @Override
     public void onHostAudioSelected(AudioModel audioModel) {
         if (isHost) {
-            serverHelper.sendCommand(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
+            serverHelper.broadcast(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
             musicPlayer.loadAndPlay(audioModel.getName());
         } else {
             sendCommand(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
@@ -216,35 +213,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
 
-    @Override
-    public void onPlayRequest(String name) {
-        //triggered by hosted Song fragment
-        musicPlayer.loadAndPlay(name);
-    }
-
-    @Override
-    public void onResumeRequest() {
-        musicPlayer.resume();
-    }
-
-    @Override
-    public void onPauseRequest() {
-        musicPlayer.pause();
-    }
-
-    @Override
-    public void onSeekToRequest(int time) {
-        musicPlayer.seekTo(time);
-    }
-
-
-    @Override
-    public void broadcastCommand(String command) {
-        serverHelper.sendCommand(command);
-    }
-
-    @Override
-    public void onSendFileRequest(String name, String id) {
+    public void onUploadRequest(String name, String id) {
         // only host wil response this method
         if (isHost) {
             FileService.startActionSend(this, name, id, true, true);
@@ -252,7 +221,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
-    public void onReceiveFileRequest(String name, String id) {
+    public void onMusicPlayerControl(ControlPlayer controlPlayer) {
+        musicPlayer.handleControl(controlPlayer);
+    }
+
+    public void onDownloadRequest(String name, String id) {
+        Log.d("CONTROLS", "onReceiveFileRequest: " + id + "==========> " + name);
         // only host wil response this method
         if (isHost) {
             // prepare file receive from client
@@ -270,33 +244,27 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         }
     }
 
-    @Override
-    public void onSendFileRequestAccepted(String name, String id) {
+    public void onUploadRequestAccepted(String name, String id) {
         // receiver requested file or sent by host itself
         FileService.startActionReceive(this, name, id, isHost);
     }
 
-    @Override
-    public void onVolumeChange(float vol) {
-        musicPlayer.setVolume(vol);
-    }
 
-    @Override
-    public void onReceiveFileRequestAccepted(String name, String id) {
+    public void onDownloadRequestAccepted(String name, String id) {
         //only client need to handle this , not for host
         // send requested file to client sent request
         FileService.startActionSend(this, name, id, isHost, false);
     }
 
     @Override
-    public void onMoveToRequest(int change) {
+    public String getNextSong(int change) {
+        if (!isHost) return null;
         position += change;
         if (position >= queue.size() || position < 0) position = 0;
-        if (isHost) {
-            String name = queue.get(position);
-            serverHelper.sendCommand(new ControlPlayer(ControlPlayer.ACTION_PLAY, name));
-            musicPlayer.loadAndPlay(name);
-        }
+        String name = queue.get(position);
+        // broadcast next song information
+        serverHelper.broadcast(new ControlPlayer(ControlPlayer.ACTION_PLAY, name));
+        return name;
     }
 
     @Override
@@ -308,7 +276,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onRequestSongNotFound(String songName) {
-        if (!isHost) sendCommand(new ControlFile(ControlFile.ACTION_SEND_REQUEST, songName));
+        if (!isHost)
+            sendCommand(new ControlFile(ControlFile.UPLOAD_REQUEST, songName, user.getUserId()));
     }
 
 
@@ -319,7 +288,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onRequestAccepted(String name, boolean send, String clientId) {
-        ControlFile controlFile = new ControlFile(send ? ControlFile.ACTION_SEND_CONFIRM : ControlFile.ACTION_RECEIVE_CONFIRM, name.trim());
+        Log.d("CONTROLS", "onRequestAccepted: ============== " + name + "  " + send);
+        ControlFile controlFile = new ControlFile(send ? ControlFile.UPLOAD_REQUEST_CONFIRM : ControlFile.DOWNLOAD_REQUEST_CONFIRM, name, user.getUserId());
         serverHelper.sendCommandToOnly(controlFile, clientId);
     }
 
@@ -415,15 +385,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
-    public void onCommandCreated(ControlPlayer control) {
+    public void onObjectCreated(Object control) {
         if (isHost) {
-            serverHelper.sendCommand(control);
-            Message message = new Message();
-            Bundle bundle = new Bundle();
-            bundle.putString("ID", user.getUserId());
-            control.copyToBundle(bundle);
-            message.setData(bundle);
-            signalHandler.sendMessage(message);
+            serverHelper.broadcast(control);
+            if (control instanceof ControlPlayer) {
+                musicPlayer.handleControl((ControlPlayer) control);
+            }
         } else {
             sendCommand(control);
         }

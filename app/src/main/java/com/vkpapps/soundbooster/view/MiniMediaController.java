@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -16,6 +17,7 @@ import java.io.File;
 public class MiniMediaController extends FrameLayout {
     private ImageView audioCover;
     private TextView audioTitle;
+    private ImageButton btnPlay;
     private boolean enableVisibilityChanges = true;
     private File imageRoot;
 
@@ -44,6 +46,7 @@ public class MiniMediaController extends FrameLayout {
         View inflate = inflate(getContext(), R.layout.mini_controller, this);
         audioCover = inflate.findViewById(R.id.audioCover);
         audioTitle = inflate.findViewById(R.id.audioTitle);
+        btnPlay = inflate.findViewById(R.id.btnPlay);
         imageRoot = new StorageManager(getContext()).getImageDir();
     }
 
