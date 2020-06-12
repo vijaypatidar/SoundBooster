@@ -16,7 +16,7 @@ import com.vkpapps.soundbooster.model.User;
 
 import java.util.List;
 
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> {

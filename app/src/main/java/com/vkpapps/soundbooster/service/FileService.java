@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
-import android.util.Log;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -22,12 +21,16 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-/*
+import static com.vkpapps.soundbooster.analitics.Logger.d;
+import static com.vkpapps.soundbooster.analitics.Logger.e;
+import static com.vkpapps.soundbooster.analitics.Logger.i;
+
+/***
  * @author VIJAY PATIDAR
- *
- * */
+ * @version 1.0
+ * @since Jun 11,2020
+ */
 public class FileService extends IntentService {
-    // IntentService can perform, e.g. ACTION_FETCH_NEW_ITEMS
     public static final String ACTION_SEND = "com.vkpapps.soundbooster.action.SEND";
     public static final String ACTION_RECEIVE = "com.vkpapps.soundbooster.action.RECEIVE";
     public static final String STATUS_SUCCESS = "com.vkpapps.soundbooster.action.SUCCESS";
@@ -39,8 +42,10 @@ public class FileService extends IntentService {
     private static final String IS_HOST = "com.vkpapps.soundbooster.extra.IS_HOST";
     public static final String LAST_REQUEST = "com.vkpapps.soundbooster.action.IS_LAST_REQUEST";
     public static String HOST_ADDRESS;
-    private File root;
+
+    private File musicRoot;
     private File imageRoot;
+    private LocalBroadcastManager localBroadcastManager;
 
     public FileService() {
         super("FileService");
@@ -65,29 +70,6 @@ public class FileService extends IntentService {
         context.startService(intent);
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        root = new StorageManager(this).getSongDir();
-        imageRoot = new StorageManager(this).getImageDir();
-    }
-
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        if (intent != null) {
-            final String action = intent.getAction();
-            final String name = intent.getStringExtra(NAME);
-            final String clientId = intent.getStringExtra(CLIENT_ID);
-            final boolean isHost = intent.getBooleanExtra(IS_HOST, false);
-            Log.d("CONTROLS", "onHandleIntent: " + action + "  " + clientId + "  " + isHost);
-            if (ACTION_SEND.equals(action)) {
-                handleActionSend(name, clientId, isHost);
-            } else if (ACTION_RECEIVE.equals(action)) {
-                handleActionReceive(name, clientId, isHost);
-            }
-        }
-    }
-
     private Socket getSocket(boolean isHost) throws IOException {
         Socket socket;
         if (isHost) {
@@ -102,13 +84,38 @@ public class FileService extends IntentService {
         return socket;
     }
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        musicRoot = new StorageManager(this).getSongDir();
+        imageRoot = new StorageManager(this).getImageDir();
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
+    }
+
+    @Override
+    protected void onHandleIntent(Intent intent) {
+        if (intent != null) {
+            final String action = intent.getAction();
+            final String name = intent.getStringExtra(NAME);
+            final String clientId = intent.getStringExtra(CLIENT_ID);
+            final boolean isHost = intent.getBooleanExtra(IS_HOST, false);
+            final boolean isLast = intent.getBooleanExtra(LAST_REQUEST, false);
+            d("onHandleIntent: " + action + "  " + clientId + "  " + isHost);
+            if (ACTION_SEND.equals(action)) {
+                handleActionSend(name, clientId, isHost, isLast);
+            } else if (ACTION_RECEIVE.equals(action)) {
+                handleActionReceive(name, clientId, isHost);
+            }
+        }
+    }
+
     private void handleActionReceive(String name, String clientId, boolean isHost) {
         try {
-            Log.d("CONTROLS", "handleActionReceive: " + name + " " + isHost);
+            d("handleActionReceive: " + name + " " + isHost);
             onAccepted(name, clientId, false);
             Socket socket = getSocket(isHost);
             InputStream in = socket.getInputStream();
-            File file = new File(root, name.trim());
+            File file = new File(musicRoot, name.trim());
             OutputStream out = new FileOutputStream(file);
             byte[] bytes = new byte[2 * 1024];
             int count;
@@ -119,7 +126,7 @@ public class FileService extends IntentService {
             out.flush();
             out.close();
             socket.close();
-            onSuccess(name);
+            onSuccess(name, false);
             saveCover(name);
         } catch (IOException e) {
             onFailed(name);
@@ -127,12 +134,12 @@ public class FileService extends IntentService {
         }
     }
 
-    private void handleActionSend(String name, String clientId, boolean isHost) {
+    private void handleActionSend(String name, String clientId, boolean isHost, boolean isLast) {
         try {
-            Log.d("CONTROLS", "handleActionSend: " + name + "  " + clientId + "  " + isHost);
+            d("handleActionSend: " + name + "  " + clientId + "  " + isHost);
             onAccepted(name, clientId, true);
             Socket socket = getSocket(isHost);
-            File file = new File(root, name.trim());
+            File file = new File(musicRoot, name.trim());
             InputStream inputStream = new FileInputStream(file);
             OutputStream outputStream = socket.getOutputStream();
             byte[] bytes = new byte[2 * 1024];
@@ -144,49 +151,51 @@ public class FileService extends IntentService {
             outputStream.close();
             inputStream.close();
             socket.close();
-            onSuccess(name);
+            onSuccess(name, isLast);
         } catch (IOException e) {
             onFailed(name);
             e.printStackTrace();
         }
     }
 
-    private void onSuccess(String name) {
-        Log.d("CONTROLS", "onSuccess: ============ " + name);
+    private void onSuccess(String name, boolean isLast) {
+        d("onSuccess:  " + name);
         Intent intent = new Intent(STATUS_SUCCESS);
         intent.putExtra(NAME, name);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        intent.putExtra(LAST_REQUEST, isLast);
+        localBroadcastManager.sendBroadcast(intent);
     }
 
     private void onFailed(String name) {
-        Log.d("CONTROLS", "onFailed: ============ " + name);
+        e("onFailed:  " + name);
         Intent intent = new Intent(STATUS_FAILED);
         intent.putExtra(NAME, name);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        localBroadcastManager.sendBroadcast(intent);
     }
 
     private void onAccepted(String name, String clientID, boolean send) {
-        Log.d("CONTROLS", "onAccepted: ========== " + name + "   " + send);
+        i("onAccepted: " + name + "   " + send);
         Intent intent = new Intent(REQUEST_ACCEPTED);
         intent.putExtra(NAME, name);
         intent.putExtra(ACTION_SEND, send);
         intent.putExtra(CLIENT_ID, clientID);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        localBroadcastManager.sendBroadcast(intent);
     }
 
     private void saveCover(String name) {
         try {
-            android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(new File(root, name).getAbsolutePath());
+            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+            mmr.setDataSource(new File(musicRoot, name).getAbsolutePath());
 
             byte[] data = mmr.getEmbeddedPicture();
 
-            // convert the byte array to a bitmap
             if (data != null) {
+                //destination for saving file
                 File file = new File(imageRoot, name);
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
                 FileOutputStream fos = new FileOutputStream(file);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+                // decoding byte array to a bitmap
+                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
             }
         } catch (Exception e) {
             e.printStackTrace();

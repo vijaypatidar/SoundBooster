@@ -2,7 +2,7 @@ package com.vkpapps.soundbooster.interfaces;
 
 import android.media.MediaPlayer;
 
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 public interface OnMediaPlayerChangeListener {

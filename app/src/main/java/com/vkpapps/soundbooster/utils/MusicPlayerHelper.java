@@ -2,15 +2,16 @@ package com.vkpapps.soundbooster.utils;
 
 import android.content.Context;
 import android.media.MediaPlayer;
+import android.util.Log;
 
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
 
 import java.io.File;
 import java.io.IOException;
-/*
+/***
  * @author VIJAY PATIDAR
- * */
+ */
 
 public class MusicPlayerHelper {
     private static MusicPlayerHelper musicPlayerHelper;
@@ -41,6 +42,7 @@ public class MusicPlayerHelper {
     }
 
     public void loadAndPlay(String name) {
+        Log.d("CONTROLS", "loadAndPlay: " + name);
         try {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(new File(root, name).getAbsolutePath());
@@ -57,6 +59,10 @@ public class MusicPlayerHelper {
             onMusicPlayerHelperListener.onRequestSongNotFound(name);
             e.printStackTrace();
         }
+    }
+
+    public boolean isPlaying() {
+        return mediaPlayer.isPlaying();
     }
 
     public void resume() {
@@ -122,6 +128,11 @@ public class MusicPlayerHelper {
                 break;
             case ControlPlayer.ACTION_PREVIOUS:
                 next = onMusicPlayerHelperListener.getNextSong(-1);
+                if (next != null) {
+                    loadAndPlay(next);
+                }
+            case ControlPlayer.ACTION_RESUME:
+                next = onMusicPlayerHelperListener.getNextSong(0);
                 if (next != null) {
                     loadAndPlay(next);
                 }

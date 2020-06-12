@@ -2,7 +2,7 @@ package com.vkpapps.soundbooster.model;
 
 import java.io.Serializable;
 
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 public class User implements Serializable {

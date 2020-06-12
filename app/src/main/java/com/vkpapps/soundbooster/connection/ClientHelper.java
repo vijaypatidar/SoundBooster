@@ -17,7 +17,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-/*
+/***
  * @author VIJAY PATIDAR
  * */
 public class ClientHelper extends Thread {

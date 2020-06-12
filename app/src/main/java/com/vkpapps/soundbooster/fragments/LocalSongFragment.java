@@ -21,12 +21,10 @@ import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.StorageManager;
-import com.vkpapps.soundbooster.utils.Utils;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.List;
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioSelectedListener {
@@ -54,9 +52,8 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
 
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
-            allSong = Utils.getAllAudioFromDevice(view.getContext());
-            sort();
-            AudioAdapter audioAdapter = new AudioAdapter(allSong, this);
+            allSong = storageManager.getAllAudioFromDevice();
+            AudioAdapter audioAdapter = new AudioAdapter(allSong, this, view.getContext());
             recyclerView.setItemAnimator(new DefaultItemAnimator());
             recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
             recyclerView.setAdapter(audioAdapter);
@@ -76,7 +73,7 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
 
     @Override
     public void onAudioSelected(AudioModel audioMode) {
-        storageManager.copySong(new File(audioMode.getPath()), source ->
+        storageManager.copySong(new File(audioMode.getPath()), audioMode.getName(), source ->
                 onLocalSongFragmentListener.onLocalSongSelected(audioMode));
     }
 
@@ -102,12 +99,4 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
         onLocalSongFragmentListener = null;
         onNavigationVisibilityListener = null;
     }
-
-    private void sort() {
-        Collections.sort(allSong, (o1, o2) -> o1.getName().compareTo(o2.getName()));
-        for (int i = 5; i < allSong.size(); i += 20) {
-            allSong.add(i, null);
-        }
-    }
-
 }

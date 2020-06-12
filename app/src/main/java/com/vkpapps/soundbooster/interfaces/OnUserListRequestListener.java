@@ -4,7 +4,7 @@ import com.vkpapps.soundbooster.connection.ClientHelper;
 
 import java.util.List;
 
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 public interface OnUserListRequestListener {

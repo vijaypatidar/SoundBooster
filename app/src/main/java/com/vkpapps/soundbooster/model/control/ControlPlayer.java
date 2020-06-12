@@ -2,7 +2,7 @@ package com.vkpapps.soundbooster.model.control;
 
 import java.io.Serializable;
 
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 public class ControlPlayer implements Serializable {
@@ -12,6 +12,7 @@ public class ControlPlayer implements Serializable {
     public static final int ACTION_PREVIOUS = 4;
     public static final int ACTION_SEEK_TO = 6;
     public static final int ACTION_CHANGE_VOLUME = 7;
+    public static final int ACTION_RESUME = 8;
 
     private int action;
     private String data;

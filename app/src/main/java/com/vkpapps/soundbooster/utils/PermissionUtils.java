@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import androidx.core.app.ActivityCompat;
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 

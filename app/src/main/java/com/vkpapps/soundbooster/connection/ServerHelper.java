@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 public class ServerHelper extends Thread implements OnClientConnectionStateListener, OnObjectReceiveListener {
@@ -27,21 +27,26 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
 
     @Override
     public void run() {
-        while (true) {
-            try {
-                ServerSocket serverSocket = new ServerSocket(1203);
-                Socket socket = serverSocket.accept();
-                ClientHelper commandHelper = new ClientHelper(socket, onControlRequestListener, user, this);
-                commandHelper.setOnObjectReceiveListener(this);
-                new Thread(commandHelper).start();
+        try {
+            ServerSocket serverSocket = new ServerSocket(1203);
+            while (true) {
                 try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
+                    Socket socket = serverSocket.accept();
+
+                    ClientHelper commandHelper = new ClientHelper(socket, onControlRequestListener, user, this);
+                    commandHelper.setOnObjectReceiveListener(this);
+                    new Thread(commandHelper).start();
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

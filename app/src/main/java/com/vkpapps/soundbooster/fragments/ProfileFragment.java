@@ -20,7 +20,7 @@ import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.Utils;
 
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 public class ProfileFragment extends Fragment {

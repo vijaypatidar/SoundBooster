@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.ads.AdView;
+import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.FirebaseUtils;
@@ -20,7 +21,7 @@ import com.vkpapps.soundbooster.utils.StorageManager;
 import java.io.File;
 import java.util.List;
 
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.AudioViewHolder> {
@@ -70,7 +71,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
             ImageView audioIcon = holder.audioIcon;
             File file = new File(storageManager.getImageDir(), audioModel.getName());
             if (file.exists()) {
-                audioIcon.setImageURI(Uri.fromFile(file));
+                Picasso.get().load(Uri.fromFile(file)).into(audioIcon);
             }
         }
     }

@@ -13,13 +13,12 @@ public class SoundBoosterApplication extends Application {
         super.onCreate();
         MobileAds.initialize(this);
         setDefaultUser();
-        deletePreviousSession();
+
+        StorageManager storageManager = new StorageManager(this);
+        storageManager.getAllAudioFromDevice();
+        storageManager.deleteDir(storageManager.getSongDir());
     }
 
-    private void deletePreviousSession() {
-        StorageManager storageManager = new StorageManager(this);
-        storageManager.deleteMedia();
-    }
 
     private void setDefaultUser() {
         User user = Utils.loadUser(this);

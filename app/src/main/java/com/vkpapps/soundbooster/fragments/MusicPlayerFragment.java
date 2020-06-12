@@ -1,5 +1,6 @@
 package com.vkpapps.soundbooster.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -16,6 +17,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.fragment.app.Fragment;
 
+import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
@@ -28,15 +30,15 @@ import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
-/*
+/**
  * @author VIJAY PATIDAR
- * */
+ */
 public class MusicPlayerFragment extends Fragment implements View.OnClickListener, OnMediaPlayerChangeListener {
 
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private OnFragmentAttachStatusListener onFragmentAttachStatusListener;
     private TextView audioTitle;
-    private ImageView audioCover, btnPlay;
+    private ImageView audioCover, fullCover, btnPlay;
     private MediaPlayer mediaPlayer;
     private OnObjectCallbackListener objectCallbackListener;
     private StorageManager storageManager;
@@ -56,6 +58,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         storageManager = new StorageManager(view.getContext());
 
         btnPlay = view.findViewById(R.id.btnPlay);
+        fullCover = view.findViewById(R.id.coverFull);
         btnPlay.setOnClickListener(this);
         view.findViewById(R.id.btnNext).setOnClickListener(this);
         view.findViewById(R.id.btnPrevious).setOnClickListener(this);
@@ -132,7 +135,9 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onChangeSong(String title, MediaPlayer mediaPlayer) {
-        getActivity().runOnUiThread(() -> {
+        Activity activity = getActivity();
+        if (activity == null) return;
+        activity.runOnUiThread(() -> {
             audioTitle.setText(title);
             loadCover(title);
             this.mediaPlayer = mediaPlayer;
@@ -147,9 +152,10 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
 
     private void loadCover(String title) {
         File file = new File(storageManager.getImageDir(), title);
-        if (file.exists())
-            audioCover.setImageURI(Uri.fromFile(file));
-
+        if (file.exists()) {
+            Picasso.get().load(Uri.fromFile(file)).into(audioCover);
+            Picasso.get().load(Uri.fromFile(file)).into(fullCover);
+        }
     }
 
     @Override

@@ -6,7 +6,7 @@ import android.net.wifi.WifiManager;
 
 import static android.content.Context.WIFI_SERVICE;
 
-/*
+/**
  * @author VIJAY PATIDAR
  * */
 public class IPManager {

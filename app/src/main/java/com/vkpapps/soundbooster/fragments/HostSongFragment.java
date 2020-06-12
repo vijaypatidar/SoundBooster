@@ -28,7 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/*
+/***
  * @author VIJAY PATIDAR
  * */
 public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnAudioSelectedListener {
@@ -85,11 +85,11 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Save to download");
         builder.setMessage(audioModel.getName());
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            storageManager.download(audioModel.getName(), source -> {
-                Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show();
-            });
-        });
+        builder.setPositiveButton("Save", (dialog, which) ->
+                storageManager.download(audioModel.getName(), source ->
+                        Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show()
+                )
+        );
         builder.setNegativeButton("Cancel", null);
         builder.create().show();
     }

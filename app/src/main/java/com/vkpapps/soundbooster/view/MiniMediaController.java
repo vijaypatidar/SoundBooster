@@ -9,13 +9,15 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
-/*
+
+/**
  * @author VIJAY PATIDAR
- * */
+ */
 
 public class MiniMediaController extends FrameLayout {
     private ImageView audioCover;
@@ -60,9 +62,15 @@ public class MiniMediaController extends FrameLayout {
         audioTitle.setText(name);
         File file = new File(imageRoot, name);
         if (file.exists()) {
-            audioCover.setImageURI(Uri.fromFile(file));
+            Picasso.get().load(Uri.fromFile(file)).into(audioCover);
         }
     }
 
+    public void setButtonOnClick(View.OnClickListener click) {
+        btnPlay.setOnClickListener(click);
+    }
 
+    public void changePlayButtonIcon(boolean isPlaying) {
+        btnPlay.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+    }
 }
