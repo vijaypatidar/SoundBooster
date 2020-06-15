@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
-        musicPlayer = MusicPlayerHelper.getInstance(this, this);
+        musicPlayer = new MusicPlayerHelper(this, this);
 
         initMiniMediaPlayer();
         getChoice();

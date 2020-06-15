@@ -19,7 +19,7 @@ import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.interfaces.OnFragmentPopBackListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.User;
-import com.vkpapps.soundbooster.utils.Utils;
+import com.vkpapps.soundbooster.utils.UserUtils;
 
 /**
  * @author VIJAY PATIDAR
@@ -52,7 +52,7 @@ public class ProfileFragment extends Fragment {
             String name = editTextName.getText().toString().trim();
             if (!name.isEmpty()) {
                 user.setName(name);
-                Utils.setUser(user, v.getContext());
+                new UserUtils(v.getContext()).setUser(user);
                 Toast.makeText(view.getContext(), "Profile Updated", Toast.LENGTH_SHORT).show();
                 onFragmentPopBackListener.onPopBackStack();
             } else {

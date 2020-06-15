@@ -38,7 +38,7 @@ public class ClientHelper extends Thread {
     @Override
     public void run() {
         Bundle bundle = new Bundle();
-        bundle.putString("ID", user.getUserId());
+        bundle.putString("ID", user.userId);
         String TAG = "ClientHelper";
         try {
             Log.d(TAG, "run: ==================================== connecting...to istream ");
@@ -70,7 +70,7 @@ public class ClientHelper extends Thread {
                             handleFileControl(control);
                         } else if (object instanceof User) {
                             User u = (User) object;
-                            if (u.getUserId().equals(user.getUserId())) {
+                            if (u.userId.equals(user.userId)) {
                                 user.setName(u.getName());
                             }
                         } else {
