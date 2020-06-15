@@ -1,8 +1,8 @@
 package com.vkpapps.soundbooster.fragments;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,15 +21,17 @@ import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
-import com.vkpapps.soundbooster.utils.Utils;
+import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+/***
+ * @author VIJAY PATIDAR
+ * */
 public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnAudioSelectedListener {
 
     private File song;
@@ -37,42 +39,39 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private List<AudioModel> allSong;
     private HostedAudioAdapter audioAdapter;
-    private File download;
+    private StorageManager storageManager;
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        download = container.getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
         return inflater.inflate(R.layout.fragment_host_song, container, false);
+
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        song = view.getContext().getDir("song", Context.MODE_PRIVATE);
-        if (PermissionUtils.checkStoragePermission(view.getContext())) {
-            allSong = new ArrayList<>();
-            RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
-            refreshSong();
-            audioAdapter = new HostedAudioAdapter(allSong, this);
-            recyclerView.setItemAnimator(new DefaultItemAnimator());
-            recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
-            recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
-                @Override
-                public boolean onFling(int velocityX, int velocityY) {
-                    if (onNavigationVisibilityListener != null)
-                        onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
-                    return false;
-                }
-            });
-            recyclerView.setAdapter(audioAdapter);
-            audioAdapter.notifyDataSetChanged();
+        storageManager = new StorageManager(view.getContext());
+        song = storageManager.getSongDir();
 
-        } else {
-            PermissionUtils.askStoragePermission(getActivity());
-        }
+        allSong = new ArrayList<>();
+        RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
+        refreshSong();
+        audioAdapter = new HostedAudioAdapter(allSong, this, view.getContext());
+        recyclerView.setItemAnimator(new DefaultItemAnimator());
+        recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
+        recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
+            @Override
+            public boolean onFling(int velocityX, int velocityY) {
+                if (onNavigationVisibilityListener != null)
+                    onNavigationVisibilityListener.onNavVisibilityChange(velocityY < 0);
+                return false;
+            }
+        });
+        recyclerView.setAdapter(audioAdapter);
+        audioAdapter.notifyDataSetChanged();
 
 
     }
@@ -84,12 +83,18 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
 
     @Override
     public void onAudioLongSelected(AudioModel audioModel) {
-        try {
-            Utils.copyFromTo(new File(audioModel.getPath()), new File(download, audioModel.getName()));
-            Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle("Save to download");
+        builder.setMessage(audioModel.getName());
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            if (PermissionUtils.checkStoragePermission(getContext())) {
+                storageManager.download(audioModel.getName(), source ->
+                        Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show()
+                );
+            } else PermissionUtils.askStoragePermission(getActivity(), 102);
+        });
+        builder.setNegativeButton("Cancel", null);
+        builder.create().show();
     }
 
     public void refreshSong() {
@@ -129,7 +134,6 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         if (context instanceof OnNavigationVisibilityListener) {
             onNavigationVisibilityListener = (OnNavigationVisibilityListener) context;
         }
-
     }
 
     @Override
@@ -138,6 +142,5 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         onHostSongFragmentListener = null;
         onNavigationVisibilityListener = null;
     }
-
 
 }

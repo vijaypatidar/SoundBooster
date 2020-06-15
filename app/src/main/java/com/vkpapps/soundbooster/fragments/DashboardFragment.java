@@ -2,7 +2,6 @@ package com.vkpapps.soundbooster.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,17 +15,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.adapter.ClientAdapter;
+import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.interfaces.OnUserListRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnUsersUpdateListener;
-import com.vkpapps.soundbooster.model.User;
 
 import java.util.List;
 
+/**
+ * @author VIJAY PATIDAR
+ * */
 public class DashboardFragment extends Fragment implements OnUsersUpdateListener {
 
-    private List<User> users;
+    private List<ClientHelper> users;
     private OnUserListRequestListener onUserListRequestListener;
     private ClientAdapter clientAdapter;
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
@@ -35,6 +37,9 @@ public class DashboardFragment extends Fragment implements OnUsersUpdateListener
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        //todo only for host error
+        if (users == null) return;
 
         clientAdapter = new ClientAdapter(users, view.getContext());
         RecyclerView recyclerView = view.findViewById(R.id.clientList);
@@ -51,13 +56,11 @@ public class DashboardFragment extends Fragment implements OnUsersUpdateListener
         recyclerView.setAdapter(clientAdapter);
         clientAdapter.notifyDataSetChanged();
 
-        Log.d("TAG", "onViewCreated: ============================== ");
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.d("TAG", "onCreateView:============================ ");
         return inflater.inflate(R.layout.fragment_dashboard, container, false);
     }
 

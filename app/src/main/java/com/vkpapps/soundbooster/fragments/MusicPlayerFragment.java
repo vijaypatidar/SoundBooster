@@ -1,10 +1,10 @@
 package com.vkpapps.soundbooster.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,26 +17,32 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.fragment.app.Fragment;
 
+import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.interfaces.OnCommandListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
-import com.vkpapps.soundbooster.utils.Utils;
+import com.vkpapps.soundbooster.interfaces.OnObjectCallbackListener;
+import com.vkpapps.soundbooster.model.control.ControlPlayer;
+import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 
+/**
+ * @author VIJAY PATIDAR
+ */
 public class MusicPlayerFragment extends Fragment implements View.OnClickListener, OnMediaPlayerChangeListener {
 
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private OnFragmentAttachStatusListener onFragmentAttachStatusListener;
     private TextView audioTitle;
-    private ImageView audioCover, btnPlay;
+    private ImageView audioCover, fullCover, btnPlay;
     private MediaPlayer mediaPlayer;
-    private File root;
-    private OnCommandListener commandListener;
+    private OnObjectCallbackListener objectCallbackListener;
+    private StorageManager storageManager;
+    private Timer timer;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -48,8 +54,11 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        root = getActivity().getDir("song", Context.MODE_PRIVATE);
+
+        storageManager = new StorageManager(view.getContext());
+
         btnPlay = view.findViewById(R.id.btnPlay);
+        fullCover = view.findViewById(R.id.coverFull);
         btnPlay.setOnClickListener(this);
         view.findViewById(R.id.btnNext).setOnClickListener(this);
         view.findViewById(R.id.btnPrevious).setOnClickListener(this);
@@ -59,7 +68,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
             onFragmentAttachStatusListener.onFragmentAttached(this);
 
         AppCompatSeekBar appCompatSeekBar = view.findViewById(R.id.seekBar);
-        Timer timer = new Timer();
+        timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -68,23 +77,23 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
                     long currentDuration = mediaPlayer.getCurrentPosition();
                     int per = (int) (currentDuration * 100 / totalDuration);
                     appCompatSeekBar.setProgress(per);
+                    if (per == 100) {
+                        objectCallbackListener.onObjectCreated(new ControlPlayer(ControlPlayer.ACTION_NEXT, ""));
+                    }
                 } catch (Exception ignored) {
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
             }
         }, 0, 1000);
+
+        ControlPlayer controlPlayer = new ControlPlayer();
+        controlPlayer.setAction(ControlPlayer.ACTION_SEEK_TO);
         appCompatSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 if (fromUser) {
-                    Log.d("seekto", "onProgressChanged: " + progress + " " + fromUser);
                     int time = progress * mediaPlayer.getDuration() / 100;
-                    String command = "SKT " + time;
-                    commandListener.onCommandCreated(command);
+                    controlPlayer.setIntData(time);
+                    objectCallbackListener.onObjectCreated(controlPlayer);
                 }
             }
 
@@ -103,30 +112,35 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onClick(View v) {
-        String com;
+        ControlPlayer controlPlayer = new ControlPlayer();
         switch (v.getId()) {
             case R.id.btnPlay:
                 if (mediaPlayer.isPlaying()) {
-                    com = "PAS";
+                    controlPlayer.setAction(ControlPlayer.ACTION_PAUSE);
                 } else {
-                    com = "PLY " + audioTitle.getText().toString();
+                    controlPlayer.setAction(ControlPlayer.ACTION_PLAY);
+                    controlPlayer.setData(audioTitle.getText().toString());
                 }
                 break;
             case R.id.btnNext:
-                com = "NXT 1";
+                controlPlayer.setAction(ControlPlayer.ACTION_NEXT);
                 break;
-            default:
-                com = "NXT -1";
+            case R.id.btnPrevious:
+                controlPlayer.setAction(ControlPlayer.ACTION_PREVIOUS);
         }
-        commandListener.onCommandCreated(com);
+        objectCallbackListener.onObjectCreated(controlPlayer);
     }
 
     @Override
     public void onChangeSong(String title, MediaPlayer mediaPlayer) {
-        audioTitle.setText(title);
-        loadCover(title);
-        this.mediaPlayer = mediaPlayer;
-        setPlayPauseButton();
+        Activity activity = getActivity();
+        if (activity == null) return;
+        activity.runOnUiThread(() -> {
+            audioTitle.setText(title);
+            loadCover(title);
+            this.mediaPlayer = mediaPlayer;
+            setPlayPauseButton();
+        });
     }
 
     @Override
@@ -135,10 +149,11 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     }
 
     private void loadCover(String title) {
-        File file = new File(Utils.imageRoot, title);
-        if (file.exists())
-            audioCover.setImageURI(Uri.fromFile(file));
-
+        File file = new File(storageManager.getImageDir(), title);
+        if (file.exists()) {
+            Picasso.get().load(Uri.fromFile(file)).into(audioCover);
+            Picasso.get().load(Uri.fromFile(file)).into(fullCover);
+        }
     }
 
     @Override
@@ -151,7 +166,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         super.onAttach(context);
         onNavigationVisibilityListener = (OnNavigationVisibilityListener) context;
         onFragmentAttachStatusListener = (OnFragmentAttachStatusListener) context;
-        commandListener = (OnCommandListener) context;
+        objectCallbackListener = (OnObjectCallbackListener) context;
         onNavigationVisibilityListener.onNavVisibilityChange(false);
     }
 
@@ -162,7 +177,9 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         onNavigationVisibilityListener.onNavVisibilityChange(true);
         onNavigationVisibilityListener = null;
         onFragmentAttachStatusListener = null;
-        commandListener = null;
+        objectCallbackListener = null;
+        if (timer != null)
+            timer.cancel();
     }
 
     private void setPlayPauseButton() {

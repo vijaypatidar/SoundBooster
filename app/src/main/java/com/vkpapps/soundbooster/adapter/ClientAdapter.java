@@ -4,27 +4,26 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.interfaces.OnClientControlChangeRequest;
+import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.model.User;
 
 import java.util.List;
 
+/**
+ * @author VIJAY PATIDAR
+ */
 public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> {
 
-    private List<User> users;
-    private OnClientControlChangeRequest onClientConnectionStateListener;
+    private List<ClientHelper> users;
 
-    public ClientAdapter(List<User> users, Context context) {
+    public ClientAdapter(List<ClientHelper> users, Context context) {
         this.users = users;
-        if (context instanceof OnClientControlChangeRequest)
-            onClientConnectionStateListener = (OnClientControlChangeRequest) context;
     }
 
     @NonNull
@@ -36,28 +35,21 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull MyHolder holder, int position) {
-        final User user = users.get(position);
+        final ClientHelper clientHelper = users.get(position);
+        final User user = clientHelper.user;
         holder.userName.setText(user.getName());
-        holder.switchAllow.setChecked(user.isAccess());
-        holder.switchAllow.setOnCheckedChangeListener((compoundButton, b) -> {
-            if (onClientConnectionStateListener!=null)
-                onClientConnectionStateListener.OnClientControlChangeRequest(user);
-        });
     }
 
     @Override
     public int getItemCount() {
-        return users.size();
+        return (users == null) ? 0 : users.size();
     }
 
     static class MyHolder extends RecyclerView.ViewHolder {
-
-        private Switch switchAllow;
         private TextView userName;
 
         MyHolder(@NonNull View itemView) {
             super(itemView);
-            switchAllow = itemView.findViewById(R.id.switchAllow);
             userName = itemView.findViewById(R.id.userName);
         }
     }

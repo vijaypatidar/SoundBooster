@@ -1,5 +1,6 @@
 package com.vkpapps.soundbooster.adapter;
 
+import android.content.Context;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -11,21 +12,27 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.ads.AdView;
+import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.AudioModel;
 import com.vkpapps.soundbooster.utils.FirebaseUtils;
-import com.vkpapps.soundbooster.utils.Utils;
+import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
 import java.util.List;
 
+/**
+ * @author VIJAY PATIDAR
+ * */
 public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.AudioViewHolder> {
     private List<AudioModel> audioModels;
     private OnAudioSelectedListener onAudioSelectedListener;
+    private StorageManager storageManager;
 
-    public HostedAudioAdapter(List<AudioModel> audioModels, OnAudioSelectedListener onAudioSelectedListener) {
+    public HostedAudioAdapter(List<AudioModel> audioModels, OnAudioSelectedListener onAudioSelectedListener, Context context) {
         this.audioModels = audioModels;
         this.onAudioSelectedListener = onAudioSelectedListener;
+        this.storageManager = new StorageManager(context);
     }
 
     @NonNull
@@ -50,30 +57,28 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
         AudioModel audioModel = audioModels.get(position);
         if (audioModel == null) {
             AdView adView = (AdView) holder.itemView;
-            adView.loadAd(FirebaseUtils.getAdRequest());
+            FirebaseUtils.INSTANCE.getAdRequest(adView);
         } else {
 
             holder.audioTitle.setText(audioModel.getName());
             holder.audioArtist.setText(audioModel.getArtist());
-            holder.itemView.setOnClickListener(v -> {
-                onAudioSelectedListener.onAudioSelected(audioModel);
-            });
+            holder.itemView.setOnClickListener(v -> onAudioSelectedListener.onAudioSelected(audioModel));
             holder.itemView.setOnLongClickListener(v -> {
                 onAudioSelectedListener.onAudioLongSelected(audioModel);
                 return true;
             });
 
             ImageView audioIcon = holder.audioIcon;
-            File file = new File(Utils.imageRoot, audioModel.getName());
+            File file = new File(storageManager.getImageDir(), audioModel.getName());
             if (file.exists()) {
-                audioIcon.setImageURI(Uri.fromFile(file));
+                Picasso.get().load(Uri.fromFile(file)).into(audioIcon);
             }
         }
     }
 
     @Override
     public int getItemCount() {
-        return audioModels.size();
+        return (audioModels == null) ? 0 : audioModels.size();
     }
 
     public interface OnAudioSelectedListener {
