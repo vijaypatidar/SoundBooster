@@ -10,7 +10,9 @@ import com.vkpapps.soundbooster.utils.Utils;
 /**
  * @author VIJAY PATIDAR
  */
-public class SoundBoosterApplication extends Application {
+public class App extends Application {
+    private static User user;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -22,14 +24,16 @@ public class SoundBoosterApplication extends Application {
         storageManager.deleteDir(storageManager.getSongDir());
     }
 
+    public static User getUser() {
+        return user;
+    }
 
     private void setDefaultUser() {
-        User user = Utils.loadUser(this);
+        user = Utils.loadUser(this);
         if (user == null) {
             user = new User();
             user.setName("RockStar");
             user.setUserId(String.valueOf(System.currentTimeMillis()));
-            user.setAccess(true);
             Utils.setUser(user, this);
         }
     }

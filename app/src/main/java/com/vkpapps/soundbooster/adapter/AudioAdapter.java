@@ -63,7 +63,6 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
             AdView adView = (AdView) holder.itemView;
             FirebaseUtils.getAdRequest(adView);
         } else {
-
             holder.audioTitle.setText(audioModel.getName());
             holder.audioArtist.setText(audioModel.getArtist());
             holder.itemView.setOnClickListener(v -> onAudioSelectedListener.onAudioSelected(audioModel));
@@ -99,7 +98,7 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
 
     @Override
     public int getItemCount() {
-        return audioModels.size();
+        return (audioModels == null) ? 0 : audioModels.size();
     }
 
     public interface OnAudioSelectedListener {

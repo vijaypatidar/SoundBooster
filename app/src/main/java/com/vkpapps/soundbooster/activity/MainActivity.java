@@ -25,6 +25,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.vkpapps.soundbooster.App;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.analitics.Logger;
 import com.vkpapps.soundbooster.connection.ClientHelper;
@@ -52,7 +53,6 @@ import com.vkpapps.soundbooster.service.FileService;
 import com.vkpapps.soundbooster.utils.IPManager;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.UpdateManager;
-import com.vkpapps.soundbooster.utils.Utils;
 import com.vkpapps.soundbooster.view.MiniMediaController;
 
 import java.io.IOException;
@@ -89,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         setContentView(R.layout.activity_main);
 
         navView = findViewById(R.id.nav_view);
+        user = App.getUser();
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
@@ -98,7 +99,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
-        user = Utils.loadUser(this);
         musicPlayer = MusicPlayerHelper.getInstance(this, this);
 
         initMiniMediaPlayer();
@@ -407,11 +407,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     private void sendCommand(Object command) {
-        if (user.isAccess()) {
-            clientHelper.write(command);
-        } else {
-            Toast.makeText(this, "host denied", Toast.LENGTH_SHORT).show();
-        }
+        clientHelper.write(command);
     }
 
     @Override

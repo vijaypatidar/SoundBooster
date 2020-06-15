@@ -71,7 +71,6 @@ public class ClientHelper extends Thread {
                         } else if (object instanceof User) {
                             User u = (User) object;
                             if (u.getUserId().equals(user.getUserId())) {
-                                user.setAccess(u.isAccess());
                                 user.setName(u.getName());
                             }
                         } else {

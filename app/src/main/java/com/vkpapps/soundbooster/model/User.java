@@ -8,24 +8,14 @@ import java.io.Serializable;
 public class User implements Serializable {
     private String name;
     private String userId;
-    private boolean access;
-
-    public boolean isAccess() {
-        return access;
-    }
-
-    public void setAccess(boolean access) {
-        this.access = access;
-    }
 
     public User() {
 
     }
 
-    public User(String name, String userId, boolean access) {
+    public User(String name, String userId) {
         this.name = name;
         this.userId = userId;
-        this.access = access;
     }
 
     public String getName() {

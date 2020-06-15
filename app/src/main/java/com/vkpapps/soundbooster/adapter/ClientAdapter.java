@@ -4,7 +4,6 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,7 +17,7 @@ import java.util.List;
 
 /**
  * @author VIJAY PATIDAR
- * */
+ */
 public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> {
 
     private List<ClientHelper> users;
@@ -39,27 +38,18 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
         final ClientHelper clientHelper = users.get(position);
         final User user = clientHelper.user;
         holder.userName.setText(user.getName());
-        holder.switchAllow.setChecked(user.isAccess());
-        holder.switchAllow.setOnCheckedChangeListener((compoundButton, b) -> {
-            user.setAccess(!user.isAccess());
-            clientHelper.write(user);
-            notifyDataSetChanged();
-        });
     }
 
     @Override
     public int getItemCount() {
-        return users.size();
+        return (users == null) ? 0 : users.size();
     }
 
     static class MyHolder extends RecyclerView.ViewHolder {
-
-        private Switch switchAllow;
         private TextView userName;
 
         MyHolder(@NonNull View itemView) {
             super(itemView);
-            switchAllow = itemView.findViewById(R.id.switchAllow);
             userName = itemView.findViewById(R.id.userName);
         }
     }

@@ -78,7 +78,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
 
     @Override
     public int getItemCount() {
-        return audioModels.size();
+        return (audioModels == null) ? 0 : audioModels.size();
     }
 
     public interface OnAudioSelectedListener {
