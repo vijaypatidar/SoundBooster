@@ -91,7 +91,8 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
                     e.printStackTrace();
                 }
             }
-            Picasso.get().load(Uri.fromFile(file)).into(audioIcon);
+            if (file.exists())
+                Picasso.get().load(Uri.fromFile(file)).into(audioIcon);
             audioIcon.setAdjustViewBounds(true);
         }
     }

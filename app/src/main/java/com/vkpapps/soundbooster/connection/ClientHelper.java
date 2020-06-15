@@ -59,7 +59,7 @@ public class ClientHelper extends Thread {
                     onClientConnectionStateListener.onClientConnected(this);
                 }
 
-                while (socket.isConnected()) {
+                while (!socket.isClosed()) {
                     try {
                         object = inputStream.readObject();
                         if (object instanceof ControlPlayer) {
@@ -106,19 +106,6 @@ public class ClientHelper extends Thread {
         }).start();
     }
 
-    public void writeIfClient(@NonNull Object command, String clientId) {
-        new Thread(() -> {
-            if (user.getUserId().equals(clientId)) {
-                try {
-                    outputStream.writeObject(command);
-                    outputStream.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-    }
-
     private void handleControl(ControlPlayer control) {
 
         if (onObjectReceiveListener != null) {
@@ -154,5 +141,13 @@ public class ClientHelper extends Thread {
 
     public void setOnObjectReceiveListener(OnObjectReceiveListener onObjectReceiveListener) {
         this.onObjectReceiveListener = onObjectReceiveListener;
+    }
+
+    public void shutDown() {
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

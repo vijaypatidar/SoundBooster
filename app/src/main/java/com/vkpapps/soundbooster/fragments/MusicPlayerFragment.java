@@ -77,12 +77,10 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
                     long currentDuration = mediaPlayer.getCurrentPosition();
                     int per = (int) (currentDuration * 100 / totalDuration);
                     appCompatSeekBar.setProgress(per);
+                    if (per == 100) {
+                        objectCallbackListener.onObjectCreated(new ControlPlayer(ControlPlayer.ACTION_NEXT, ""));
+                    }
                 } catch (Exception ignored) {
-                }
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
             }
         }, 0, 1000);

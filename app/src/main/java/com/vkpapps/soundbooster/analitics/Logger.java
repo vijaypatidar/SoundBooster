@@ -5,7 +5,7 @@ import android.util.Log;
 /***
  * <h1>Logger</h1>
  * <P>Utility class for analytic and debugging</P>
- * @author VIJAY-PATIDAR
+ * @author VIJAY PATIDAR
  * @since 2020-06-11
  * @version 1.0
  */

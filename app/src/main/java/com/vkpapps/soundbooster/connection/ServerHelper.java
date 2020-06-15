@@ -17,6 +17,7 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
     private ArrayList<ClientHelper> clientHelpers;
     private User user;
     private OnClientConnectionStateListener onClientConnectionStateListener;
+    private boolean live = true;
 
     public ServerHelper(OnControlRequestListener onControlRequestListener, User user, OnClientConnectionStateListener onClientConnectionStateListener) {
         clientHelpers = new ArrayList<>();
@@ -29,13 +30,12 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
     public void run() {
         try {
             ServerSocket serverSocket = new ServerSocket(1203);
-            while (true) {
+            while (live) {
                 try {
                     Socket socket = serverSocket.accept();
-
                     ClientHelper commandHelper = new ClientHelper(socket, onControlRequestListener, user, this);
                     commandHelper.setOnObjectReceiveListener(this);
-                    new Thread(commandHelper).start();
+                    commandHelper.start();
                     try {
                         Thread.sleep(2000);
                     } catch (InterruptedException e) {
@@ -58,7 +58,9 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
 
     public void sendCommandToOnly(Object command, String clientId) {
         for (ClientHelper c : clientHelpers) {
-            c.writeIfClient(command, clientId);
+            if (c.user.getUserId().endsWith(clientId)) {
+                c.write(command);
+            }
         }
     }
 
@@ -85,5 +87,12 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
     @Override
     public void onObjectReceive(Object object) {
         broadcast(object);
+    }
+
+    public void shutDown() {
+        live = false;
+        for (ClientHelper c : clientHelpers) {
+            c.shutDown();
+        }
     }
 }

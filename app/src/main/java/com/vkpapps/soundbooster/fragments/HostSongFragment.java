@@ -20,6 +20,7 @@ import com.vkpapps.soundbooster.adapter.HostedAudioAdapter;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
+import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
@@ -85,11 +86,13 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setTitle("Save to download");
         builder.setMessage(audioModel.getName());
-        builder.setPositiveButton("Save", (dialog, which) ->
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            if (PermissionUtils.checkStoragePermission(getContext())) {
                 storageManager.download(audioModel.getName(), source ->
                         Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show()
-                )
-        );
+                );
+            } else PermissionUtils.askStoragePermission(getActivity(), 102);
+        });
         builder.setNegativeButton("Cancel", null);
         builder.create().show();
     }

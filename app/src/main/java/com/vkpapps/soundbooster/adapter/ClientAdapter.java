@@ -42,7 +42,7 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
         holder.switchAllow.setChecked(user.isAccess());
         holder.switchAllow.setOnCheckedChangeListener((compoundButton, b) -> {
             user.setAccess(!user.isAccess());
-            clientHelper.writeIfClient(user, user.getUserId());
+            clientHelper.write(user);
             notifyDataSetChanged();
         });
     }

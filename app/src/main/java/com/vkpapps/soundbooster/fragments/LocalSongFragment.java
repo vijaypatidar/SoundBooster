@@ -31,7 +31,6 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
 
     private OnLocalSongFragmentListener onLocalSongFragmentListener;
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
-    private List<AudioModel> allSong;
     private StorageManager storageManager;
 
     public LocalSongFragment() {
@@ -47,12 +46,11 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         storageManager = new StorageManager(getActivity());
 
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
-            allSong = storageManager.getAllAudioFromDevice();
+            List<AudioModel> allSong = storageManager.getAllAudioFromDevice();
             AudioAdapter audioAdapter = new AudioAdapter(allSong, this, view.getContext());
             recyclerView.setItemAnimator(new DefaultItemAnimator());
             recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));

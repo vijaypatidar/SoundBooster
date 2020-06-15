@@ -27,8 +27,6 @@ import static com.vkpapps.soundbooster.analitics.Logger.i;
 
 /***
  * @author VIJAY PATIDAR
- * @version 1.0
- * @since Jun 11,2020
  */
 public class FileService extends IntentService {
     public static final String ACTION_SEND = "com.vkpapps.soundbooster.action.SEND";

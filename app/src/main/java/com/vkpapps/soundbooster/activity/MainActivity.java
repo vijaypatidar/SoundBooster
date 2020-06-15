@@ -51,7 +51,6 @@ import com.vkpapps.soundbooster.receivers.FileRequestReceiver;
 import com.vkpapps.soundbooster.service.FileService;
 import com.vkpapps.soundbooster.utils.IPManager;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
-import com.vkpapps.soundbooster.utils.StorageManager;
 import com.vkpapps.soundbooster.utils.UpdateManager;
 import com.vkpapps.soundbooster.utils.Utils;
 import com.vkpapps.soundbooster.view.MiniMediaController;
@@ -83,14 +82,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private HostSongFragment currentFragment;
     private ArrayList<String> queue;
     private int position = 0;
-    private StorageManager storageManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        storageManager = new StorageManager(this);
         navView = findViewById(R.id.nav_view);
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
@@ -415,6 +412,26 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         } else {
             Toast.makeText(this, "host denied", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (navController.getCurrentDestination().getId() == R.id.navigation_home) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Are you want to exit?");
+            builder.setPositiveButton("Yes", (dialog, which) -> {
+                if (isHost) {
+                    serverHelper.shutDown();
+                } else {
+                    clientHelper.shutDown();
+                }
+                musicPlayer.pause();
+                finish();
+            });
+            builder.setNegativeButton("No", null);
+            builder.create().show();
+        } else
+            super.onBackPressed();
     }
 
     @Override

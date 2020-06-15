@@ -138,28 +138,30 @@ public class StorageManager {
         Logger.d("getAllAudioFromDevice: ");
         if (audioModels.size() == 0) {
 
-            audioModels = new ArrayList<>();
-            Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-            String[] projection = {MediaStore.Audio.AudioColumns.DATA, MediaStore.Audio.AudioColumns.TITLE, MediaStore.Audio.AudioColumns.ALBUM, MediaStore.Audio.ArtistColumns.ARTIST};
-            Cursor c = context.getContentResolver().query(uri, projection, null, null, null);
+            if (PermissionUtils.checkStoragePermission(context)) {
+                audioModels = new ArrayList<>();
+                Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+                String[] projection = {MediaStore.Audio.AudioColumns.DATA, MediaStore.Audio.AudioColumns.TITLE, MediaStore.Audio.AudioColumns.ALBUM, MediaStore.Audio.ArtistColumns.ARTIST};
+                Cursor c = context.getContentResolver().query(uri, projection, null, null, null);
 
-            if (c != null) {
-                while (c.moveToNext()) {
+                if (c != null) {
+                    while (c.moveToNext()) {
 
-                    AudioModel audioModel = new AudioModel();
-                    String path = c.getString(c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
-                    String name = c.getString(1).trim();
-                    String album = c.getString(2);
-                    String artist = c.getString(3);
+                        AudioModel audioModel = new AudioModel();
+                        String path = c.getString(c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA));
+                        String name = c.getString(1).trim();
+                        String album = c.getString(2);
+                        String artist = c.getString(3);
 
-                    audioModel.setName(name);
-                    audioModel.setAlbum(album);
-                    audioModel.setArtist(artist);
-                    audioModel.setPath(path);
-                    audioModels.add(audioModel);
-                    Collections.sort(audioModels, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+                        audioModel.setName(name);
+                        audioModel.setAlbum(album);
+                        audioModel.setArtist(artist);
+                        audioModel.setPath(path);
+                        audioModels.add(audioModel);
+                        Collections.sort(audioModels, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+                    }
+                    c.close();
                 }
-                c.close();
             }
         }
         return audioModels;

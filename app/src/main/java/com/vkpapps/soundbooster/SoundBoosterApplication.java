@@ -7,6 +7,9 @@ import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.StorageManager;
 import com.vkpapps.soundbooster.utils.Utils;
 
+/**
+ * @author VIJAY PATIDAR
+ */
 public class SoundBoosterApplication extends Application {
     @Override
     public void onCreate() {
