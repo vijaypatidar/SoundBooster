@@ -21,7 +21,8 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
         playerChangeListener?.onChangeSong(current, mediaPlayer)
     }
 
-    fun loadAndPlay(name: String) {
+    fun loadAndPlay(name: String?) {
+        if (name == null) return
         Log.d("CONTROLS", "loadAndPlay: $name")
         try {
             mediaPlayer.reset()
@@ -30,11 +31,9 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
             mediaPlayer.start()
             current = name
             onMusicPlayerHelperListener?.onSongChange(name)
-            if (playerChangeListener != null) {
-                playerChangeListener!!.onChangeSong(name, mediaPlayer)
-            }
+            playerChangeListener?.onChangeSong(name, mediaPlayer)
         } catch (e: IOException) {
-            onMusicPlayerHelperListener!!.onRequestSongNotFound(name)
+            onMusicPlayerHelperListener?.onRequestSongNotFound(name)
             e.printStackTrace()
         }
     }
@@ -46,7 +45,7 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
     private fun resume() {
         try {
             mediaPlayer.start()
-            playerChangeListener!!.onPlayingStatusChange(mediaPlayer.isPlaying)
+            playerChangeListener?.onPlayingStatusChange(mediaPlayer.isPlaying)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -56,7 +55,7 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
         try {
             mediaPlayer.pause()
             if (playerChangeListener != null) {
-                playerChangeListener!!.onPlayingStatusChange(mediaPlayer.isPlaying)
+                playerChangeListener?.onPlayingStatusChange(mediaPlayer.isPlaying)
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -75,7 +74,7 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
         try {
             mediaPlayer.setVolume(vol, vol)
             if (playerChangeListener != null) {
-                playerChangeListener!!.onVolumeChange(vol)
+                playerChangeListener?.onVolumeChange(vol)
             }
         } catch (ignored: Exception) {
         }
@@ -88,15 +87,15 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
             ControlPlayer.ACTION_SEEK_TO -> seekTo(control.intData)
             ControlPlayer.ACTION_CHANGE_VOLUME -> setVolume(control.intData.toFloat())
             ControlPlayer.ACTION_NEXT -> {
-                val next = onMusicPlayerHelperListener!!.getNextSong(1)
+                val next = onMusicPlayerHelperListener?.getNextSong(1)
                 loadAndPlay(next)
             }
             ControlPlayer.ACTION_PREVIOUS -> {
-                val next = onMusicPlayerHelperListener!!.getNextSong(-1)
+                val next = onMusicPlayerHelperListener?.getNextSong(-1)
                 loadAndPlay(next)
             }
             ControlPlayer.ACTION_RESUME -> {
-                val next = onMusicPlayerHelperListener!!.getNextSong(0)
+                val next = onMusicPlayerHelperListener?.getNextSong(0)
                 loadAndPlay(next)
             }
         }
@@ -105,7 +104,7 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
     interface OnMusicPlayerHelperListener {
         fun onSongChange(name: String?)
         fun onRequestSongNotFound(songName: String?)
-        fun getNextSong(change: Int): String
+        fun getNextSong(change: Int): String?
     }
 
 }

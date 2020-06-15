@@ -22,19 +22,20 @@ class MiniMediaController : FrameLayout {
     private var btnPlay: ImageButton? = null
     private var enableVisibilityChanges = true
     private var imageRoot: File? = null
+
     fun setEnableVisibilityChanges(enableVisibilityChanges: Boolean) {
         this.enableVisibilityChanges = enableVisibilityChanges
     }
 
-    constructor(context: Context?, attrs: AttributeSet?, defStyle: Int) : super(context!!, attrs, defStyle) {
+    constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle) {
         initView()
     }
 
-    constructor(context: Context?, attrs: AttributeSet?) : super(context!!, attrs) {
+    constructor(context: Context, attrs: AttributeSet?) : super(context, attrs) {
         initView()
     }
 
-    constructor(context: Context?) : super(context!!) {
+    constructor(context: Context) : super(context) {
         initView()
     }
 
@@ -51,7 +52,7 @@ class MiniMediaController : FrameLayout {
         if (enableVisibilityChanges) {
             visibility = View.VISIBLE
         }
-        audioTitle!!.text = name
+        audioTitle?.text = name
         val file = File(imageRoot, name)
         if (file.exists()) {
             Picasso.get().load(Uri.fromFile(file)).into(audioCover)
@@ -59,10 +60,10 @@ class MiniMediaController : FrameLayout {
     }
 
     fun setButtonOnClick(click: OnClickListener?) {
-        btnPlay!!.setOnClickListener(click)
+        btnPlay?.setOnClickListener(click)
     }
 
     fun changePlayButtonIcon(isPlaying: Boolean) {
-        btnPlay!!.setImageResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
+        btnPlay?.setImageResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
     }
 }
