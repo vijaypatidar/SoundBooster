@@ -3,6 +3,7 @@ package com.vkpapps.soundbooster
 import android.app.Application
 import com.google.android.gms.ads.MobileAds
 import com.vkpapps.soundbooster.model.User
+import com.vkpapps.soundbooster.utils.MusicPlayerHelper
 import com.vkpapps.soundbooster.utils.StorageManager
 import com.vkpapps.soundbooster.utils.UserUtils
 
@@ -14,6 +15,7 @@ class App : Application() {
         super.onCreate()
         MobileAds.initialize(this)
         user = UserUtils(this).loadUser()
+        musicPlayerHelper = MusicPlayerHelper(this)
         val storageManager = StorageManager(this)
         storageManager.allAudioFromDevice
         storageManager.deleteDir(storageManager.songDir)
@@ -22,5 +24,8 @@ class App : Application() {
     companion object {
         @JvmStatic
         lateinit var user: User
+
+        @JvmStatic
+        lateinit var musicPlayerHelper: MusicPlayerHelper
     }
 }

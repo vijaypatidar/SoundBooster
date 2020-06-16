@@ -163,6 +163,10 @@ public class StorageManager {
                     c.close();
                 }
             }
+            // inserting null value , this null values will be replaced by adView when displayed on RecyclerView
+            for (int i = 5; i < audioModels.size(); i = i + 25) {
+                audioModels.add(i, null);
+            }
         }
         return audioModels;
     }

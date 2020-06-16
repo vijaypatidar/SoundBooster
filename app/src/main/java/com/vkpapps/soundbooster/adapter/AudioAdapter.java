@@ -18,7 +18,7 @@ import com.google.android.gms.ads.AdView;
 import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.AudioModel;
-import com.vkpapps.soundbooster.utils.FirebaseUtils;
+import com.vkpapps.soundbooster.utils.AdsUtils;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
@@ -61,7 +61,7 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
         AudioModel audioModel = audioModels.get(position);
         if (audioModel == null) {
             AdView adView = (AdView) holder.itemView;
-            FirebaseUtils.INSTANCE.getAdRequest(adView);
+            AdsUtils.INSTANCE.getAdRequest(adView);
         } else {
             holder.audioTitle.setText(audioModel.getName());
             holder.audioArtist.setText(audioModel.getArtist());

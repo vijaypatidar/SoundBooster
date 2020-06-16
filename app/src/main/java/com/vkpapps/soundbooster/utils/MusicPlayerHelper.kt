@@ -11,10 +11,11 @@ import java.io.IOException
 /***
  * @author VIJAY PATIDAR
  */
-class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListener: OnMusicPlayerHelperListener?) {
+class MusicPlayerHelper(context: Context?) {
     private val mediaPlayer = MediaPlayer()
     private val root: File = StorageManager(context).songDir
     private var playerChangeListener: OnMediaPlayerChangeListener? = null
+    private var onMusicPlayerHelperListener: OnMusicPlayerHelperListener? = null
     private var current: String? = null
 
     fun setPlayerChangeListener(playerChangeListener: OnMediaPlayerChangeListener?) {
@@ -23,6 +24,11 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
         if (current != null)
             playerChangeListener?.onChangeSong(current!!, mediaPlayer)
     }
+
+    fun setOnMusicPlayerHelperListener(onMusicPlayerHelperListener: OnMusicPlayerHelperListener) {
+        this.onMusicPlayerHelperListener = onMusicPlayerHelperListener
+    }
+
 
     fun loadAndPlay(name: String?) {
         if (name == null) return

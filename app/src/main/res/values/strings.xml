@@ -10,6 +10,8 @@
     <string name="title_my_song">My Song</string>
     <string name="title_profile">Profile</string>
     <string name="title_share">Share</string>
+    <string name="create_party">CREATE PARTY</string>
+    <string name="join_party">JOIN PARTY</string>
 
     <!-- TODO: Remove or change this placeholder text -->
 

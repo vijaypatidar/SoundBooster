@@ -55,6 +55,8 @@ import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.UpdateManager;
 import com.vkpapps.soundbooster.view.MiniMediaController;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -111,7 +113,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         miniMediaController.setButtonOnClick(v -> {
             onObjectCreated(new ControlPlayer(musicPlayer.isPlaying() ? ControlPlayer.ACTION_PAUSE : ControlPlayer.ACTION_RESUME, null));
         });
-        musicPlayer = new MusicPlayerHelper(this, this);
+        musicPlayer = App.Companion.getMusicPlayerHelper();
+        musicPlayer.setOnMusicPlayerHelperListener(this);
         musicPlayer.setPlayerChangeListener(miniMediaController);
     }
 
@@ -227,12 +230,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
-    public void onMusicPlayerControl(ControlPlayer controlPlayer) {
+    public void onMusicPlayerControl(@NotNull ControlPlayer controlPlayer) {
         musicPlayer.handleControl(controlPlayer);
     }
 
-    public void onDownloadRequest(String name, String id) {
-        Logger.d("onReceiveFileRequest: " + id + "==========> " + name);
+    public void onDownloadRequest(@NotNull String name, @NotNull String id) {
+        Logger.d("onDownloadRequest: " + id + " title =  " + name);
         // only host wil response this method
         if (isHost) {
             // prepare file receive from client
@@ -250,13 +253,13 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         }
     }
 
-    public void onUploadRequestAccepted(String name, String id) {
+    public void onUploadRequestAccepted(@NotNull String name, @NotNull String id) {
         // receiver requested file or sent by host itself
         FileService.startActionReceive(this, name, id, isHost);
     }
 
 
-    public void onDownloadRequestAccepted(String name, String id) {
+    public void onDownloadRequestAccepted(@NotNull String name, @NotNull String id) {
         //only client need to handle this , not for host
         // send requested file to client sent request
         FileService.startActionSend(this, name, id, isHost, false);
@@ -295,12 +298,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onRequestFailed(String name) {
-        Logger.d("onRequestFailed: ==============>" + name);
+        Logger.d("onRequestFailed: " + name);
     }
 
     @Override
     public void onRequestAccepted(String name, boolean send, String clientId) {
-        Logger.d("onRequestAccepted: ============== " + name + "  " + send);
+        Logger.d("onRequestAccepted: " + name + "  " + send);
         ControlFile controlFile = new ControlFile(send ? ControlFile.UPLOAD_REQUEST_CONFIRM : ControlFile.DOWNLOAD_REQUEST_CONFIRM, name, user.getUserId());
         serverHelper.sendCommandToOnly(controlFile, clientId);
     }
@@ -320,14 +323,14 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
-    public void onClientConnected(ClientHelper clientHelper) {
+    public void onClientConnected(@NotNull ClientHelper clientHelper) {
         if (onUsersUpdateListener != null && isHost) {
             runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
         }
     }
 
     @Override
-    public void onClientDisconnected(ClientHelper clientHelper) {
+    public void onClientDisconnected(@NotNull ClientHelper clientHelper) {
         //prompt client when disconnect to a party to create or rejoin the party
         if (!isHost) {
             runOnUiThread(this::getChoice);
@@ -376,7 +379,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
-    public void onFragmentAttached(Fragment fragment) {
+    public void onFragmentAttached(@NotNull Fragment fragment) {
         if (fragment instanceof DashboardFragment) {
             onUsersUpdateListener = (OnUsersUpdateListener) fragment;
         } else if (fragment instanceof MusicPlayerFragment) {
@@ -388,7 +391,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
-    public void onFragmentDetached(Fragment fragment) {
+    public void onFragmentDetached(@NotNull Fragment fragment) {
         if (fragment instanceof DashboardFragment) {
             onUsersUpdateListener = null;
         } else if (fragment instanceof MusicPlayerFragment) {

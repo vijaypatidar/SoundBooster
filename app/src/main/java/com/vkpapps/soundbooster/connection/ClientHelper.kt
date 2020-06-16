@@ -1,7 +1,6 @@
 package com.vkpapps.soundbooster.connection
 
 import android.os.Bundle
-import android.util.Log
 import com.vkpapps.soundbooster.analitics.Logger
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener
 import com.vkpapps.soundbooster.interfaces.OnControlRequestListener
@@ -39,7 +38,7 @@ class ClientHelper(private val socket: Socket, private val onControlRequestListe
                     try {
                         obj = inputStream.readObject()
                         if (obj is ControlPlayer) {
-                            handleControl(obj)
+                            onControlRequestListener.onMusicPlayerControl(obj)
                         } else if (obj is ControlFile) {
                             handleFileControl(obj)
                         } else if (obj is User) {
@@ -73,12 +72,6 @@ class ClientHelper(private val socket: Socket, private val onControlRequestListe
                 e.printStackTrace()
             }
         }).start()
-    }
-
-    private fun handleControl(control: ControlPlayer) {
-        onObjectReceiveListener?.onObjectReceive(control)
-        Logger.d("handleMessage:  req " + control.action)
-        onControlRequestListener.onMusicPlayerControl(control)
     }
 
     private fun handleFileControl(control: ControlFile) {
