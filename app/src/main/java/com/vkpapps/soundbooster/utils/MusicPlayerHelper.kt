@@ -2,7 +2,7 @@ package com.vkpapps.soundbooster.utils
 
 import android.content.Context
 import android.media.MediaPlayer
-import android.util.Log
+import com.vkpapps.soundbooster.analitics.Logger
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener
 import com.vkpapps.soundbooster.model.control.ControlPlayer
 import java.io.File
@@ -16,14 +16,17 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
     private val root: File = StorageManager(context).songDir
     private var playerChangeListener: OnMediaPlayerChangeListener? = null
     private var current: String? = null
+
     fun setPlayerChangeListener(playerChangeListener: OnMediaPlayerChangeListener?) {
         this.playerChangeListener = playerChangeListener
-        playerChangeListener?.onChangeSong(current, mediaPlayer)
+        playerChangeListener?.onPlayingStatusChange(mediaPlayer.isPlaying)
+        if (current != null)
+            playerChangeListener?.onChangeSong(current!!, mediaPlayer)
     }
 
     fun loadAndPlay(name: String?) {
         if (name == null) return
-        Log.d("CONTROLS", "loadAndPlay: $name")
+        Logger.d("loadAndPlay: $name")
         try {
             mediaPlayer.reset()
             mediaPlayer.setDataSource(File(root, name).absolutePath)
@@ -41,7 +44,6 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
     val isPlaying: Boolean
         get() = mediaPlayer.isPlaying
 
-
     private fun resume() {
         try {
             mediaPlayer.start()
@@ -54,9 +56,7 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
     fun pause() {
         try {
             mediaPlayer.pause()
-            if (playerChangeListener != null) {
-                playerChangeListener?.onPlayingStatusChange(mediaPlayer.isPlaying)
-            }
+            playerChangeListener?.onPlayingStatusChange(mediaPlayer.isPlaying)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -95,8 +95,8 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
                 loadAndPlay(next)
             }
             ControlPlayer.ACTION_RESUME -> {
-                val next = onMusicPlayerHelperListener?.getNextSong(0)
-                loadAndPlay(next)
+                onMusicPlayerHelperListener?.onResumePaying()
+                resume()
             }
         }
     }
@@ -105,6 +105,7 @@ class MusicPlayerHelper(context: Context?, private val onMusicPlayerHelperListen
         fun onSongChange(name: String?)
         fun onRequestSongNotFound(songName: String?)
         fun getNextSong(change: Int): String?
+        fun onResumePaying()
     }
 
 }

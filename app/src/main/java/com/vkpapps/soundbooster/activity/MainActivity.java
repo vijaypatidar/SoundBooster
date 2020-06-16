@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private OnUsersUpdateListener onUsersUpdateListener;
     private MiniMediaController miniMediaController;
     private HostSongFragment currentFragment;
-    private ArrayList<String> queue;
+    private ArrayList<String> queue = new ArrayList<>();
     private int position = 0;
 
     @Override
@@ -99,20 +99,20 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
-        musicPlayer = new MusicPlayerHelper(this, this);
-
-        initMiniMediaPlayer();
+        init();
         getChoice();
 
         new UpdateManager(true).checkForUpdate(true, this);
     }
 
-    private void initMiniMediaPlayer() {
+    private void init() {
         miniMediaController = findViewById(R.id.miniController);
         miniMediaController.setOnClickListener(v -> navController.navigate(R.id.navigation_musicPlayer));
         miniMediaController.setButtonOnClick(v -> {
             onObjectCreated(new ControlPlayer(musicPlayer.isPlaying() ? ControlPlayer.ACTION_PAUSE : ControlPlayer.ACTION_RESUME, null));
         });
+        musicPlayer = new MusicPlayerHelper(this, this);
+        musicPlayer.setPlayerChangeListener(miniMediaController);
     }
 
     @Override
@@ -142,7 +142,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     private void setup(boolean host) {
         isHost = host;
-        queue = new ArrayList<>();
         if (isHost) {
             serverHelper = new ServerHelper(this, user, this);
             serverHelper.start();
@@ -275,8 +274,14 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
+    public void onResumePaying() {
+        if (isHost) {
+            serverHelper.broadcast(new ControlPlayer(ControlPlayer.ACTION_RESUME, null));
+        }
+    }
+
+    @Override
     public void onSongChange(String name) {
-        runOnUiThread(() -> miniMediaController.changeSong(name));
         position = queue.indexOf(name);
         initPlayer = true;
     }
@@ -387,7 +392,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         if (fragment instanceof DashboardFragment) {
             onUsersUpdateListener = null;
         } else if (fragment instanceof MusicPlayerFragment) {
-            musicPlayer.setPlayerChangeListener(null);
+            musicPlayer.setPlayerChangeListener(miniMediaController);
             miniMediaController.setEnableVisibilityChanges(true);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = null;

@@ -26,6 +26,8 @@ import com.vkpapps.soundbooster.interfaces.OnObjectCallbackListener;
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -132,20 +134,20 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
-    public void onChangeSong(String title, MediaPlayer mediaPlayer) {
+    public void onChangeSong(@NotNull String title, @NotNull MediaPlayer mediaPlayer) {
         Activity activity = getActivity();
         if (activity == null) return;
         activity.runOnUiThread(() -> {
             audioTitle.setText(title);
             loadCover(title);
             this.mediaPlayer = mediaPlayer;
-            setPlayPauseButton();
+            setPlayPauseButton(mediaPlayer.isPlaying());
         });
     }
 
     @Override
     public void onPlayingStatusChange(boolean isPlaying) {
-        setPlayPauseButton();
+        setPlayPauseButton(isPlaying);
     }
 
     private void loadCover(String title) {
@@ -182,7 +184,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
             timer.cancel();
     }
 
-    private void setPlayPauseButton() {
-        btnPlay.setImageResource(mediaPlayer.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
+    private void setPlayPauseButton(boolean isPlaying) {
+        btnPlay.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
     }
 }
