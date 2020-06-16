@@ -13,25 +13,14 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         MobileAds.initialize(this)
-        setDefaultUser()
+        user = UserUtils(this).loadUser()
         val storageManager = StorageManager(this)
         storageManager.allAudioFromDevice
         storageManager.deleteDir(storageManager.songDir)
     }
 
-    private fun setDefaultUser() {
-        user = UserUtils(this).loadUser()
-        if (user == null) {
-            user = User()
-            user!!.name = "RockStar"
-            user!!.userId = System.currentTimeMillis().toString()
-            UserUtils(this).setUser(user)
-        }
-    }
-
     companion object {
         @JvmStatic
-        var user: User? = null
-
+        lateinit var user: User
     }
 }

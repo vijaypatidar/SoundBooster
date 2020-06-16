@@ -36,7 +36,7 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
     @Override
     public void onBindViewHolder(@NonNull MyHolder holder, int position) {
         final ClientHelper clientHelper = users.get(position);
-        final User user = clientHelper.user;
+        final User user = clientHelper.getUser();
         holder.userName.setText(user.getName());
     }
 

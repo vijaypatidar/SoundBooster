@@ -38,7 +38,7 @@ public class DashboardFragment extends Fragment implements OnUsersUpdateListener
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        //todo only for host error
+        //Nothing to display when user is client
         if (users == null) return;
 
         clientAdapter = new ClientAdapter(users, view.getContext());

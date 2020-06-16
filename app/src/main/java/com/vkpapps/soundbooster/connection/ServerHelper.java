@@ -58,7 +58,7 @@ public class ServerHelper extends Thread implements OnClientConnectionStateListe
 
     public void sendCommandToOnly(Object command, String clientId) {
         for (ClientHelper c : clientHelpers) {
-            if (c.user.getUserId().equals(clientId)) {
+            if (c.getUser().getUserId().equals(clientId)) {
                 c.write(command);
             }
         }

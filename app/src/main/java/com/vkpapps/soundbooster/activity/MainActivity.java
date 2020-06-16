@@ -185,7 +185,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             int N = clientHelpers.size() - 1;
             for (int i = 0; i <= N; i++) {
                 ClientHelper chr = clientHelpers.get(i);
-                FileService.startActionSend(this, audio.getName(), chr.user.getUserId(), isHost, i == N);
+                FileService.startActionSend(this, audio.getName(), chr.getUser().getUserId(), isHost, i == N);
             }
         } else {
             sendCommand(new ControlFile(ControlFile.DOWNLOAD_REQUEST, audio.getName(), user.getUserId()));
@@ -243,9 +243,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             int N = clientHelpers.size() - 1;
             for (int i = 0; i <= N; i++) {
                 ClientHelper chr = clientHelpers.get(i);
-                String cid = chr.user.getUserId();
+                String cid = chr.getUser().getUserId();
                 if (!cid.equals(id)) {
-                    FileService.startActionSend(this, name, chr.user.getUserId(), isHost, i == N);
+                    FileService.startActionSend(this, name, chr.getUser().getUserId(), isHost, i == N);
                 }
             }
         }
