@@ -1,8 +1,10 @@
 package com.vkpapps.soundbooster.utils
 
 import android.content.Context
+import com.vkpapps.soundbooster.analitics.Logger.d
 import com.vkpapps.soundbooster.model.User
 import java.io.*
+import kotlin.random.Random
 
 /**
  * @author VIJAY PATIDAR
@@ -27,7 +29,8 @@ class UserUtils(val context: Context) {
         // return default user
         val user = User()
         user.name = "RockStar"
-        user.userId = System.currentTimeMillis().toString()
+        user.userId = HashUtils.getHashValue(Random.nextBytes(20))
+        d(user.userId)
         setUser(user)
         return user
     }
