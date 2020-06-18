@@ -13,7 +13,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/music_player_background">
+        android:background="@drawable/cover_background">
 
         <ImageView
             android:id="@+id/audioCover"

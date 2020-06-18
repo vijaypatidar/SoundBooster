@@ -40,7 +40,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private OnFragmentAttachStatusListener onFragmentAttachStatusListener;
     private TextView audioTitle;
-    private ImageView audioCover, fullCover, btnPlay;
+    private ImageView audioCover, btnPlay;
     private MediaPlayer mediaPlayer;
     private OnObjectCallbackListener objectCallbackListener;
     private StorageManager storageManager;
@@ -60,7 +60,6 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         storageManager = new StorageManager(view.getContext());
 
         btnPlay = view.findViewById(R.id.btnPlay);
-        fullCover = view.findViewById(R.id.coverFull);
         btnPlay.setOnClickListener(this);
         view.findViewById(R.id.btnNext).setOnClickListener(this);
         view.findViewById(R.id.btnPrevious).setOnClickListener(this);
@@ -154,7 +153,6 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         File file = new File(storageManager.getImageDir(), title);
         if (file.exists()) {
             Picasso.get().load(Uri.fromFile(file)).into(audioCover);
-            Picasso.get().load(Uri.fromFile(file)).into(fullCover);
         }
     }
 

@@ -4,15 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/music_player_background"
     tools:context=".fragments.MusicPlayerFragment">
-
-    <ImageView
-        android:id="@+id/coverFull"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alpha=".7"
-        android:scaleType="centerCrop"
-        tools:ignore="ContentDescription" />
 
     <androidx.cardview.widget.CardView
         android:id="@+id/cardView"
@@ -27,7 +20,7 @@
             android:id="@+id/audioCover"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/music_player_background"
+            android:background="@drawable/cover_background"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_default_audio_icon"
             tools:ignore="ContentDescription" />
@@ -53,15 +46,12 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/cardView"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="30dp"
         android:layout_marginStart="15dp"
-        android:alpha=".75"
-        android:background="@drawable/round_rectangle"
-        android:backgroundTint="@color/colorPrimary"
-        android:padding="5dp"
+        android:layout_marginTop="30dp"
         android:layout_marginEnd="15dp"
+        android:padding="5dp"
         android:textColor="@color/white"
-        android:textSize="16sp"
+        android:textSize="22sp"
         tools:text="vijay patidar" />
 
     <LinearLayout
@@ -70,9 +60,9 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerVertical="true"
-        android:layout_marginBottom="40dp"
         android:gravity="center"
-        android:padding="5dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
         android:orientation="horizontal">
 
         <ImageView
@@ -84,14 +74,13 @@
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardPlay"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
             android:layout_marginStart="30dp"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="30dp"
             android:layout_marginBottom="10dp"
-            android:backgroundTint="@color/colorPrimary"
-            android:padding="5dp"
+            android:backgroundTint="@color/green"
             app:cardCornerRadius="40dp"
             tools:ignore="ContentDescription">
 
@@ -99,6 +88,7 @@
                 android:id="@+id/btnPlay"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_margin="5dp"
                 android:src="@drawable/ic_play"
                 tools:ignore="ContentDescription" />
         </androidx.cardview.widget.CardView>

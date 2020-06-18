@@ -50,6 +50,7 @@ import com.vkpapps.soundbooster.model.control.ControlFile;
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
 import com.vkpapps.soundbooster.receivers.FileRequestReceiver;
 import com.vkpapps.soundbooster.service.FileService;
+import com.vkpapps.soundbooster.utils.FragmentDestinationListener;
 import com.vkpapps.soundbooster.utils.IPManager;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.UpdateManager;
@@ -100,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
+        navController.addOnDestinationChangedListener(new FragmentDestinationListener(this));
 
         init();
         getChoice();
@@ -222,7 +224,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
 
-    public void onUploadRequest(String name, String id) {
+    public void onUploadRequest(@NotNull String name, @NotNull String id) {
         // only host wil response this method
         if (isHost) {
             FileService.startActionSend(this, name, id, true, true);
