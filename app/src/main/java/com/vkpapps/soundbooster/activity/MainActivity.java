@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
+
         navController.addOnDestinationChangedListener(new FragmentDestinationListener(this));
 
         init();
@@ -189,15 +190,15 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             int N = clientHelpers.size() - 1;
             for (int i = 0; i <= N; i++) {
                 ClientHelper chr = clientHelpers.get(i);
-                FileService.startActionSend(this, audio.getName(), chr.getUser().getUserId(), isHost, i == N);
+                FileService.startActionSend(this, audio.getName(), chr.getUser().getUserId(), isHost, i == N, ControlFile.FILE_TYPE_MUSIC);
             }
         } else {
-            sendCommand(new ControlFile(ControlFile.DOWNLOAD_REQUEST, audio.getName(), user.getUserId()));
+            sendCommand(new ControlFile(ControlFile.DOWNLOAD_REQUEST, audio.getName(), user.getUserId(), ControlFile.FILE_TYPE_MUSIC));
         }
     }
 
     @Override
-    public void onHostAudioSelected(AudioModel audioModel) {
+    public void onHostAudioSelected(@NotNull AudioModel audioModel) {
         if (isHost) {
             serverHelper.broadcast(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
             musicPlayer.loadAndPlay(audioModel.getName());
@@ -227,7 +228,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onUploadRequest(@NotNull String name, @NotNull String id) {
         // only host wil response this method
         if (isHost) {
-            FileService.startActionSend(this, name, id, true, true);
+            FileService.startActionSend(this, name, id, true, true, ControlFile.FILE_TYPE_MUSIC);
         }
     }
 

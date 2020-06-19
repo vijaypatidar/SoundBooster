@@ -130,6 +130,10 @@ public class StorageManager {
         }).start();
     }
 
+    public File getProfiles() {
+        return context.getDir("profiles", MODE_PRIVATE);
+    }
+
     public interface OnStorageManagerListener {
         void onCopyComplete(File source);
     }
@@ -164,7 +168,7 @@ public class StorageManager {
                 }
             }
             // inserting null value , this null values will be replaced by adView when displayed on RecyclerView
-            for (int i = 5; i < audioModels.size(); i = i + 25) {
+            for (int i = 5; i < audioModels.size(); i = i + 45) {
                 audioModels.add(i, null);
             }
         }

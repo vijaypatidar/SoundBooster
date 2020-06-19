@@ -10,11 +10,22 @@ public class ControlFile implements Serializable {
     public static final int DOWNLOAD_REQUEST = 13;
     public static final int UPLOAD_REQUEST_CONFIRM = 14;
     public static final int DOWNLOAD_REQUEST_CONFIRM = 15;
+    public static final int FILE_TYPE_MUSIC = 16;
+    public static final int FILE_TYPE_PROFILE_PIC = 17;
 
     private int action;
     private String fileName;
     private String id;
+    private int type;
 
+    public ControlFile(int action, String fileName, String id, int type) {
+        this.action = action;
+        this.fileName = fileName;
+        this.id = id;
+        this.type = type;
+    }
+
+    @Deprecated
     public ControlFile(int action, String fileName, String id) {
         this.action = action;
         this.fileName = fileName;
@@ -51,5 +62,13 @@ public class ControlFile implements Serializable {
 
     public void setData(String fileName) {
         this.fileName = fileName;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 }

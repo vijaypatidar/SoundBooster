@@ -39,6 +39,7 @@ public class FileService extends IntentService {
     public static final String CLIENT_ID = "com.vkpapps.soundbooster.extra.CLIENT_ID";
     private static final String IS_HOST = "com.vkpapps.soundbooster.extra.IS_HOST";
     public static final String LAST_REQUEST = "com.vkpapps.soundbooster.action.IS_LAST_REQUEST";
+    private static final String FILE_TYPE = "com.vkpapps.soundbooster.action.FILE_TYPE";
     public static String HOST_ADDRESS;
 
     private File musicRoot;
@@ -49,6 +50,7 @@ public class FileService extends IntentService {
         super("FileService");
     }
 
+    @Deprecated
     public static void startActionSend(Context context, String name, String clientId, boolean isHost, boolean isLast) {
         Intent intent = new Intent(context, FileService.class);
         intent.setAction(ACTION_SEND);
@@ -59,6 +61,7 @@ public class FileService extends IntentService {
         context.startService(intent);
     }
 
+    @Deprecated
     public static void startActionReceive(Context context, String name, String clientId, boolean isHost) {
         Intent intent = new Intent(context, FileService.class);
         intent.setAction(ACTION_RECEIVE);
@@ -67,6 +70,28 @@ public class FileService extends IntentService {
         intent.putExtra(IS_HOST, isHost);
         context.startService(intent);
     }
+
+    public static void startActionSend(Context context, String name, String clientId, boolean isHost, boolean isLast, int type) {
+        Intent intent = new Intent(context, FileService.class);
+        intent.setAction(ACTION_SEND);
+        intent.putExtra(NAME, name);
+        intent.putExtra(CLIENT_ID, clientId);
+        intent.putExtra(IS_HOST, isHost);
+        intent.putExtra(FILE_TYPE, type);
+        intent.putExtra(LAST_REQUEST, isLast);
+        context.startService(intent);
+    }
+
+    public static void startActionReceive(Context context, String name, String clientId, boolean isHost, int type) {
+        Intent intent = new Intent(context, FileService.class);
+        intent.setAction(ACTION_RECEIVE);
+        intent.putExtra(NAME, name);
+        intent.putExtra(CLIENT_ID, clientId);
+        intent.putExtra(IS_HOST, isHost);
+        intent.putExtra(FILE_TYPE, type);
+        context.startService(intent);
+    }
+
 
     private Socket getSocket(boolean isHost) throws IOException {
         Socket socket;
