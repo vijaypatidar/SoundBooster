@@ -1,5 +1,6 @@
 package com.vkpapps.soundbooster.utils
 
+import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.InterstitialAd
 
@@ -8,10 +9,10 @@ import com.google.android.gms.ads.InterstitialAd
  */
 object AdsUtils {
     fun getAdRequest(adView: AdView?) {
-//        adView!!.loadAd(AdRequest.Builder().build())
+        adView?.loadAd(AdRequest.Builder().build())
     }
 
     fun getAdRequest(adView: InterstitialAd?) {
-//        adView!!.loadAd(AdRequest.Builder().build())
+        adView?.loadAd(AdRequest.Builder().build())
     }
 }

@@ -9,6 +9,7 @@ import android.media.MediaMetadataRetriever;
 
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.vkpapps.soundbooster.model.control.ControlFile;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
@@ -123,22 +124,23 @@ public class FileService extends IntentService {
             final String clientId = intent.getStringExtra(CLIENT_ID);
             final boolean isHost = intent.getBooleanExtra(IS_HOST, false);
             final boolean isLast = intent.getBooleanExtra(LAST_REQUEST, false);
+            final int type = intent.getIntExtra(FILE_TYPE, ControlFile.FILE_TYPE_MUSIC);
             d("onHandleIntent: " + action + "  " + clientId + "  " + isHost);
             if (ACTION_SEND.equals(action)) {
-                handleActionSend(name, clientId, isHost, isLast);
+                handleActionSend(name, clientId, isHost, isLast, type);
             } else if (ACTION_RECEIVE.equals(action)) {
-                handleActionReceive(name, clientId, isHost);
+                handleActionReceive(name, clientId, isHost, type);
             }
         }
     }
 
-    private void handleActionReceive(String name, String clientId, boolean isHost) {
+    private void handleActionReceive(String name, String clientId, boolean isHost, int type) {
         try {
             d("handleActionReceive: " + name + " " + isHost);
             onAccepted(name, clientId, false);
             Socket socket = getSocket(isHost);
             InputStream in = socket.getInputStream();
-            File file = new File(musicRoot, name.trim());
+            File file = new File(type == ControlFile.FILE_TYPE_MUSIC ? musicRoot : new StorageManager(this).getProfiles(), name.trim());
             OutputStream out = new FileOutputStream(file);
             byte[] bytes = new byte[2 * 1024];
             int count;
@@ -157,12 +159,12 @@ public class FileService extends IntentService {
         }
     }
 
-    private void handleActionSend(String name, String clientId, boolean isHost, boolean isLast) {
+    private void handleActionSend(String name, String clientId, boolean isHost, boolean isLast, int type) {
         try {
             d("handleActionSend: " + name + "  " + clientId + "  " + isHost);
             onAccepted(name, clientId, true);
             Socket socket = getSocket(isHost);
-            File file = new File(musicRoot, name.trim());
+            File file = new File(type == ControlFile.FILE_TYPE_MUSIC ? musicRoot : new StorageManager(this).getProfiles(), name.trim());
             InputStream inputStream = new FileInputStream(file);
             OutputStream outputStream = socket.getOutputStream();
             byte[] bytes = new byte[2 * 1024];

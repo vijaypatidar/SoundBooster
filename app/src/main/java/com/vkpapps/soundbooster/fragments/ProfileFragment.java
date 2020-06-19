@@ -17,8 +17,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.App;
 import com.vkpapps.soundbooster.R;
@@ -35,7 +35,7 @@ import java.io.IOException;
 /**
  * @author VIJAY PATIDAR
  */
-public class ProfileFragment extends Fragment {
+public class ProfileFragment extends BottomSheetDialogFragment {
 
     private User user;
     private ImageView userPic;
