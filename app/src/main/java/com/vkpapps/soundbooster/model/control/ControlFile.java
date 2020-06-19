@@ -25,13 +25,6 @@ public class ControlFile implements Serializable {
         this.type = type;
     }
 
-    @Deprecated
-    public ControlFile(int action, String fileName, String id) {
-        this.action = action;
-        this.fileName = fileName;
-        this.id = id;
-    }
-
     public String getFileName() {
         return fileName;
     }

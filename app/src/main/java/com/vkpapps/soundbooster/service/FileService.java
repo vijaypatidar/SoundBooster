@@ -40,7 +40,7 @@ public class FileService extends IntentService {
     public static final String CLIENT_ID = "com.vkpapps.soundbooster.extra.CLIENT_ID";
     private static final String IS_HOST = "com.vkpapps.soundbooster.extra.IS_HOST";
     public static final String LAST_REQUEST = "com.vkpapps.soundbooster.action.IS_LAST_REQUEST";
-    private static final String FILE_TYPE = "com.vkpapps.soundbooster.action.FILE_TYPE";
+    public static final String FILE_TYPE = "com.vkpapps.soundbooster.action.FILE_TYPE";
     public static String HOST_ADDRESS;
 
     private File musicRoot;
@@ -49,27 +49,6 @@ public class FileService extends IntentService {
 
     public FileService() {
         super("FileService");
-    }
-
-    @Deprecated
-    public static void startActionSend(Context context, String name, String clientId, boolean isHost, boolean isLast) {
-        Intent intent = new Intent(context, FileService.class);
-        intent.setAction(ACTION_SEND);
-        intent.putExtra(NAME, name);
-        intent.putExtra(CLIENT_ID, clientId);
-        intent.putExtra(IS_HOST, isHost);
-        intent.putExtra(LAST_REQUEST, isLast);
-        context.startService(intent);
-    }
-
-    @Deprecated
-    public static void startActionReceive(Context context, String name, String clientId, boolean isHost) {
-        Intent intent = new Intent(context, FileService.class);
-        intent.setAction(ACTION_RECEIVE);
-        intent.putExtra(NAME, name);
-        intent.putExtra(CLIENT_ID, clientId);
-        intent.putExtra(IS_HOST, isHost);
-        context.startService(intent);
     }
 
     public static void startActionSend(Context context, String name, String clientId, boolean isHost, boolean isLast, int type) {
@@ -125,7 +104,7 @@ public class FileService extends IntentService {
             final boolean isHost = intent.getBooleanExtra(IS_HOST, false);
             final boolean isLast = intent.getBooleanExtra(LAST_REQUEST, false);
             final int type = intent.getIntExtra(FILE_TYPE, ControlFile.FILE_TYPE_MUSIC);
-            d("onHandleIntent: " + action + "  " + clientId + "  " + isHost);
+            d("onHandleIntent: " + action + "  " + clientId + "  " + isHost + " type " + type);
             if (ACTION_SEND.equals(action)) {
                 handleActionSend(name, clientId, isHost, isLast, type);
             } else if (ACTION_RECEIVE.equals(action)) {
@@ -137,7 +116,7 @@ public class FileService extends IntentService {
     private void handleActionReceive(String name, String clientId, boolean isHost, int type) {
         try {
             d("handleActionReceive: " + name + " " + isHost);
-            onAccepted(name, clientId, false);
+            onAccepted(name, clientId, false, type);
             Socket socket = getSocket(isHost);
             InputStream in = socket.getInputStream();
             File file = new File(type == ControlFile.FILE_TYPE_MUSIC ? musicRoot : new StorageManager(this).getProfiles(), name.trim());
@@ -151,10 +130,10 @@ public class FileService extends IntentService {
             out.flush();
             out.close();
             socket.close();
-            onSuccess(name, false);
-            saveCover(name);
+            onSuccess(name, false, type);
+            saveCover(name, type);
         } catch (IOException e) {
-            onFailed(name);
+            onFailed(name, type);
             e.printStackTrace();
         }
     }
@@ -162,7 +141,7 @@ public class FileService extends IntentService {
     private void handleActionSend(String name, String clientId, boolean isHost, boolean isLast, int type) {
         try {
             d("handleActionSend: " + name + "  " + clientId + "  " + isHost);
-            onAccepted(name, clientId, true);
+            onAccepted(name, clientId, true, type);
             Socket socket = getSocket(isHost);
             File file = new File(type == ControlFile.FILE_TYPE_MUSIC ? musicRoot : new StorageManager(this).getProfiles(), name.trim());
             InputStream inputStream = new FileInputStream(file);
@@ -176,54 +155,59 @@ public class FileService extends IntentService {
             outputStream.close();
             inputStream.close();
             socket.close();
-            onSuccess(name, isLast);
+            onSuccess(name, isLast, type);
         } catch (IOException e) {
-            onFailed(name);
+            onFailed(name, type);
             e.printStackTrace();
         }
     }
 
-    private void onSuccess(String name, boolean isLast) {
+    private void onSuccess(String name, boolean isLast, int type) {
         d("onSuccess:  " + name);
         Intent intent = new Intent(STATUS_SUCCESS);
         intent.putExtra(NAME, name);
         intent.putExtra(LAST_REQUEST, isLast);
+        intent.putExtra(FILE_TYPE, type);
         localBroadcastManager.sendBroadcast(intent);
     }
 
-    private void onFailed(String name) {
+    private void onFailed(String name, int type) {
         e("onFailed:  " + name);
         Intent intent = new Intent(STATUS_FAILED);
         intent.putExtra(NAME, name);
+        intent.putExtra(FILE_TYPE, type);
         localBroadcastManager.sendBroadcast(intent);
     }
 
-    private void onAccepted(String name, String clientID, boolean send) {
+    private void onAccepted(String name, String clientID, boolean send, int type) {
         i("onAccepted: " + name + "   " + send);
         Intent intent = new Intent(REQUEST_ACCEPTED);
         intent.putExtra(NAME, name);
         intent.putExtra(ACTION_SEND, send);
+        intent.putExtra(FILE_TYPE, type);
         intent.putExtra(CLIENT_ID, clientID);
         localBroadcastManager.sendBroadcast(intent);
     }
 
-    private void saveCover(String name) {
-        try {
-            MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-            mmr.setDataSource(new File(musicRoot, name).getAbsolutePath());
+    private void saveCover(String name, int type) {
+        if (ControlFile.FILE_TYPE_MUSIC == type) {
+            try {
+                MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+                mmr.setDataSource(new File(musicRoot, name).getAbsolutePath());
 
-            byte[] data = mmr.getEmbeddedPicture();
+                byte[] data = mmr.getEmbeddedPicture();
 
-            if (data != null) {
-                //destination for saving file
-                File file = new File(imageRoot, name);
-                FileOutputStream fos = new FileOutputStream(file);
-                // decoding byte array to a bitmap
-                Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                if (data != null) {
+                    //destination for saving file
+                    File file = new File(imageRoot, name);
+                    FileOutputStream fos = new FileOutputStream(file);
+                    // decoding byte array to a bitmap
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 }

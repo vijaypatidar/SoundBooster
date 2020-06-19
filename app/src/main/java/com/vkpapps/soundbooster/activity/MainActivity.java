@@ -229,24 +229,17 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
 
-    public void onUploadRequest(@NotNull String name, @NotNull String id) {
-        // only host wil response this method
-        if (isHost) {
-            FileService.startActionSend(this, name, id, true, true, ControlFile.FILE_TYPE_MUSIC);
-        }
-    }
-
     @Override
     public void onMusicPlayerControl(@NotNull ControlPlayer controlPlayer) {
         musicPlayer.handleControl(controlPlayer);
     }
 
-    public void onDownloadRequest(@NotNull String name, @NotNull String id) {
-        Logger.d("onDownloadRequest: " + id + " title =  " + name);
+    @Override
+    public void onDownloadRequest(@NotNull String name, @NotNull String id, int type) {
         // only host wil response this method
         if (isHost) {
             // prepare file receive from client
-            FileService.startActionReceive(this, name, id, true);
+            FileService.startActionReceive(this, name, id, true, type);
             // prepare send request for all other client except the sender of that file
             ArrayList<ClientHelper> clientHelpers = serverHelper.getClientHelpers();
             int N = clientHelpers.size() - 1;
@@ -254,22 +247,29 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 ClientHelper chr = clientHelpers.get(i);
                 String cid = chr.getUser().getUserId();
                 if (!cid.equals(id)) {
-                    FileService.startActionSend(this, name, chr.getUser().getUserId(), isHost, i == N);
+                    FileService.startActionSend(this, name, chr.getUser().getUserId(), isHost, i == N, type);
                 }
             }
         }
     }
 
-    public void onUploadRequestAccepted(@NotNull String name, @NotNull String id) {
+    public void onUploadRequestAccepted(@NotNull String name, @NotNull String id, int type) {
         // receiver requested file or sent by host itself
-        FileService.startActionReceive(this, name, id, isHost);
+        FileService.startActionReceive(this, name, id, isHost, type);
+    }
+
+    public void onUploadRequest(@NotNull String name, @NotNull String id, int type) {
+        // only host wil response this method
+        if (isHost) {
+            FileService.startActionSend(this, name, id, true, true, type);
+        }
     }
 
 
-    public void onDownloadRequestAccepted(@NotNull String name, @NotNull String id) {
+    public void onDownloadRequestAccepted(@NotNull String name, @NotNull String id, int type) {
         //only client need to handle this , not for host
         // send requested file to client sent request
-        FileService.startActionSend(this, name, id, isHost, false);
+        FileService.startActionSend(this, name, id, isHost, false, type);
     }
 
     @Override
@@ -299,47 +299,55 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     @Override
     public void onRequestSongNotFound(String songName) {
         if (!isHost)
-            sendCommand(new ControlFile(ControlFile.UPLOAD_REQUEST, songName, user.getUserId()));
+            sendCommand(new ControlFile(ControlFile.UPLOAD_REQUEST, songName, user.getUserId(), ControlFile.FILE_TYPE_MUSIC));
     }
 
 
     @Override
-    public void onRequestFailed(String name) {
-        Logger.d("onRequestFailed: " + name);
+    public void onRequestFailed(String name, int type) {
+        Logger.d("onRequestFailed: " + name + "  type " + type);
     }
 
     @Override
-    public void onRequestAccepted(String name, boolean send, String clientId) {
+    public void onRequestAccepted(String name, boolean send, String clientId, int type) {
         Logger.d("onRequestAccepted: " + name + "  " + send);
-        ControlFile controlFile = new ControlFile(send ? ControlFile.UPLOAD_REQUEST_CONFIRM : ControlFile.DOWNLOAD_REQUEST_CONFIRM, name, user.getUserId());
+        ControlFile controlFile = new ControlFile(send ? ControlFile.UPLOAD_REQUEST_CONFIRM : ControlFile.DOWNLOAD_REQUEST_CONFIRM, name, user.getUserId(), type);
         serverHelper.sendCommandToOnly(controlFile, clientId);
     }
 
     @Override
-    public void onRequestSuccess(String name, boolean isLastRequest) {
+    public void onRequestSuccess(String name, boolean isLastRequest, int type) {
         Logger.d("onRequestSuccess: " + name + "   " + isLastRequest);
-        if (isLastRequest) {
-            // update host song list
-            if (currentFragment != null) {
-                currentFragment.refreshSong();
+        if (type == ControlFile.FILE_TYPE_MUSIC) {
+            if (isLastRequest) {
+                // update host song list
+                if (currentFragment != null) {
+                    currentFragment.refreshSong();
+                }
+                if (isHost) {
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(1100);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        onHostAudioSelected(new AudioModel(name));
+                    }).start();
+                }
             }
-            if (isHost) {
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(1100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    onHostAudioSelected(new AudioModel(name));
-                }).start();
-            }
+        } else {
+            // TODO profile pic receive
         }
     }
 
     @Override
     public void onClientConnected(@NotNull ClientHelper clientHelper) {
-        if (onUsersUpdateListener != null && isHost) {
-            runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
+        if (isHost) {
+            if (onUsersUpdateListener != null) {
+                runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
+            }
+        } else {
+            sendCommand(new ControlFile(ControlFile.DOWNLOAD_REQUEST, user.getUserId(), user.getUserId(), ControlFile.FILE_TYPE_PROFILE_PIC));
         }
     }
 

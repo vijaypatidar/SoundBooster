@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="3dp"
+    android:layout_margin="5dp"
     android:orientation="horizontal"
     app:cardCornerRadius="50pt"
     app:cardElevation="3dp">
@@ -21,10 +21,11 @@
             android:layout_centerVertical="true"
             android:overScrollMode="never"
             app:cardCornerRadius="25dp"
-            app:cardElevation="5dp"
+            android:elevation="5dp"
             app:cardPreventCornerOverlap="true">
 
             <ImageView
+                android:id="@+id/profilePic"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"

@@ -34,6 +34,7 @@ class ClientHelper(private val socket: Socket, private val onControlRequestListe
 
                 //notify user added
                 onClientConnectionStateListener?.onClientConnected(this)
+                var retry = 0
                 while (!socket.isClosed) {
                     try {
                         obj = inputStream.readObject()
@@ -50,6 +51,8 @@ class ClientHelper(private val socket: Socket, private val onControlRequestListe
                             Logger.e("invalid object received $obj")
                         }
                     } catch (e: Exception) {
+                        retry++
+                        if (retry == 10) break
                         e.printStackTrace()
                     }
                 }
@@ -77,10 +80,10 @@ class ClientHelper(private val socket: Socket, private val onControlRequestListe
     private fun handleFileControl(control: ControlFile) {
         try {
             when (control.action) {
-                ControlFile.DOWNLOAD_REQUEST -> onControlRequestListener.onDownloadRequest(control.data, control.id)
-                ControlFile.UPLOAD_REQUEST -> onControlRequestListener.onUploadRequest(control.data, control.id)
-                ControlFile.DOWNLOAD_REQUEST_CONFIRM -> onControlRequestListener.onDownloadRequestAccepted(control.data, control.id)
-                ControlFile.UPLOAD_REQUEST_CONFIRM -> onControlRequestListener.onUploadRequestAccepted(control.data, control.id)
+                ControlFile.DOWNLOAD_REQUEST -> onControlRequestListener.onDownloadRequest(control.data, control.id, control.type)
+                ControlFile.UPLOAD_REQUEST -> onControlRequestListener.onUploadRequest(control.data, control.id, control.type)
+                ControlFile.DOWNLOAD_REQUEST_CONFIRM -> onControlRequestListener.onDownloadRequestAccepted(control.data, control.id, control.type)
+                ControlFile.UPLOAD_REQUEST_CONFIRM -> onControlRequestListener.onUploadRequestAccepted(control.data, control.id, control.type)
                 else -> Logger.d("handleFileControl: invalid req " + control.action)
             }
         } catch (e: NullPointerException) {
