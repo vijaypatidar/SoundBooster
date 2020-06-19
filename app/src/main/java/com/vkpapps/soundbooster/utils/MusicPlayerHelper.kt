@@ -1,34 +1,23 @@
 package com.vkpapps.soundbooster.utils
 
 import android.content.Context
+import android.content.Intent
 import android.media.MediaPlayer
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.vkpapps.soundbooster.analitics.Logger
-import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener
 import com.vkpapps.soundbooster.model.control.ControlPlayer
+import com.vkpapps.soundbooster.receivers.MediaChangeReceiver
 import java.io.File
 import java.io.IOException
 
 /***
  * @author VIJAY PATIDAR
  */
-class MusicPlayerHelper(context: Context?) {
+class MusicPlayerHelper(private val context: Context) {
     private val mediaPlayer = MediaPlayer()
     private val root: File = StorageManager(context).songDir
-    private var playerChangeListener: OnMediaPlayerChangeListener? = null
     private var onMusicPlayerHelperListener: OnMusicPlayerHelperListener? = null
     private var current: String? = null
-
-    fun setPlayerChangeListener(playerChangeListener: OnMediaPlayerChangeListener?) {
-        this.playerChangeListener = playerChangeListener
-        playerChangeListener?.onPlayingStatusChange(mediaPlayer.isPlaying)
-        if (current != null)
-            playerChangeListener?.onChangeSong(current!!, mediaPlayer)
-    }
-
-    fun setOnMusicPlayerHelperListener(onMusicPlayerHelperListener: OnMusicPlayerHelperListener) {
-        this.onMusicPlayerHelperListener = onMusicPlayerHelperListener
-    }
-
 
     fun loadAndPlay(name: String?) {
         if (name == null) return
@@ -40,12 +29,13 @@ class MusicPlayerHelper(context: Context?) {
             mediaPlayer.start()
             current = name
             onMusicPlayerHelperListener?.onSongChange(name)
-            playerChangeListener?.onChangeSong(name, mediaPlayer)
+            sendLocalBroadcast(ControlPlayer.ACTION_PLAY, name)
         } catch (e: IOException) {
             onMusicPlayerHelperListener?.onRequestSongNotFound(name)
             e.printStackTrace()
         }
     }
+
 
     val isPlaying: Boolean
         get() = mediaPlayer.isPlaying
@@ -53,7 +43,7 @@ class MusicPlayerHelper(context: Context?) {
     private fun resume() {
         try {
             mediaPlayer.start()
-            playerChangeListener?.onPlayingStatusChange(mediaPlayer.isPlaying)
+            sendLocalBroadcast(ControlPlayer.ACTION_RESUME)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -62,7 +52,7 @@ class MusicPlayerHelper(context: Context?) {
     fun pause() {
         try {
             mediaPlayer.pause()
-            playerChangeListener?.onPlayingStatusChange(mediaPlayer.isPlaying)
+            sendLocalBroadcast(ControlPlayer.ACTION_PAUSE)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -79,9 +69,6 @@ class MusicPlayerHelper(context: Context?) {
     private fun setVolume(vol: Float) {
         try {
             mediaPlayer.setVolume(vol, vol)
-            if (playerChangeListener != null) {
-                playerChangeListener?.onVolumeChange(vol)
-            }
         } catch (ignored: Exception) {
         }
     }
@@ -107,11 +94,33 @@ class MusicPlayerHelper(context: Context?) {
         }
     }
 
+    fun getMediaPlayer(): MediaPlayer {
+        return mediaPlayer
+    }
+
+    private fun sendLocalBroadcast(action: Int, data: String = "") {
+        Logger.d("$action  $data")
+        val intent = Intent(MediaChangeReceiver.MEDIA_PLAYER_CHANGE)
+        intent.putExtra(MediaChangeReceiver.PARAM_ACTION_TYPE, action)
+        intent.putExtra(MediaChangeReceiver.PARAM_ACTION_DATA, data)
+        LocalBroadcastManager.getInstance(context).sendBroadcast(intent)
+    }
+
     interface OnMusicPlayerHelperListener {
+
         fun onSongChange(name: String?)
         fun onRequestSongNotFound(songName: String?)
         fun getNextSong(change: Int): String?
         fun onResumePaying()
     }
+
+    fun setOnMusicPlayerHelperListener(onMusicPlayerHelperListener: OnMusicPlayerHelperListener) {
+        this.onMusicPlayerHelperListener = onMusicPlayerHelperListener
+    }
+
+    fun getCurrentSongName(): String? {
+        return current
+    }
+
 
 }

@@ -49,6 +49,7 @@ import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.model.control.ControlFile;
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
 import com.vkpapps.soundbooster.receivers.FileRequestReceiver;
+import com.vkpapps.soundbooster.receivers.MediaChangeReceiver;
 import com.vkpapps.soundbooster.service.FileService;
 import com.vkpapps.soundbooster.utils.FragmentDestinationListener;
 import com.vkpapps.soundbooster.utils.IPManager;
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private HostSongFragment currentFragment;
     private ArrayList<String> queue = new ArrayList<>();
     private int position = 0;
+    private MediaChangeReceiver mediaChangeReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,8 +108,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
         init();
         getChoice();
-
         new UpdateManager(true).checkForUpdate(true, this);
+
     }
 
     private void init() {
@@ -118,7 +120,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         });
         musicPlayer = App.Companion.getMusicPlayerHelper();
         musicPlayer.setOnMusicPlayerHelperListener(this);
-        musicPlayer.setPlayerChangeListener(miniMediaController);
+        mediaChangeReceiver = new MediaChangeReceiver();
+        mediaChangeReceiver.addOnMediaPlayerChangeListener(miniMediaController);
+        LocalBroadcastManager.getInstance(this).registerReceiver(mediaChangeReceiver, new IntentFilter(MediaChangeReceiver.MEDIA_PLAYER_CHANGE));
     }
 
     @Override
@@ -387,7 +391,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             onUsersUpdateListener = (OnUsersUpdateListener) fragment;
         } else if (fragment instanceof MusicPlayerFragment) {
             miniMediaController.setEnableVisibilityChanges(false);
-            musicPlayer.setPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
+            mediaChangeReceiver.addOnMediaPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = (HostSongFragment) fragment;
         }
@@ -398,7 +402,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         if (fragment instanceof DashboardFragment) {
             onUsersUpdateListener = null;
         } else if (fragment instanceof MusicPlayerFragment) {
-            musicPlayer.setPlayerChangeListener(miniMediaController);
+            mediaChangeReceiver.removeOnMediaPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
             miniMediaController.setEnableVisibilityChanges(true);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = null;
@@ -457,5 +461,11 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         } else {
             Toast.makeText(this, "Storage permission required!", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mediaChangeReceiver);
     }
 }

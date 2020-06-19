@@ -40,16 +40,16 @@ class ServerHelper(private val onControlRequestListener: OnControlRequestListene
         }
     }
 
-    fun broadcast(command: Any?) {
+    fun broadcast(command: Any) {
         for (c in clientHelpers) {
-            c.write(command!!)
+            c.write(command)
         }
     }
 
-    fun sendCommandToOnly(command: Any?, clientId: String) {
+    fun sendCommandToOnly(command: Any, clientId: String) {
         for (c in clientHelpers) {
             if (c.user.userId == clientId) {
-                c.write(command!!)
+                c.write(command)
             }
         }
     }

@@ -17,7 +17,9 @@ class App : Application() {
         user = UserUtils(this).loadUser()
         musicPlayerHelper = MusicPlayerHelper(this)
         val storageManager = StorageManager(this)
-        storageManager.allAudioFromDevice
+        Thread {
+            storageManager.allAudioFromDevice
+        }.start()
         storageManager.deleteDir(storageManager.songDir)
     }
 

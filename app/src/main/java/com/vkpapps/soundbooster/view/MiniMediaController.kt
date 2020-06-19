@@ -10,6 +10,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import com.squareup.picasso.Picasso
+import com.vkpapps.soundbooster.App
 import com.vkpapps.soundbooster.R
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener
 import com.vkpapps.soundbooster.utils.StorageManager
@@ -24,6 +25,7 @@ class MiniMediaController : FrameLayout, OnMediaPlayerChangeListener {
     private var btnPlay: ImageButton? = null
     private var enableVisibilityChanges = true
     private var imageRoot: File? = null
+    private var mediaPlayer: MediaPlayer = App.musicPlayerHelper.getMediaPlayer()
 
     constructor(context: Context, attrs: AttributeSet?, defStyle: Int) : super(context, attrs, defStyle) {
         initView()
@@ -54,7 +56,7 @@ class MiniMediaController : FrameLayout, OnMediaPlayerChangeListener {
         btnPlay?.setImageResource(if (isPlaying) R.drawable.ic_pause else R.drawable.ic_play)
     }
 
-    override fun onChangeSong(title: String, mediaPlayer: MediaPlayer) {
+    override fun onChangeSong(title: String) {
         if (enableVisibilityChanges) {
             visibility = View.VISIBLE
         }

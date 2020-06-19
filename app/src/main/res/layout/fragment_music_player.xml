@@ -81,7 +81,7 @@
             android:layout_marginEnd="30dp"
             android:layout_marginBottom="10dp"
             android:backgroundTint="@color/green"
-            app:cardCornerRadius="40dp"
+            app:cardCornerRadius="30dp"
             tools:ignore="ContentDescription">
 
             <ImageView
