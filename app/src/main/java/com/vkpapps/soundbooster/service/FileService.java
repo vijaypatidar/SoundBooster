@@ -77,7 +77,7 @@ public class FileService extends IntentService {
         Socket socket;
         if (isHost) {
             try (ServerSocket serverSocket = new ServerSocket(15448)) {
-                serverSocket.setSoTimeout(4000);
+                serverSocket.setSoTimeout(2000);
                 socket = serverSocket.accept();
             }
         } else {

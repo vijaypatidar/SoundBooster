@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
@@ -33,6 +34,7 @@ import com.vkpapps.soundbooster.connection.ServerHelper;
 import com.vkpapps.soundbooster.fragments.DashboardFragment;
 import com.vkpapps.soundbooster.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.fragments.MusicPlayerFragment;
+import com.vkpapps.soundbooster.fragments.ProfileFragment;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
 import com.vkpapps.soundbooster.interfaces.OnControlRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
@@ -63,6 +65,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -115,9 +118,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private void init() {
         miniMediaController = findViewById(R.id.miniController);
         miniMediaController.setOnClickListener(v -> navController.navigate(R.id.navigation_musicPlayer));
-        miniMediaController.setButtonOnClick(v -> {
-            onObjectCreated(new ControlPlayer(musicPlayer.isPlaying() ? ControlPlayer.ACTION_PAUSE : ControlPlayer.ACTION_RESUME, null));
-        });
+        miniMediaController.setButtonOnClick(v -> onObjectCreated(new ControlPlayer(musicPlayer.isPlaying() ? ControlPlayer.ACTION_PAUSE : ControlPlayer.ACTION_RESUME, null)));
         musicPlayer = App.Companion.getMusicPlayerHelper();
         musicPlayer.setOnMusicPlayerHelperListener(this);
         mediaChangeReceiver = new MediaChangeReceiver();
@@ -197,7 +198,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 FileService.startActionSend(this, audio.getName(), chr.getUser().getUserId(), isHost, i == N, ControlFile.FILE_TYPE_MUSIC);
             }
         } else {
-            sendCommand(new ControlFile(ControlFile.DOWNLOAD_REQUEST, audio.getName(), user.getUserId(), ControlFile.FILE_TYPE_MUSIC));
+            clientHelper.write(new ControlFile(ControlFile.DOWNLOAD_REQUEST, audio.getName(), user.getUserId(), ControlFile.FILE_TYPE_MUSIC));
         }
     }
 
@@ -207,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             serverHelper.broadcast(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
             musicPlayer.loadAndPlay(audioModel.getName());
         } else {
-            sendCommand(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
+            clientHelper.write(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
         }
     }
 
@@ -299,7 +300,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     @Override
     public void onRequestSongNotFound(String songName) {
         if (!isHost)
-            sendCommand(new ControlFile(ControlFile.UPLOAD_REQUEST, songName, user.getUserId(), ControlFile.FILE_TYPE_MUSIC));
+            clientHelper.write(new ControlFile(ControlFile.UPLOAD_REQUEST, songName, user.getUserId(), ControlFile.FILE_TYPE_MUSIC));
     }
 
 
@@ -327,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 if (isHost) {
                     new Thread(() -> {
                         try {
-                            Thread.sleep(1100);
+                            Thread.sleep(1500);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -335,9 +336,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                     }).start();
                 }
             }
-        } else {
-            // TODO profile pic receive
         }
+
     }
 
     @Override
@@ -347,7 +347,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
             }
         } else {
-            sendCommand(new ControlFile(ControlFile.DOWNLOAD_REQUEST, user.getUserId(), user.getUserId(), ControlFile.FILE_TYPE_PROFILE_PIC));
+            clientHelper.write(new ControlFile(ControlFile.DOWNLOAD_REQUEST, user.getUserId(), user.getUserId(), ControlFile.FILE_TYPE_PROFILE_PIC));
         }
     }
 
@@ -397,7 +397,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         if (serverHelper != null) {
             return serverHelper.getClientHelpers();
         }
-        return null;
+        return new ArrayList<>(Collections.singleton(clientHelper));
     }
 
     @Override
@@ -409,6 +409,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             mediaChangeReceiver.addOnMediaPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = (HostSongFragment) fragment;
+        } else if (fragment instanceof ProfileFragment) {
+            miniMediaController.setEnableVisibilityChanges(false);
         }
     }
 
@@ -421,6 +423,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             miniMediaController.setEnableVisibilityChanges(true);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = null;
+        } else if (fragment instanceof ProfileFragment) {
+            miniMediaController.setEnableVisibilityChanges(true);
+            send(user);
         }
     }
 
@@ -432,17 +437,14 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 musicPlayer.handleControl((ControlPlayer) control);
             }
         } else {
-            sendCommand(control);
+            clientHelper.write(control);
         }
-    }
-
-    private void sendCommand(Object command) {
-        clientHelper.write(command);
     }
 
     @Override
     public void onBackPressed() {
-        if (navController.getCurrentDestination().getId() == R.id.navigation_home) {
+        NavDestination currentDestination = navController.getCurrentDestination();
+        if (currentDestination != null && currentDestination.getId() == R.id.navigation_home) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Are you want to exit?");
             builder.setPositiveButton("Yes", (dialog, which) -> {
@@ -483,4 +485,13 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         super.onDestroy();
         unregisterReceiver(mediaChangeReceiver);
     }
+
+    private void send(Object o) {
+        if (isHost) {
+            serverHelper.broadcast(o);
+        } else {
+            clientHelper.write(o);
+        }
+    }
+
 }

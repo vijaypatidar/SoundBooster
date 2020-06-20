@@ -40,6 +40,7 @@ class ClientHelper(private val socket: Socket, private val onControlRequestListe
                         obj = inputStream.readObject()
                         if (obj is ControlPlayer) {
                             onControlRequestListener.onMusicPlayerControl(obj)
+                            onObjectReceiveListener?.onObjectReceive(obj)
                         } else if (obj is ControlFile) {
                             handleFileControl(obj)
                         } else if (obj is User) {
