@@ -5,7 +5,7 @@
     app:startDestination="@+id/navigation_home">
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.vkpapps.soundbooster.fragments.HostSongFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.HostSongFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_host_song">
 
@@ -17,25 +17,25 @@
     </fragment>
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.vkpapps.soundbooster.fragments.DashboardFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.DashboardFragment"
         android:label="@string/title_dashboard"
         tools:layout="@layout/fragment_dashboard" />
 
     <fragment
         android:id="@+id/navigation_local"
-        android:name="com.vkpapps.soundbooster.fragments.LocalSongFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.LocalSongFragment"
         android:label="@string/title_my_song"
         tools:layout="@layout/fragment_local_song">
 
     </fragment>
     <fragment
         android:id="@+id/navigation_profile"
-        android:name="com.vkpapps.soundbooster.fragments.ProfileFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_user_detail" />
     <fragment
         android:id="@+id/navigation_musicPlayer"
-        android:name="com.vkpapps.soundbooster.fragments.MusicPlayerFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.MusicPlayerFragment"
         android:label="Music Player"
         tools:layout="@layout/fragment_music_player" />
 </navigation>

@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.view
+package com.vkpapps.soundbooster.ui.view
 
 import android.content.Context
 import android.media.MediaPlayer
@@ -78,5 +78,9 @@ class MiniMediaController : FrameLayout, OnMediaPlayerChangeListener {
 
     fun setEnableVisibilityChanges(enableVisibilityChanges: Boolean) {
         this.enableVisibilityChanges = enableVisibilityChanges
+    }
+
+    override fun setVisibility(visibility: Int) {
+        if (enableVisibilityChanges) super.setVisibility(visibility)
     }
 }

@@ -22,7 +22,7 @@
             android:background="@color/colorPrimary"
             android:scaleType="centerCrop"
             tools:ignore="ContentDescription"
-            tools:src="@drawable/ic_music" />
+            android:src="@drawable/ic_music" />
 
         <TextView
             android:id="@+id/audioTitle"

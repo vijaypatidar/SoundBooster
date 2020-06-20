@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.fragments;
+package com.vkpapps.soundbooster.ui.fragments;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -16,10 +16,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.adapter.HostedAudioAdapter;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
+import com.vkpapps.soundbooster.ui.adapter.HostedAudioAdapter;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.StorageManager;
 

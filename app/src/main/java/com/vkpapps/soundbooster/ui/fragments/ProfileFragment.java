@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.fragments;
+package com.vkpapps.soundbooster.ui.fragments;
 
 import android.app.Activity;
 import android.content.Context;
@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -17,12 +18,13 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.navigation.Navigation;
 
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
 import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.App;
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.interfaces.OnFragmentPopBackListener;
+import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.StorageManager;
@@ -32,6 +34,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import static android.content.Context.INPUT_METHOD_SERVICE;
+
 /**
  * @author VIJAY PATIDAR
  */
@@ -40,12 +44,11 @@ public class ProfileFragment extends BottomSheetDialogFragment {
     private User user;
     private ImageView userPic;
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
-    private OnFragmentPopBackListener onFragmentPopBackListener;
+    private OnFragmentAttachStatusListener onFragmentAttachStatusListener;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        // This callback will only be called when MyFragment is at least Started.
         return inflater.inflate(R.layout.fragment_user_detail, container, false);
     }
 
@@ -72,10 +75,18 @@ public class ProfileFragment extends BottomSheetDialogFragment {
             String name = editTextName.getText().toString().trim();
             if (!name.isEmpty()) {
                 user.setName(name);
+                editTextName.clearFocus();
                 new UserUtils(v.getContext()).setUser(user);
                 Toast.makeText(view.getContext(), "Profile Updated", Toast.LENGTH_SHORT).show();
-                onFragmentPopBackListener.onPopBackStack();
+                Navigation.findNavController(v).popBackStack();
                 savePic(userPic);
+                //hide keyboard
+                try {
+                    InputMethodManager inputMethodManager = (InputMethodManager) requireActivity().getSystemService(INPUT_METHOD_SERVICE);
+                    inputMethodManager.hideSoftInputFromWindow(requireActivity().getCurrentFocus().getWindowToken(), 0);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             } else {
                 editTextName.setError("name required!");
             }
@@ -118,8 +129,8 @@ public class ProfileFragment extends BottomSheetDialogFragment {
             onNavigationVisibilityListener = (OnNavigationVisibilityListener) context;
             onNavigationVisibilityListener.onNavVisibilityChange(false);
         }
-        if (context instanceof OnFragmentPopBackListener) {
-            onFragmentPopBackListener = (OnFragmentPopBackListener) context;
+        if (context instanceof OnFragmentAttachStatusListener) {
+            this.onFragmentAttachStatusListener = (OnFragmentAttachStatusListener) context;
         }
     }
 
@@ -127,7 +138,8 @@ public class ProfileFragment extends BottomSheetDialogFragment {
     public void onDetach() {
         super.onDetach();
         onNavigationVisibilityListener.onNavVisibilityChange(true);
+        onFragmentAttachStatusListener.onFragmentDetached(this);
+        onFragmentAttachStatusListener = null;
         onNavigationVisibilityListener = null;
-        onFragmentPopBackListener = null;
     }
 }

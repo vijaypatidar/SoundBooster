@@ -27,7 +27,7 @@
             android:value="true" />
 
         <activity
-            android:name=".activity.MainActivity"
+            android:name="com.vkpapps.soundbooster.ui.activity.MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme"
@@ -39,14 +39,12 @@
             android:exported="false" />
 
         <activity
-            android:name=".activity.SplashActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:name="com.vkpapps.soundbooster.ui.activity.SplashActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SplashScreen"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

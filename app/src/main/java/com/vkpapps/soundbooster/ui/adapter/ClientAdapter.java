@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.adapter;
+package com.vkpapps.soundbooster.ui.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.analitics.Logger;
 import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.utils.StorageManager;
@@ -45,7 +44,6 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
         final User user = clientHelper.getUser();
         holder.userName.setText(user.getName());
         File file = new File(profiles, user.getUserId());
-        Logger.d("==================== " + user.getUserId());
         if (file.exists()) {
             Picasso.get().load(file).into(holder.profilePic);
         }

@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.activity;
+package com.vkpapps.soundbooster.ui.activity;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -31,14 +31,9 @@ import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.analitics.Logger;
 import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.connection.ServerHelper;
-import com.vkpapps.soundbooster.fragments.DashboardFragment;
-import com.vkpapps.soundbooster.fragments.HostSongFragment;
-import com.vkpapps.soundbooster.fragments.MusicPlayerFragment;
-import com.vkpapps.soundbooster.fragments.ProfileFragment;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
 import com.vkpapps.soundbooster.interfaces.OnControlRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
-import com.vkpapps.soundbooster.interfaces.OnFragmentPopBackListener;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnLocalSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
@@ -53,11 +48,15 @@ import com.vkpapps.soundbooster.model.control.ControlPlayer;
 import com.vkpapps.soundbooster.receivers.FileRequestReceiver;
 import com.vkpapps.soundbooster.receivers.MediaChangeReceiver;
 import com.vkpapps.soundbooster.service.FileService;
-import com.vkpapps.soundbooster.utils.FragmentDestinationListener;
+import com.vkpapps.soundbooster.ui.fragments.DashboardFragment;
+import com.vkpapps.soundbooster.ui.fragments.HostSongFragment;
+import com.vkpapps.soundbooster.ui.fragments.MusicPlayerFragment;
+import com.vkpapps.soundbooster.ui.fragments.ProfileFragment;
+import com.vkpapps.soundbooster.ui.fragments.destinations.FragmentDestinationListener;
+import com.vkpapps.soundbooster.ui.view.MiniMediaController;
 import com.vkpapps.soundbooster.utils.IPManager;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.UpdateManager;
-import com.vkpapps.soundbooster.view.MiniMediaController;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -74,7 +73,7 @@ import java.util.Objects;
  */
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
         OnUserListRequestListener, OnFragmentAttachStatusListener, OnHostSongFragmentListener, OnControlRequestListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
-        FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener, OnFragmentPopBackListener,
+        FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener,
         OnObjectCallbackListener {
     private BottomNavigationView navView;
     private ServerHelper serverHelper;
@@ -124,11 +123,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         mediaChangeReceiver = new MediaChangeReceiver();
         mediaChangeReceiver.addOnMediaPlayerChangeListener(miniMediaController);
         LocalBroadcastManager.getInstance(this).registerReceiver(mediaChangeReceiver, new IntentFilter(MediaChangeReceiver.MEDIA_PLAYER_CHANGE));
-    }
-
-    @Override
-    public void onPopBackStack() {
-        navController.popBackStack();
     }
 
 
@@ -325,16 +319,16 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 if (currentFragment != null) {
                     currentFragment.refreshSong();
                 }
-                if (isHost) {
-                    new Thread(() -> {
-                        try {
-                            Thread.sleep(1500);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                        onHostAudioSelected(new AudioModel(name));
-                    }).start();
-                }
+//                if (isHost) {
+//                    new Thread(() -> {
+//                        try {
+//                            Thread.sleep(1500);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//                        onHostAudioSelected(new AudioModel(name));
+//                    }).start();
+//                }
             }
         }
 
@@ -346,6 +340,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             if (onUsersUpdateListener != null) {
                 runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
             }
+            // host user send his/her profile to client
+            FileService.startActionSend(this, user.getUserId(), clientHelper.getUser().getUserId(), true, true, ControlFile.FILE_TYPE_PROFILE_PIC);
         } else {
             clientHelper.write(new ControlFile(ControlFile.DOWNLOAD_REQUEST, user.getUserId(), user.getUserId(), ControlFile.FILE_TYPE_PROFILE_PIC));
         }

@@ -28,8 +28,8 @@ class UserUtils(val context: Context) {
         }
         // return default user
         val user = User()
-        user.name = "RockStar"
-        user.userId = HashUtils.getHashValue(Random.nextBytes(20)).trim()
+        user.name = HashUtils.getHashValue(Random.nextBytes(5))
+        user.userId = HashUtils.getHashValue(Random.nextBytes(20))
         d(user.userId)
         setUser(user)
         return user

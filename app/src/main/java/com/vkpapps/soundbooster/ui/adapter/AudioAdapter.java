@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.adapter;
+package com.vkpapps.soundbooster.ui.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;

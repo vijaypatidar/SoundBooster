@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.fragments;
+package com.vkpapps.soundbooster.ui.fragments;
 
 import android.content.Context;
 import android.media.MediaPlayer;

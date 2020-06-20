@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.utils
+package com.vkpapps.soundbooster.ui.fragments.destinations
 
 import android.os.Bundle
 import androidx.appcompat.app.ActionBar
