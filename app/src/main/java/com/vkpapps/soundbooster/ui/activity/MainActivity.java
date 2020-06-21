@@ -48,6 +48,7 @@ import com.vkpapps.soundbooster.model.control.ControlPlayer;
 import com.vkpapps.soundbooster.receivers.FileRequestReceiver;
 import com.vkpapps.soundbooster.receivers.MediaChangeReceiver;
 import com.vkpapps.soundbooster.service.FileService;
+import com.vkpapps.soundbooster.ui.dialog.PrivacyDialog;
 import com.vkpapps.soundbooster.ui.fragments.DashboardFragment;
 import com.vkpapps.soundbooster.ui.fragments.HostSongFragment;
 import com.vkpapps.soundbooster.ui.fragments.MusicPlayerFragment;
@@ -112,6 +113,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         getChoice();
         new UpdateManager(true).checkForUpdate(true, this);
 
+        // check for policy accepted or not
+        new PrivacyDialog(this).isPolicyAccepted();
     }
 
     private void init() {
@@ -370,6 +373,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             sharingIntent.putExtra(Intent.EXTRA_SUBJECT, "Sound Booster");
             sharingIntent.putExtra(Intent.EXTRA_TEXT, shareBody);
             startActivity(Intent.createChooser(sharingIntent, "Share via"));
+        } else if (item.getItemId() == R.id.menu_about) {
+            navController.navigate(R.id.aboutFragment);
         }
         return super.onOptionsItemSelected(item);
     }

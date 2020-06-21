@@ -30,8 +30,7 @@
             android:name="com.vkpapps.soundbooster.ui.activity.MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme"
-            android:label="@string/title_activity_main2" />
+            android:theme="@style/AppTheme" />
 
         <service
             android:label="File service"

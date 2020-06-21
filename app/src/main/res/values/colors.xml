@@ -10,4 +10,5 @@
     <color name="gray">#607D8B</color>
     <color name="profile_frag_background">#96bb7c</color>
     <color name="green">#8BC34A</color>
+    <string name="made_in_india">Made with ❤ in India</string>
 </resources>

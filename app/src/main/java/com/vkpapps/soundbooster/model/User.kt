@@ -6,6 +6,6 @@ import java.io.Serializable
  * @author VIJAY PATIDAR
  */
 class User : Serializable {
-    var name: String? = null
+    lateinit var name: String
     lateinit var userId: String
 }
