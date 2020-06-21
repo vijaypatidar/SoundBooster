@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.vkpapps.soundbooster.model.control.ControlFile;
 import com.vkpapps.soundbooster.service.FileService;
 
 import static com.vkpapps.soundbooster.service.FileService.LAST_REQUEST;
@@ -24,28 +25,29 @@ public class FileRequestReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
         String name = intent.getStringExtra(FileService.NAME);
+        int type = intent.getIntExtra(FileService.FILE_TYPE, ControlFile.FILE_TYPE_MUSIC);
         if (action == null) return;
         switch (action) {
             case FileService.STATUS_SUCCESS:
-                onFileRequestReceiverListener.onRequestSuccess(name, intent.getBooleanExtra(LAST_REQUEST, false));
+                onFileRequestReceiverListener.onRequestSuccess(name, intent.getBooleanExtra(LAST_REQUEST, false), type);
                 break;
             case FileService.STATUS_FAILED:
-                onFileRequestReceiverListener.onRequestFailed(name);
+                onFileRequestReceiverListener.onRequestFailed(name, type);
                 break;
             case FileService.REQUEST_ACCEPTED:
                 String clientId = intent.getStringExtra(FileService.CLIENT_ID);
                 boolean send = intent.getBooleanExtra(FileService.ACTION_SEND, false);
-                onFileRequestReceiverListener.onRequestAccepted(name, send, clientId);
+                onFileRequestReceiverListener.onRequestAccepted(name, send, clientId, type);
                 break;
         }
     }
 
     public interface OnFileRequestReceiverListener {
-        void onRequestFailed(String name);
+        void onRequestFailed(String name, int type);
 
-        void onRequestAccepted(String name, boolean send, String clientId);
+        void onRequestAccepted(String name, boolean send, String clientId, int type);
 
-        void onRequestSuccess(String name, boolean isLast);
+        void onRequestSuccess(String name, boolean isLast, int type);
     }
 
 }

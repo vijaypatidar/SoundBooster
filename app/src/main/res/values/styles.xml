@@ -17,7 +17,8 @@
     </style>
 
     <style name="SplashScreen" parent="AppThemeNoAction">
-        <item name="colorPrimaryDark">#FFFFFF</item>
+        <item name="colorPrimaryDark">@color/colorPrimary</item>
+        <item name="android:navigationBarColor">@color/colorPrimary</item>
     </style>
 
 </resources>

@@ -27,29 +27,23 @@
             android:value="true" />
 
         <activity
-            android:name=".activity.MainActivity"
+            android:name="com.vkpapps.soundbooster.ui.activity.MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme"
-            android:label="@string/title_activity_main2" />
+            android:theme="@style/AppTheme" />
 
         <service
             android:label="File service"
             android:name=".service.FileService"
             android:exported="false" />
 
-        <meta-data
-            android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-4043007075380826~2360517416" />
         <activity
-            android:name=".activity.SplashActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:name="com.vkpapps.soundbooster.ui.activity.SplashActivity"
             android:screenOrientation="portrait"
             android:theme="@style/SplashScreen"
             tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

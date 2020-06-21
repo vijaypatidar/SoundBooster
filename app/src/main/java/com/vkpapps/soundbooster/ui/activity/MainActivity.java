@@ -1,4 +1,4 @@
-package com.vkpapps.soundbooster.activity;
+package com.vkpapps.soundbooster.ui.activity;
 
 import android.app.AlertDialog;
 import android.content.Intent;
@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.navigation.NavController;
+import androidx.navigation.NavDestination;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
@@ -30,13 +31,9 @@ import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.analitics.Logger;
 import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.connection.ServerHelper;
-import com.vkpapps.soundbooster.fragments.DashboardFragment;
-import com.vkpapps.soundbooster.fragments.HostSongFragment;
-import com.vkpapps.soundbooster.fragments.MusicPlayerFragment;
 import com.vkpapps.soundbooster.interfaces.OnClientConnectionStateListener;
 import com.vkpapps.soundbooster.interfaces.OnControlRequestListener;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
-import com.vkpapps.soundbooster.interfaces.OnFragmentPopBackListener;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnLocalSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
@@ -49,16 +46,26 @@ import com.vkpapps.soundbooster.model.User;
 import com.vkpapps.soundbooster.model.control.ControlFile;
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
 import com.vkpapps.soundbooster.receivers.FileRequestReceiver;
+import com.vkpapps.soundbooster.receivers.MediaChangeReceiver;
 import com.vkpapps.soundbooster.service.FileService;
+import com.vkpapps.soundbooster.ui.dialog.PrivacyDialog;
+import com.vkpapps.soundbooster.ui.fragments.DashboardFragment;
+import com.vkpapps.soundbooster.ui.fragments.HostSongFragment;
+import com.vkpapps.soundbooster.ui.fragments.MusicPlayerFragment;
+import com.vkpapps.soundbooster.ui.fragments.ProfileFragment;
+import com.vkpapps.soundbooster.ui.fragments.destinations.FragmentDestinationListener;
+import com.vkpapps.soundbooster.ui.view.MiniMediaController;
 import com.vkpapps.soundbooster.utils.IPManager;
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper;
 import com.vkpapps.soundbooster.utils.UpdateManager;
-import com.vkpapps.soundbooster.view.MiniMediaController;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -67,7 +74,7 @@ import java.util.Objects;
  */
 public class MainActivity extends AppCompatActivity implements OnLocalSongFragmentListener, OnNavigationVisibilityListener,
         OnUserListRequestListener, OnFragmentAttachStatusListener, OnHostSongFragmentListener, OnControlRequestListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
-        FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener, OnFragmentPopBackListener,
+        FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener,
         OnObjectCallbackListener {
     private BottomNavigationView navView;
     private ServerHelper serverHelper;
@@ -80,8 +87,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private OnUsersUpdateListener onUsersUpdateListener;
     private MiniMediaController miniMediaController;
     private HostSongFragment currentFragment;
-    private ArrayList<String> queue;
+    private ArrayList<String> queue = new ArrayList<>();
     private int position = 0;
+    private MediaChangeReceiver mediaChangeReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,25 +107,25 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
 
-        musicPlayer = new MusicPlayerHelper(this, this);
+        navController.addOnDestinationChangedListener(new FragmentDestinationListener(this));
 
-        initMiniMediaPlayer();
+        init();
         getChoice();
-
         new UpdateManager(true).checkForUpdate(true, this);
+
+        // check for policy accepted or not
+        new PrivacyDialog(this).isPolicyAccepted();
     }
 
-    private void initMiniMediaPlayer() {
+    private void init() {
         miniMediaController = findViewById(R.id.miniController);
         miniMediaController.setOnClickListener(v -> navController.navigate(R.id.navigation_musicPlayer));
-        miniMediaController.setButtonOnClick(v -> {
-            onObjectCreated(new ControlPlayer(musicPlayer.isPlaying() ? ControlPlayer.ACTION_PAUSE : ControlPlayer.ACTION_RESUME, null));
-        });
-    }
-
-    @Override
-    public void onPopBackStack() {
-        navController.popBackStack();
+        miniMediaController.setButtonOnClick(v -> onObjectCreated(new ControlPlayer(musicPlayer.isPlaying() ? ControlPlayer.ACTION_PAUSE : ControlPlayer.ACTION_RESUME, null)));
+        musicPlayer = App.Companion.getMusicPlayerHelper();
+        musicPlayer.setOnMusicPlayerHelperListener(this);
+        mediaChangeReceiver = new MediaChangeReceiver();
+        mediaChangeReceiver.addOnMediaPlayerChangeListener(miniMediaController);
+        LocalBroadcastManager.getInstance(this).registerReceiver(mediaChangeReceiver, new IntentFilter(MediaChangeReceiver.MEDIA_PLAYER_CHANGE));
     }
 
 
@@ -142,7 +150,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     private void setup(boolean host) {
         isHost = host;
-        queue = new ArrayList<>();
         if (isHost) {
             serverHelper = new ServerHelper(this, user, this);
             serverHelper.start();
@@ -185,20 +192,20 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             int N = clientHelpers.size() - 1;
             for (int i = 0; i <= N; i++) {
                 ClientHelper chr = clientHelpers.get(i);
-                FileService.startActionSend(this, audio.getName(), chr.user.getUserId(), isHost, i == N);
+                FileService.startActionSend(this, audio.getName(), chr.getUser().getUserId(), isHost, i == N, ControlFile.FILE_TYPE_MUSIC);
             }
         } else {
-            sendCommand(new ControlFile(ControlFile.DOWNLOAD_REQUEST, audio.getName(), user.getUserId()));
+            clientHelper.write(new ControlFile(ControlFile.DOWNLOAD_REQUEST, audio.getName(), user.getUserId(), ControlFile.FILE_TYPE_MUSIC));
         }
     }
 
     @Override
-    public void onHostAudioSelected(AudioModel audioModel) {
+    public void onHostAudioSelected(@NotNull AudioModel audioModel) {
         if (isHost) {
             serverHelper.broadcast(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
             musicPlayer.loadAndPlay(audioModel.getName());
         } else {
-            sendCommand(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
+            clientHelper.write(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
         }
     }
 
@@ -220,47 +227,47 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
 
-    public void onUploadRequest(String name, String id) {
-        // only host wil response this method
-        if (isHost) {
-            FileService.startActionSend(this, name, id, true, true);
-        }
-    }
-
     @Override
-    public void onMusicPlayerControl(ControlPlayer controlPlayer) {
+    public void onMusicPlayerControl(@NotNull ControlPlayer controlPlayer) {
         musicPlayer.handleControl(controlPlayer);
     }
 
-    public void onDownloadRequest(String name, String id) {
-        Logger.d("onReceiveFileRequest: " + id + "==========> " + name);
+    @Override
+    public void onDownloadRequest(@NotNull String name, @NotNull String id, int type) {
         // only host wil response this method
         if (isHost) {
             // prepare file receive from client
-            FileService.startActionReceive(this, name, id, true);
+            FileService.startActionReceive(this, name, id, true, type);
             // prepare send request for all other client except the sender of that file
             ArrayList<ClientHelper> clientHelpers = serverHelper.getClientHelpers();
             int N = clientHelpers.size() - 1;
             for (int i = 0; i <= N; i++) {
                 ClientHelper chr = clientHelpers.get(i);
-                String cid = chr.user.getUserId();
+                String cid = chr.getUser().getUserId();
                 if (!cid.equals(id)) {
-                    FileService.startActionSend(this, name, chr.user.getUserId(), isHost, i == N);
+                    FileService.startActionSend(this, name, chr.getUser().getUserId(), isHost, i == N, type);
                 }
             }
         }
     }
 
-    public void onUploadRequestAccepted(String name, String id) {
+    public void onUploadRequestAccepted(@NotNull String name, @NotNull String id, int type) {
         // receiver requested file or sent by host itself
-        FileService.startActionReceive(this, name, id, isHost);
+        FileService.startActionReceive(this, name, id, isHost, type);
+    }
+
+    public void onUploadRequest(@NotNull String name, @NotNull String id, int type) {
+        // only host wil response this method
+        if (isHost) {
+            FileService.startActionSend(this, name, id, true, true, type);
+        }
     }
 
 
-    public void onDownloadRequestAccepted(String name, String id) {
+    public void onDownloadRequestAccepted(@NotNull String name, @NotNull String id, int type) {
         //only client need to handle this , not for host
         // send requested file to client sent request
-        FileService.startActionSend(this, name, id, isHost, false);
+        FileService.startActionSend(this, name, id, isHost, false, type);
     }
 
     @Override
@@ -275,8 +282,14 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     }
 
     @Override
+    public void onResumePaying() {
+        if (isHost) {
+            serverHelper.broadcast(new ControlPlayer(ControlPlayer.ACTION_RESUME, null));
+        }
+    }
+
+    @Override
     public void onSongChange(String name) {
-        runOnUiThread(() -> miniMediaController.changeSong(name));
         position = queue.indexOf(name);
         initPlayer = true;
     }
@@ -284,45 +297,61 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     @Override
     public void onRequestSongNotFound(String songName) {
         if (!isHost)
-            sendCommand(new ControlFile(ControlFile.UPLOAD_REQUEST, songName, user.getUserId()));
+            clientHelper.write(new ControlFile(ControlFile.UPLOAD_REQUEST, songName, user.getUserId(), ControlFile.FILE_TYPE_MUSIC));
     }
 
 
     @Override
-    public void onRequestFailed(String name) {
-        Logger.d("onRequestFailed: ==============>" + name);
+    public void onRequestFailed(String name, int type) {
+        Logger.d("onRequestFailed: " + name + "  type " + type);
     }
 
     @Override
-    public void onRequestAccepted(String name, boolean send, String clientId) {
-        Logger.d("onRequestAccepted: ============== " + name + "  " + send);
-        ControlFile controlFile = new ControlFile(send ? ControlFile.UPLOAD_REQUEST_CONFIRM : ControlFile.DOWNLOAD_REQUEST_CONFIRM, name, user.getUserId());
+    public void onRequestAccepted(String name, boolean send, String clientId, int type) {
+        Logger.d("onRequestAccepted: " + name + "  " + send);
+        ControlFile controlFile = new ControlFile(send ? ControlFile.UPLOAD_REQUEST_CONFIRM : ControlFile.DOWNLOAD_REQUEST_CONFIRM, name, user.getUserId(), type);
         serverHelper.sendCommandToOnly(controlFile, clientId);
     }
 
     @Override
-    public void onRequestSuccess(String name, boolean isLastRequest) {
+    public void onRequestSuccess(String name, boolean isLastRequest, int type) {
         Logger.d("onRequestSuccess: " + name + "   " + isLastRequest);
-        if (isLastRequest) {
-            // update host song list
-            if (currentFragment != null) {
-                currentFragment.refreshSong();
+        if (type == ControlFile.FILE_TYPE_MUSIC) {
+            if (isLastRequest) {
+                // update host song list
+                if (currentFragment != null) {
+                    currentFragment.refreshSong();
+                }
+//                if (isHost) {
+//                    new Thread(() -> {
+//                        try {
+//                            Thread.sleep(1500);
+//                        } catch (InterruptedException e) {
+//                            e.printStackTrace();
+//                        }
+//                        onHostAudioSelected(new AudioModel(name));
+//                    }).start();
+//                }
             }
-            if (isHost) {
-                onLocalSongSelected(new AudioModel(name));
+        }
+
+    }
+
+    @Override
+    public void onClientConnected(@NotNull ClientHelper clientHelper) {
+        if (isHost) {
+            if (onUsersUpdateListener != null) {
+                runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
             }
+            // host user send his/her profile to client
+            FileService.startActionSend(this, user.getUserId(), clientHelper.getUser().getUserId(), true, true, ControlFile.FILE_TYPE_PROFILE_PIC);
+        } else {
+            clientHelper.write(new ControlFile(ControlFile.DOWNLOAD_REQUEST, user.getUserId(), user.getUserId(), ControlFile.FILE_TYPE_PROFILE_PIC));
         }
     }
 
     @Override
-    public void onClientConnected(ClientHelper clientHelper) {
-        if (onUsersUpdateListener != null && isHost) {
-            runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
-        }
-    }
-
-    @Override
-    public void onClientDisconnected(ClientHelper clientHelper) {
+    public void onClientDisconnected(@NotNull ClientHelper clientHelper) {
         //prompt client when disconnect to a party to create or rejoin the party
         if (!isHost) {
             runOnUiThread(this::getChoice);
@@ -344,6 +373,8 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             sharingIntent.putExtra(Intent.EXTRA_SUBJECT, "Sound Booster");
             sharingIntent.putExtra(Intent.EXTRA_TEXT, shareBody);
             startActivity(Intent.createChooser(sharingIntent, "Share via"));
+        } else if (item.getItemId() == R.id.menu_about) {
+            navController.navigate(R.id.aboutFragment);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -367,30 +398,35 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         if (serverHelper != null) {
             return serverHelper.getClientHelpers();
         }
-        return null;
+        return new ArrayList<>(Collections.singleton(clientHelper));
     }
 
     @Override
-    public void onFragmentAttached(Fragment fragment) {
+    public void onFragmentAttached(@NotNull Fragment fragment) {
         if (fragment instanceof DashboardFragment) {
             onUsersUpdateListener = (OnUsersUpdateListener) fragment;
         } else if (fragment instanceof MusicPlayerFragment) {
             miniMediaController.setEnableVisibilityChanges(false);
-            musicPlayer.setPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
+            mediaChangeReceiver.addOnMediaPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = (HostSongFragment) fragment;
+        } else if (fragment instanceof ProfileFragment) {
+            miniMediaController.setEnableVisibilityChanges(false);
         }
     }
 
     @Override
-    public void onFragmentDetached(Fragment fragment) {
+    public void onFragmentDetached(@NotNull Fragment fragment) {
         if (fragment instanceof DashboardFragment) {
             onUsersUpdateListener = null;
         } else if (fragment instanceof MusicPlayerFragment) {
-            musicPlayer.setPlayerChangeListener(null);
+            mediaChangeReceiver.removeOnMediaPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
             miniMediaController.setEnableVisibilityChanges(true);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = null;
+        } else if (fragment instanceof ProfileFragment) {
+            miniMediaController.setEnableVisibilityChanges(true);
+            send(user);
         }
     }
 
@@ -402,17 +438,14 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 musicPlayer.handleControl((ControlPlayer) control);
             }
         } else {
-            sendCommand(control);
+            clientHelper.write(control);
         }
-    }
-
-    private void sendCommand(Object command) {
-        clientHelper.write(command);
     }
 
     @Override
     public void onBackPressed() {
-        if (navController.getCurrentDestination().getId() == R.id.navigation_home) {
+        NavDestination currentDestination = navController.getCurrentDestination();
+        if (currentDestination != null && currentDestination.getId() == R.id.navigation_home) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle("Are you want to exit?");
             builder.setPositiveButton("Yes", (dialog, which) -> {
@@ -447,4 +480,19 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
             Toast.makeText(this, "Storage permission required!", Toast.LENGTH_SHORT).show();
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(mediaChangeReceiver);
+    }
+
+    private void send(Object o) {
+        if (isHost) {
+            serverHelper.broadcast(o);
+        } else {
+            clientHelper.write(o);
+        }
+    }
+
 }

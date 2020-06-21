@@ -7,12 +7,12 @@ import com.google.android.gms.ads.InterstitialAd
 /**
  * @author VIJAY PATIDAR
  */
-object FirebaseUtils {
+object AdsUtils {
     fun getAdRequest(adView: AdView?) {
-        adView!!.loadAd(AdRequest.Builder().build())
+        adView?.loadAd(AdRequest.Builder().build())
     }
 
     fun getAdRequest(adView: InterstitialAd?) {
-        adView!!.loadAd(AdRequest.Builder().build())
+        adView?.loadAd(AdRequest.Builder().build())
     }
 }

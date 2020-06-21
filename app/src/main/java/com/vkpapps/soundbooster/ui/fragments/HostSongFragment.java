@@ -1,9 +1,11 @@
-package com.vkpapps.soundbooster.fragments;
+package com.vkpapps.soundbooster.ui.fragments;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
@@ -16,10 +18,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.adapter.HostedAudioAdapter;
 import com.vkpapps.soundbooster.interfaces.OnHostSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
+import com.vkpapps.soundbooster.ui.adapter.HostedAudioAdapter;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
@@ -52,7 +54,7 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        setHasOptionsMenu(true);
         storageManager = new StorageManager(view.getContext());
         song = storageManager.getSongDir();
 
@@ -117,6 +119,13 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
     private void sort() {
         Collections.sort(allSong, (o1, o2) -> o1.getName().compareTo(o2.getName()));
     }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.home_menu, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
 
     @Override
     public void onResume() {

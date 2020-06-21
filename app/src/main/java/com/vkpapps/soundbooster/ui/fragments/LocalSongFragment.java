@@ -1,8 +1,10 @@
-package com.vkpapps.soundbooster.fragments;
+package com.vkpapps.soundbooster.ui.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -15,10 +17,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.vkpapps.soundbooster.R;
-import com.vkpapps.soundbooster.adapter.AudioAdapter;
 import com.vkpapps.soundbooster.interfaces.OnLocalSongFragmentListener;
 import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.model.AudioModel;
+import com.vkpapps.soundbooster.ui.adapter.AudioAdapter;
 import com.vkpapps.soundbooster.utils.PermissionUtils;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
@@ -33,10 +35,6 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private StorageManager storageManager;
 
-    public LocalSongFragment() {
-
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -46,6 +44,7 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        setHasOptionsMenu(true);
         storageManager = new StorageManager(getActivity());
 
         if (PermissionUtils.checkStoragePermission(view.getContext())) {
@@ -67,6 +66,12 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
             Navigation.findNavController(view).popBackStack();
             PermissionUtils.askStoragePermission(getActivity(), 101);
         }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.home_menu, menu);
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override

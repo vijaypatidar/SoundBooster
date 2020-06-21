@@ -6,5 +6,5 @@ import com.vkpapps.soundbooster.model.AudioModel
  * @author VIJAY PATIDAR
  */
 interface OnHostSongFragmentListener {
-    fun onHostAudioSelected(name: AudioModel?)
+    fun onHostAudioSelected(name: AudioModel)
 }

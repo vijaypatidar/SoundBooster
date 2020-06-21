@@ -5,37 +5,70 @@
     app:startDestination="@+id/navigation_home">
     <fragment
         android:id="@+id/navigation_home"
-        android:name="com.vkpapps.soundbooster.fragments.HostSongFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.HostSongFragment"
         android:label="@string/title_home"
         tools:layout="@layout/fragment_host_song">
 
         <action
             android:id="@+id/action_navigation_home_to_navigation_musicPlayer"
-            app:destination="@id/navigation_musicPlayer"
-            app:enterAnim="@anim/slide_in_bottom"
-            app:exitAnim="@anim/slide_out_bottom" />
+            app:destination="@id/navigation_musicPlayer" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_profile"
+            app:destination="@id/navigation_profile" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_dashboard"
+            app:destination="@id/navigation_dashboard" />
+        <action
+            android:id="@+id/action_navigation_home_to_navigation_local"
+            app:destination="@id/navigation_local" />
     </fragment>
     <fragment
         android:id="@+id/navigation_dashboard"
-        android:name="com.vkpapps.soundbooster.fragments.DashboardFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.DashboardFragment"
         android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        tools:layout="@layout/fragment_dashboard">
+        <action
+            android:id="@+id/action_navigation_dashboard_to_navigation_musicPlayer"
+            app:destination="@id/navigation_musicPlayer"
+            app:enterAnim="@anim/slide_in_bottom"
+            app:exitAnim="@anim/slide_out_bottom"
+            app:popEnterAnim="@anim/slide_in_bottom"
+            app:popExitAnim="@anim/slide_out_bottom" />
+        <action
+            android:id="@+id/action_navigation_dashboard_to_navigation_profile"
+            app:destination="@id/navigation_profile" />
+    </fragment>
 
     <fragment
         android:id="@+id/navigation_local"
-        android:name="com.vkpapps.soundbooster.fragments.LocalSongFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.LocalSongFragment"
         android:label="@string/title_my_song"
         tools:layout="@layout/fragment_local_song">
 
+        <action
+            android:id="@+id/action_navigation_local_to_navigation_profile"
+            app:destination="@id/navigation_profile" />
+        <action
+            android:id="@+id/action_navigation_local_to_navigation_musicPlayer"
+            app:destination="@id/navigation_musicPlayer"
+            app:enterAnim="@anim/slide_in_bottom"
+            app:exitAnim="@anim/slide_out_bottom"
+            app:popEnterAnim="@anim/slide_in_bottom"
+            app:popExitAnim="@anim/slide_out_bottom" />
     </fragment>
     <fragment
         android:id="@+id/navigation_profile"
-        android:name="com.vkpapps.soundbooster.fragments.ProfileFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.ProfileFragment"
         android:label="Profile"
         tools:layout="@layout/fragment_user_detail" />
     <fragment
         android:id="@+id/navigation_musicPlayer"
-        android:name="com.vkpapps.soundbooster.fragments.MusicPlayerFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.MusicPlayerFragment"
         android:label="Music Player"
         tools:layout="@layout/fragment_music_player" />
+    <fragment
+        android:id="@+id/aboutFragment"
+        android:name="com.vkpapps.soundbooster.ui.fragments.AboutFragment"
+        android:label="@string/about_cap"
+        tools:layout="@layout/fragment_about" />
 </navigation>

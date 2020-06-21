@@ -1,18 +1,22 @@
-package com.vkpapps.soundbooster.adapter;
+package com.vkpapps.soundbooster.ui.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.connection.ClientHelper;
 import com.vkpapps.soundbooster.model.User;
+import com.vkpapps.soundbooster.utils.StorageManager;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -21,9 +25,10 @@ import java.util.List;
 public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> {
 
     private List<ClientHelper> users;
-
+    private File profiles;
     public ClientAdapter(List<ClientHelper> users, Context context) {
         this.users = users;
+        profiles = new StorageManager(context).getProfiles();
     }
 
     @NonNull
@@ -36,8 +41,12 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
     @Override
     public void onBindViewHolder(@NonNull MyHolder holder, int position) {
         final ClientHelper clientHelper = users.get(position);
-        final User user = clientHelper.user;
+        final User user = clientHelper.getUser();
         holder.userName.setText(user.getName());
+        File file = new File(profiles, user.getUserId());
+        if (file.exists()) {
+            Picasso.get().load(file).into(holder.profilePic);
+        }
     }
 
     @Override
@@ -47,10 +56,12 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
 
     static class MyHolder extends RecyclerView.ViewHolder {
         private TextView userName;
+        private ImageView profilePic;
 
         MyHolder(@NonNull View itemView) {
             super(itemView);
             userName = itemView.findViewById(R.id.userName);
+            profilePic = itemView.findViewById(R.id.profilePic);
         }
     }
 }

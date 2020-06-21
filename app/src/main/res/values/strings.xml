@@ -4,13 +4,21 @@
 
     <string name="save">save</string>
     <string name="hint_name">enter name</string>
-    <string name="title_activity_main2">MainActivity</string>
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_my_song">My Song</string>
     <string name="title_profile">Profile</string>
     <string name="title_share">Share</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-
+    <string name="create_party">CREATE PARTY</string>
+    <string name="join_party">JOIN PARTY</string>
+    <string name="about">about</string>
+    <string name="about_cap">About</string>
+    <string name="developer">Vijay Patidar</string>
+    <string name="about_developer">Android app developer.</string>
+    <string name="app_description">A modern and easy to use app for playing music on multiple devices simultaneously without internet.</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_policy_url">https://vkpapps.blogspot.com/2019/09/sound-booster-privacy-policy.html</string>
+    <string name="accept_policy">By using the app you agree to the Sound Booster <a href="">Privacy Policy</a></string>
+    <string name="cancel">Cancel</string>
+    <string name="i_agree">I Agree</string>
 </resources>

@@ -32,7 +32,7 @@
         tools:ignore="FragmentTagUsage" />
 
 
-    <com.vkpapps.soundbooster.view.MiniMediaController
+    <com.vkpapps.soundbooster.ui.view.MiniMediaController
         android:id="@+id/miniController"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

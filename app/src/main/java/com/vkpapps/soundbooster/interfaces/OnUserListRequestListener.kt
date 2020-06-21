@@ -6,5 +6,5 @@ import com.vkpapps.soundbooster.connection.ClientHelper
  * @author VIJAY PATIDAR
  */
 interface OnUserListRequestListener {
-    fun onRequestUsers(): List<ClientHelper?>?
+    fun onRequestUsers(): List<ClientHelper>?
 }

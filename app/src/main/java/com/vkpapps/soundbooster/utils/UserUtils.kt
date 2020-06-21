@@ -1,15 +1,16 @@
 package com.vkpapps.soundbooster.utils
 
 import android.content.Context
+import com.vkpapps.soundbooster.analitics.Logger.d
 import com.vkpapps.soundbooster.model.User
 import java.io.*
+import kotlin.random.Random
 
 /**
  * @author VIJAY PATIDAR
  */
 class UserUtils(val context: Context) {
-    fun loadUser(): User? {
-        val user: User? = null
+    fun loadUser(): User {
         try {
             val objectInputStream = ObjectInputStream(
                     FileInputStream(
@@ -18,17 +19,23 @@ class UserUtils(val context: Context) {
             )
             val obj = objectInputStream.readObject()
             objectInputStream.close()
-
+            //return user
             if (obj is User) return obj
         } catch (e: IOException) {
             e.printStackTrace()
         } catch (e: ClassNotFoundException) {
             e.printStackTrace()
         }
+        // return default user
+        val user = User()
+        user.name = HashUtils.getHashValue(Random.nextBytes(5))
+        user.userId = HashUtils.getHashValue(Random.nextBytes(20))
+        d(user.userId)
+        setUser(user)
         return user
     }
 
-    fun setUser(user: User?) {
+    fun setUser(user: User) {
         try {
             val file = File(StorageManager(this.context).userDir, "user")
             val outputStream = ObjectOutputStream(FileOutputStream(file))

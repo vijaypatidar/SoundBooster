@@ -1,12 +1,17 @@
 package com.vkpapps.soundbooster.interfaces
 
-import android.media.MediaPlayer
+import androidx.annotation.UiThread
 
 /**
  * @author VIJAY PATIDAR
  */
 interface OnMediaPlayerChangeListener {
-    fun onChangeSong(title: String?, mediaPlayer: MediaPlayer?)
+    @UiThread
+    fun onChangeSong(title: String)
+
+    @UiThread
     fun onPlayingStatusChange(isPlaying: Boolean)
+
+    @UiThread
     fun onVolumeChange(volume: Float)
 }

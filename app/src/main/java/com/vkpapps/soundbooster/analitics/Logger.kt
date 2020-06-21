@@ -3,12 +3,9 @@ package com.vkpapps.soundbooster.analitics
 import android.util.Log
 
 /***
- * <h1>Logger</h1>
- * <P>Utility class for analytic and debugging</P>
  * @author VIJAY PATIDAR
- * @since 2020-06-11
- * @version 1.0
  */
+
 object Logger {
     var logger = true
     private const val TAG = "SoundBoosterLogger"

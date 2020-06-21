@@ -1,6 +1,5 @@
-package com.vkpapps.soundbooster.fragments;
+package com.vkpapps.soundbooster.ui.fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -16,8 +15,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 
 import com.squareup.picasso.Picasso;
+import com.vkpapps.soundbooster.App;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.interfaces.OnFragmentAttachStatusListener;
 import com.vkpapps.soundbooster.interfaces.OnMediaPlayerChangeListener;
@@ -25,6 +26,8 @@ import com.vkpapps.soundbooster.interfaces.OnNavigationVisibilityListener;
 import com.vkpapps.soundbooster.interfaces.OnObjectCallbackListener;
 import com.vkpapps.soundbooster.model.control.ControlPlayer;
 import com.vkpapps.soundbooster.utils.StorageManager;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Timer;
@@ -38,8 +41,8 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     private OnNavigationVisibilityListener onNavigationVisibilityListener;
     private OnFragmentAttachStatusListener onFragmentAttachStatusListener;
     private TextView audioTitle;
-    private ImageView audioCover, fullCover, btnPlay;
-    private MediaPlayer mediaPlayer;
+    private ImageView audioCover, btnPlay;
+    private MediaPlayer mediaPlayer = App.getMusicPlayerHelper().getMediaPlayer();
     private OnObjectCallbackListener objectCallbackListener;
     private StorageManager storageManager;
     private Timer timer;
@@ -56,16 +59,13 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         super.onViewCreated(view, savedInstanceState);
 
         storageManager = new StorageManager(view.getContext());
-
         btnPlay = view.findViewById(R.id.btnPlay);
-        fullCover = view.findViewById(R.id.coverFull);
         btnPlay.setOnClickListener(this);
         view.findViewById(R.id.btnNext).setOnClickListener(this);
         view.findViewById(R.id.btnPrevious).setOnClickListener(this);
         audioCover = view.findViewById(R.id.audioCover);
         audioTitle = view.findViewById(R.id.audioTitle);
-        if (onFragmentAttachStatusListener != null)
-            onFragmentAttachStatusListener.onFragmentAttached(this);
+        onFragmentAttachStatusListener.onFragmentAttached(this);
 
         AppCompatSeekBar appCompatSeekBar = view.findViewById(R.id.seekBar);
         timer = new Timer();
@@ -107,6 +107,12 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
 
             }
         });
+
+        String currentSongName = App.getMusicPlayerHelper().getCurrentSongName();
+        if (currentSongName != null)
+            onChangeSong(currentSongName);
+        else
+            Navigation.findNavController(view).popBackStack();
     }
 
 
@@ -115,12 +121,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         ControlPlayer controlPlayer = new ControlPlayer();
         switch (v.getId()) {
             case R.id.btnPlay:
-                if (mediaPlayer.isPlaying()) {
-                    controlPlayer.setAction(ControlPlayer.ACTION_PAUSE);
-                } else {
-                    controlPlayer.setAction(ControlPlayer.ACTION_PLAY);
-                    controlPlayer.setData(audioTitle.getText().toString());
-                }
+                controlPlayer.setAction(mediaPlayer.isPlaying() ? ControlPlayer.ACTION_PAUSE : ControlPlayer.ACTION_RESUME);
                 break;
             case R.id.btnNext:
                 controlPlayer.setAction(ControlPlayer.ACTION_NEXT);
@@ -132,27 +133,21 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     }
 
     @Override
-    public void onChangeSong(String title, MediaPlayer mediaPlayer) {
-        Activity activity = getActivity();
-        if (activity == null) return;
-        activity.runOnUiThread(() -> {
-            audioTitle.setText(title);
-            loadCover(title);
-            this.mediaPlayer = mediaPlayer;
-            setPlayPauseButton();
-        });
+    public void onChangeSong(@NotNull String title) {
+        audioTitle.setText(title);
+        loadCover(title);
+        setPlayPauseButton(mediaPlayer.isPlaying());
     }
 
     @Override
     public void onPlayingStatusChange(boolean isPlaying) {
-        setPlayPauseButton();
+        setPlayPauseButton(isPlaying);
     }
 
     private void loadCover(String title) {
         File file = new File(storageManager.getImageDir(), title);
         if (file.exists()) {
             Picasso.get().load(Uri.fromFile(file)).into(audioCover);
-            Picasso.get().load(Uri.fromFile(file)).into(fullCover);
         }
     }
 
@@ -182,7 +177,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
             timer.cancel();
     }
 
-    private void setPlayPauseButton() {
-        btnPlay.setImageResource(mediaPlayer.isPlaying() ? R.drawable.ic_pause : R.drawable.ic_play);
+    private void setPlayPauseButton(boolean isPlaying) {
+        btnPlay.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
     }
 }

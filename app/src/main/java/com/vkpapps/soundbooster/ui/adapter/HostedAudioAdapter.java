@@ -1,9 +1,6 @@
-package com.vkpapps.soundbooster.adapter;
+package com.vkpapps.soundbooster.ui.adapter;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,25 +15,24 @@ import com.google.android.gms.ads.AdView;
 import com.squareup.picasso.Picasso;
 import com.vkpapps.soundbooster.R;
 import com.vkpapps.soundbooster.model.AudioModel;
-import com.vkpapps.soundbooster.utils.FirebaseUtils;
+import com.vkpapps.soundbooster.utils.AdsUtils;
 import com.vkpapps.soundbooster.utils.StorageManager;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.util.List;
 
 /**
  * @author VIJAY PATIDAR
- */
-public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHolder> {
+ * */
+public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.AudioViewHolder> {
     private List<AudioModel> audioModels;
     private OnAudioSelectedListener onAudioSelectedListener;
-    private File imageRoot;
+    private StorageManager storageManager;
 
-    public AudioAdapter(List<AudioModel> audioModels, OnAudioSelectedListener onAudioSelectedListener, Context context) {
+    public HostedAudioAdapter(List<AudioModel> audioModels, OnAudioSelectedListener onAudioSelectedListener, Context context) {
         this.audioModels = audioModels;
         this.onAudioSelectedListener = onAudioSelectedListener;
-        imageRoot = new StorageManager(context).getImageDir();
+        this.storageManager = new StorageManager(context);
     }
 
     @NonNull
@@ -44,9 +40,9 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
     public AudioViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View inflate;
         if (viewType == 1) {
-            inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.local_list_item, parent, false);
+            inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.host_list_item, parent, false);
         } else {
-            inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.local_list_item_ad_view, parent, false);
+            inflate = LayoutInflater.from(parent.getContext()).inflate(R.layout.host_list_item_ad_view, parent, false);
         }
         return new AudioViewHolder(inflate);
     }
@@ -61,8 +57,9 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
         AudioModel audioModel = audioModels.get(position);
         if (audioModel == null) {
             AdView adView = (AdView) holder.itemView;
-            FirebaseUtils.INSTANCE.getAdRequest(adView);
+            AdsUtils.INSTANCE.getAdRequest(adView);
         } else {
+
             holder.audioTitle.setText(audioModel.getName());
             holder.audioArtist.setText(audioModel.getArtist());
             holder.itemView.setOnClickListener(v -> onAudioSelectedListener.onAudioSelected(audioModel));
@@ -72,27 +69,10 @@ public class AudioAdapter extends RecyclerView.Adapter<AudioAdapter.AudioViewHol
             });
 
             ImageView audioIcon = holder.audioIcon;
-            File file = new File(imageRoot, audioModel.getName().trim());
-            if (!file.exists()) {
-                try {
-                    android.media.MediaMetadataRetriever mmr = new MediaMetadataRetriever();
-                    mmr.setDataSource(audioModel.getPath());
-                    byte[] data = mmr.getEmbeddedPicture();
-                    // convert the byte array to a bitmap
-                    if (data != null) {
-                        //destination for saving file
-                        FileOutputStream fos = new FileOutputStream(file);
-                        // decoding byte array to a bitmap
-                        Bitmap bitmap = BitmapFactory.decodeByteArray(data, 0, data.length);
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            if (file.exists())
+            File file = new File(storageManager.getImageDir(), audioModel.getName());
+            if (file.exists()) {
                 Picasso.get().load(Uri.fromFile(file)).into(audioIcon);
-            audioIcon.setAdjustViewBounds(true);
+            }
         }
     }
 
