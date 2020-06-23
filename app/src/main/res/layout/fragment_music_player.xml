@@ -26,6 +26,15 @@
             tools:ignore="ContentDescription" />
     </androidx.cardview.widget.CardView>
 
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/btnDownload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/seekBar"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="15dp"
+        android:padding="5dp"
+        android:src="@drawable/ic_download" />
 
     <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/seekBar"
