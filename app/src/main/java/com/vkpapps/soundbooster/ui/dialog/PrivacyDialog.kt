@@ -1,6 +1,7 @@
 package com.vkpapps.soundbooster.ui.dialog
 
 import android.app.AlertDialog
+import android.text.method.LinkMovementMethod
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.vkpapps.soundbooster.R
@@ -24,12 +25,14 @@ class PrivacyDialog(private val activity: AppCompatActivity) {
         builder.setCancelable(false)
         val create = builder.create()
         create.show()
+        view.findViewById<TextView>(R.id.message).movementMethod = LinkMovementMethod.getInstance()
         view.findViewById<TextView>(R.id.btnCancel).setOnClickListener {
             activity.finish()
         }
         view.findViewById<TextView>(R.id.btnAgree).setOnClickListener {
             KeyValue(activity).policy = true
             create.hide()
+            create.dismiss()
         }
     }
 

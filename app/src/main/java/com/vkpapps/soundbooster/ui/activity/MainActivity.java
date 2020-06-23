@@ -495,4 +495,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         }
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        App.getMusicPlayerHelper().setUpFocusListener();
+    }
 }
