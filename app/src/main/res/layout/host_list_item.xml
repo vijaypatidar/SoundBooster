@@ -34,7 +34,7 @@
 
         <TextView
             android:id="@+id/audio_title"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:lines="1"
             android:padding="5dp"
@@ -44,11 +44,21 @@
 
         <TextView
             android:id="@+id/audio_artist"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:lines="1"
             android:padding="5dp"
             android:textSize="12sp"
             tools:text="artist" />
     </LinearLayout>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/btnDownload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        android:src="@drawable/ic_download"
+        tools:ignore="ContentDescription" />
 </LinearLayout>

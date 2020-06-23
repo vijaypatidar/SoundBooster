@@ -167,14 +167,15 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
 
     @Override
     public void onDetach() {
-        super.onDetach();
         onFragmentAttachStatusListener.onFragmentDetached(this);
         onNavigationVisibilityListener.onNavVisibilityChange(true);
         onNavigationVisibilityListener = null;
         onFragmentAttachStatusListener = null;
         objectCallbackListener = null;
-        if (timer != null)
+        if (timer != null) {
             timer.cancel();
+        }
+        super.onDetach();
     }
 
     private void setPlayPauseButton(boolean isPlaying) {

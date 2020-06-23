@@ -134,6 +134,10 @@ public class StorageManager {
         return context.getDir("profiles", MODE_PRIVATE);
     }
 
+    public boolean isSongDownloaded(String name) {
+        return new File(getDownloadDir(), name + ".mp3").exists();
+    }
+
     public interface OnStorageManagerListener {
         void onCopyComplete(File source);
     }

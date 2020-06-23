@@ -2,6 +2,7 @@ package com.vkpapps.soundbooster.utils
 
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.media.MediaPlayer
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.vkpapps.soundbooster.analitics.Logger
@@ -10,14 +11,17 @@ import com.vkpapps.soundbooster.receivers.MediaChangeReceiver
 import java.io.File
 import java.io.IOException
 
+
 /***
  * @author VIJAY PATIDAR
  */
 class MusicPlayerHelper(private val context: Context) {
+
     private val mediaPlayer = MediaPlayer()
     private val root: File = StorageManager(context).songDir
     private var onMusicPlayerHelperListener: OnMusicPlayerHelperListener? = null
     private var current: String? = null
+
 
     fun loadAndPlay(name: String?) {
         if (name == null) return
@@ -122,5 +126,29 @@ class MusicPlayerHelper(private val context: Context) {
         return current
     }
 
+
+    private val onAudioFocusChangeListenerAudioManager = AudioManager.OnAudioFocusChangeListener {
+        when (it) {
+            AudioManager.AUDIOFOCUS_GAIN -> {
+                mediaPlayer.setVolume(1f, 1f)
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT -> {
+                mediaPlayer.setVolume(0f, 0f)
+            }
+            AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
+                mediaPlayer.setVolume(0.1f, .1f)
+            }
+            AudioManager.AUDIOFOCUS_LOSS -> {
+                mediaPlayer.setVolume(0f, 0f)
+            }
+        }
+    }
+
+    fun setUpFocusListener() {
+        val am = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager?
+        am?.requestAudioFocus(onAudioFocusChangeListenerAudioManager, AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN)
+        mediaPlayer.setVolume(1f, 1f)
+    }
 
 }

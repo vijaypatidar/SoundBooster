@@ -22,18 +22,18 @@ class FragmentDestinationListener(private val activity: AppCompatActivity) : OnD
 
     private fun musicFragment(id: Int) {
         if (id == R.id.navigation_musicPlayer) {
-            actionBar!!.hide()
+            actionBar?.hide()
         } else {
-            actionBar!!.show()
+            actionBar?.show()
         }
     }
 
     private fun profile(id: Int) {
-        actionBar!!.elevation = 0f
+//        actionBar!!.elevation = 0f
         if (id == R.id.navigation_profile) {
-            actionBar.setBackgroundDrawable(activity.resources.getDrawable(R.color.profile_frag_background, activity.theme))
+            actionBar?.setBackgroundDrawable(activity.resources.getDrawable(R.color.profile_frag_background, activity.theme))
         } else {
-            actionBar.setBackgroundDrawable(activity.resources.getDrawable(R.color.colorPrimary, activity.theme))
+            actionBar?.setBackgroundDrawable(activity.resources.getDrawable(R.color.colorPrimary, activity.theme))
         }
     }
 

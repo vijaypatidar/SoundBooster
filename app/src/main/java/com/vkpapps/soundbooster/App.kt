@@ -16,6 +16,7 @@ class App : Application() {
         MobileAds.initialize(this)
         user = UserUtils(this).loadUser()
         musicPlayerHelper = MusicPlayerHelper(this)
+        musicPlayerHelper.setUpFocusListener()
         val storageManager = StorageManager(this)
         Thread {
             storageManager.allAudioFromDevice
