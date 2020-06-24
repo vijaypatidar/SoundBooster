@@ -10,9 +10,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageView;
 import androidx.appcompat.widget.AppCompatSeekBar;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.Navigation;
@@ -42,6 +44,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     private OnFragmentAttachStatusListener onFragmentAttachStatusListener;
     private TextView audioTitle;
     private ImageView audioCover, btnPlay;
+    private AppCompatImageView btnDownload;
     private MediaPlayer mediaPlayer = App.getMusicPlayerHelper().getMediaPlayer();
     private OnObjectCallbackListener objectCallbackListener;
     private StorageManager storageManager;
@@ -65,6 +68,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         view.findViewById(R.id.btnPrevious).setOnClickListener(this);
         audioCover = view.findViewById(R.id.audioCover);
         audioTitle = view.findViewById(R.id.audioTitle);
+        btnDownload = view.findViewById(R.id.btnDownload);
         onFragmentAttachStatusListener.onFragmentAttached(this);
 
         AppCompatSeekBar appCompatSeekBar = view.findViewById(R.id.seekBar);
@@ -137,6 +141,7 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
         audioTitle.setText(title);
         loadCover(title);
         setPlayPauseButton(mediaPlayer.isPlaying());
+        checkDownload(title);
     }
 
     @Override
@@ -181,4 +186,20 @@ public class MusicPlayerFragment extends Fragment implements View.OnClickListene
     private void setPlayPauseButton(boolean isPlaying) {
         btnPlay.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
     }
+
+    private void checkDownload(@NonNull String name) {
+        if (storageManager.isSongDownloaded(name)) {
+            downloaded();
+        } else {
+            btnDownload.setOnClickListener(v -> {
+                storageManager.download(name, source -> downloaded());
+            });
+        }
+    }
+
+    private void downloaded() {
+        btnDownload.setImageResource(R.drawable.ic_check_circle);
+        btnDownload.setOnClickListener(v -> Toast.makeText(requireContext(), "Already downloaded", Toast.LENGTH_SHORT).show());
+    }
+
 }

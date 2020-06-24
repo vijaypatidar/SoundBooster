@@ -30,7 +30,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/app_name"
-                android:textColor="@color/black"
+                android:textColor="@color/colorPrimary"
                 android:textSize="22sp" />
 
             <TextView
@@ -38,7 +38,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
-                android:textColor="@color/black"
+                android:textColor="@color/colorPrimary"
                 android:textSize="14sp"
                 tools:text="1.0" />
         </LinearLayout>
@@ -52,7 +52,7 @@
         android:gravity="center"
         android:text="@string/app_description"
         android:textAlignment="gravity"
-        android:textColor="@color/black"
+        android:textColor="@color/colorPrimary"
         android:textSize="14sp" />
 
 
@@ -71,8 +71,8 @@
         android:orientation="horizontal">
 
         <ImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:src="@drawable/ic_policy"
             android:tint="@color/colorPrimary"
             tools:ignore="ContentDescription" />
@@ -85,7 +85,41 @@
             android:gravity="center_horizontal"
             android:text="@string/privacy_policy"
             android:textAlignment="gravity"
-            android:textColor="@color/black"
+            android:textColor="@color/colorPrimary"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_margin="10dp"
+        android:background="?android:attr/listDivider" />
+
+    <LinearLayout
+        android:id="@+id/btnDeveloper"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:orientation="horizontal"
+        tools:ignore="UseCompoundDrawables">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_github"
+            android:tint="@color/colorPrimary"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="5dp"
+            android:gravity="center_horizontal"
+            android:text="@string/developer"
+            android:textAlignment="gravity"
+            android:textColor="@color/colorPrimary"
             android:textSize="16sp" />
     </LinearLayout>
 

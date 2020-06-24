@@ -100,19 +100,23 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
     }
 
     public void refreshSong() {
-        allSong.clear();
-        for (File file : Objects.requireNonNull(song.listFiles())) {
-            AudioModel audioModel = new AudioModel();
-            audioModel.setName(file.getName());
-            audioModel.setPath(file.getPath());
-            allSong.add(audioModel);
-        }
-        sort();
-        if (audioAdapter != null) {
-            audioAdapter.notifyDataSetChanged();
-        }
-        for (int i = 5; i < allSong.size(); i = i + 17) {
-            allSong.add(i, null);
+        try {
+            allSong.clear();
+            for (File file : Objects.requireNonNull(song.listFiles())) {
+                AudioModel audioModel = new AudioModel();
+                audioModel.setName(file.getName());
+                audioModel.setPath(file.getPath());
+                allSong.add(audioModel);
+            }
+            sort();
+            if (audioAdapter != null) {
+                audioAdapter.notifyDataSetChanged();
+            }
+            for (int i = 5; i < allSong.size(); i = i + 17) {
+                allSong.add(i, null);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

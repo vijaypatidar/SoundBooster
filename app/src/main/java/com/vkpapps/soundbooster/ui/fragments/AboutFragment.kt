@@ -31,6 +31,10 @@ class AboutFragment : Fragment() {
         btnPrivacyPolicy.setOnClickListener {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.privacy_policy_url))))
         }
+        val btnDeveloper = view.findViewById<LinearLayout>(R.id.btnDeveloper)
+        btnDeveloper.setOnClickListener {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.github_url))))
+        }
     }
 
     override fun onAttach(context: Context) {

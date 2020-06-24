@@ -76,7 +76,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         OnUserListRequestListener, OnFragmentAttachStatusListener, OnHostSongFragmentListener, OnControlRequestListener, MusicPlayerHelper.OnMusicPlayerHelperListener,
         FileRequestReceiver.OnFileRequestReceiverListener, OnClientConnectionStateListener,
         OnObjectCallbackListener {
-    private BottomNavigationView navView;
     private ServerHelper serverHelper;
     private ClientHelper clientHelper;
     private MusicPlayerHelper musicPlayer;
@@ -96,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        navView = findViewById(R.id.nav_view);
+        BottomNavigationView navView = findViewById(R.id.nav_view);
         user = App.getUser();
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
@@ -211,17 +210,14 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onNavVisibilityChange(boolean visible) {
-        if ((navView.getVisibility() == View.VISIBLE) == visible) return;
+        if ((miniMediaController.getVisibility() == View.VISIBLE) == visible) return;
         if (visible) {
             Animation animation = AnimationUtils.loadAnimation(this, R.anim.show_bottom_nav_bar);
-            navView.setAnimation(animation);
             miniMediaController.setAnimation(animation);
         } else {
             Animation animation = AnimationUtils.loadAnimation(this, R.anim.hide_bottom_nav_bar);
-            navView.setAnimation(animation);
             miniMediaController.setAnimation(animation);
         }
-        navView.setVisibility(visible ? View.VISIBLE : View.GONE);
         if (initPlayer)
             miniMediaController.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
@@ -422,10 +418,12 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         } else if (fragment instanceof MusicPlayerFragment) {
             mediaChangeReceiver.removeOnMediaPlayerChangeListener((OnMediaPlayerChangeListener) fragment);
             miniMediaController.setEnableVisibilityChanges(true);
+            miniMediaController.setVisibility(View.VISIBLE);
         } else if (fragment instanceof HostSongFragment) {
             currentFragment = null;
         } else if (fragment instanceof ProfileFragment) {
             miniMediaController.setEnableVisibilityChanges(true);
+            miniMediaController.setVisibility(View.VISIBLE);
             send(user);
         }
     }

@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import android.net.Uri
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.AnimationUtils
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -57,13 +58,14 @@ class MiniMediaController : FrameLayout, OnMediaPlayerChangeListener {
     }
 
     override fun onChangeSong(title: String) {
-        if (enableVisibilityChanges) {
-            visibility = View.VISIBLE
-        }
         audioTitle?.text = title
         val file = File(imageRoot, title)
         if (file.exists()) {
             Picasso.get().load(Uri.fromFile(file)).into(audioCover)
+        }
+        if (enableVisibilityChanges) {
+            visibility = View.VISIBLE
+            animation = AnimationUtils.loadAnimation(context, R.anim.show_bottom_nav_bar)
         }
         changePlayButtonIcon(mediaPlayer.isPlaying)
     }
@@ -81,6 +83,6 @@ class MiniMediaController : FrameLayout, OnMediaPlayerChangeListener {
     }
 
     override fun setVisibility(visibility: Int) {
-        if (enableVisibilityChanges) super.setVisibility(visibility)
+        if (enableVisibilityChanges && !audioTitle?.text.isNullOrEmpty()) super.setVisibility(visibility)
     }
 }

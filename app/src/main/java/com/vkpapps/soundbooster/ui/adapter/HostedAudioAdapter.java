@@ -77,7 +77,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
             } else {
                 Logger.d("not " + audioModel.getName());
                 holder.btnDownload.setOnClickListener(v -> {
-                    holder.btnDownload.setColorFilter(context.getResources().getColor(R.color.colorAccent));
+                    holder.btnDownload.setColorFilter(context.getResources().getColor(R.color.green));
                     storageManager.download(audioModel.getName(), source -> downloaded(holder));
                 });
             }
@@ -107,7 +107,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
     }
 
     private void downloaded(AudioViewHolder holder) {
-        holder.btnDownload.setImageResource(R.drawable.ic_done);
+        holder.btnDownload.setImageResource(R.drawable.ic_check_circle);
         holder.btnDownload.setOnClickListener(this);
         holder.btnDownload.clearColorFilter();
     }
