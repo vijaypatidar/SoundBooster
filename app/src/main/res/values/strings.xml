@@ -13,7 +13,7 @@
     <string name="join_party">JOIN PARTY</string>
     <string name="about">about</string>
     <string name="about_cap">About</string>
-    <string name="developer">Vijay Patidar</string>
+    <string name="developer">Developer Profile</string>
     <string name="about_developer">Android app developer.</string>
     <string name="app_description">A modern and easy to use app for playing music on multiple devices simultaneously without internet.</string>
     <string name="privacy_policy">Privacy Policy</string>
@@ -21,4 +21,5 @@
     <string name="accept_policy">By using the app you agree to the Sound Booster <a href="https://vkp.page.link/sbpp">Privacy Policy</a></string>
     <string name="cancel">Cancel</string>
     <string name="i_agree">I Agree</string>
+    <string name="github_url">https://github.com/vijaypatidar31</string>
 </resources>

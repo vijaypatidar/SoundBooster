@@ -131,6 +131,7 @@ public class ProfileFragment extends Fragment {
         }
         if (context instanceof OnFragmentAttachStatusListener) {
             this.onFragmentAttachStatusListener = (OnFragmentAttachStatusListener) context;
+            onFragmentAttachStatusListener.onFragmentAttached(this);
         }
     }
 
