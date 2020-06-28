@@ -61,7 +61,7 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         allSong = new ArrayList<>();
         RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
         refreshSong();
-        audioAdapter = new HostedAudioAdapter(allSong, this, view.getContext());
+        audioAdapter = new HostedAudioAdapter(allSong, this, view);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setLayoutManager(new LinearLayoutManager(view.getContext()));
         recyclerView.setOnFlingListener(new RecyclerView.OnFlingListener() {
@@ -73,7 +73,7 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
             }
         });
         recyclerView.setAdapter(audioAdapter);
-        audioAdapter.notifyDataSetChanged();
+        audioAdapter.notifyDataSetChangedAndHideIfNull();
 
 
     }

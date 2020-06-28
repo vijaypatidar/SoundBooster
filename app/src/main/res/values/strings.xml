@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">Sound Booster</string>
-
-
     <string name="save">save</string>
     <string name="hint_name">enter name</string>
     <string name="title_home">Home</string>
@@ -22,4 +20,6 @@
     <string name="cancel">Cancel</string>
     <string name="i_agree">I Agree</string>
     <string name="github_url">https://github.com/vijaypatidar31</string>
+    <string name="empty_client_list">No device connected</string>
+    <string name="empty_host_list">Add music to play on all connected devices.</string>
 </resources>
