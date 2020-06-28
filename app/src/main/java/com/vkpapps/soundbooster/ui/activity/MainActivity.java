@@ -318,16 +318,6 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 if (currentFragment != null) {
                     currentFragment.refreshSong();
                 }
-//                if (isHost) {
-//                    new Thread(() -> {
-//                        try {
-//                            Thread.sleep(1500);
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//                        onHostAudioSelected(new AudioModel(name));
-//                    }).start();
-//                }
             }
         }
 

@@ -21,16 +21,19 @@
             android:layout_marginBottom="50dp"
             app:cardBackgroundColor="@null"
             app:cardCornerRadius="75dp"
+            style="@style/Widget.MaterialComponents.CardView"
             app:cardElevation="5dp">
 
             <ImageView
                 android:id="@+id/userPic"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:foreground="?android:attr/selectableItemBackground"
                 android:background="@color/white"
                 android:scaleType="centerCrop"
+                android:foregroundTintMode="src_in"
                 android:src="@drawable/ic_profile"
-                tools:ignore="ContentDescription" />
+                tools:ignore="ContentDescription,UnusedAttribute" />
         </androidx.cardview.widget.CardView>
 
         <EditText
@@ -54,8 +57,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="20dp"
-            android:background="@drawable/round_corner_rectangle"
-            android:backgroundTint="#F57C00"
+            android:background="@drawable/save_button_back"
+            android:foreground="?android:attr/selectableItemBackground"
             android:padding="10dp"
             android:text="@string/save"
             android:textColor="@color/white" />

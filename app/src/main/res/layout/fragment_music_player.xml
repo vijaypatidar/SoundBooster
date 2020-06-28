@@ -33,8 +33,10 @@
         android:layout_above="@id/seekBar"
         android:layout_alignParentEnd="true"
         android:layout_margin="15dp"
-        android:padding="5dp"
-        android:src="@drawable/ic_download" />
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="10dp"
+        android:src="@drawable/ic_download"
+        tools:ignore="UnusedAttribute" />
 
     <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/seekBar"

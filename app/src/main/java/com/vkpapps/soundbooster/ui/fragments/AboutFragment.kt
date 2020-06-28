@@ -45,6 +45,7 @@ class AboutFragment : Fragment() {
         }
     }
 
+
     override fun onDetach() {
         super.onDetach()
         onNavigationVisibilityListener?.onNavVisibilityChange(true)

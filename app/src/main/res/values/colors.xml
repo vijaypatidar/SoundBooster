@@ -8,7 +8,7 @@
     <color name="ic_launcher_background">#00324C</color>
     <color name="black">#000000</color>
     <color name="gray">#607D8B</color>
-    <color name="profile_frag_background">#96bb7c</color>
+    <color name="profile_frag_background">#009688</color>
     <color name="green">#8BC34A</color>
     <string name="made_in_india">Made with ❤ in India</string>
 </resources>
