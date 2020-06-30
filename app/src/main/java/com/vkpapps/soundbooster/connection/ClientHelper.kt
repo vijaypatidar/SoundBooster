@@ -66,7 +66,7 @@ class ClientHelper(private val socket: Socket, private val onControlRequestListe
         // notify client leaved or disconnected
         onClientConnectionStateListener?.onClientDisconnected(this)
     }
-
+ 
     fun write(command: Any) {
         Thread(Runnable {
             try {

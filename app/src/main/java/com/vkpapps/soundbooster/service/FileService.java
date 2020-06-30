@@ -71,14 +71,15 @@ public class FileService extends IntentService {
 
     private Socket getSocket(boolean isHost) throws IOException {
         Socket socket;
+        int MAX_WAIT_TIME = 1600;
         if (isHost) {
             try (ServerSocket serverSocket = new ServerSocket(15448)) {
-                serverSocket.setSoTimeout(1500);
+                serverSocket.setSoTimeout(MAX_WAIT_TIME);
                 socket = serverSocket.accept();
             }
         } else {
             socket = new Socket();
-            socket.connect(new InetSocketAddress(HOST_ADDRESS, 15448), 1500);
+            socket.connect(new InetSocketAddress(HOST_ADDRESS, 15448), MAX_WAIT_TIME);
         }
         return socket;
     }
@@ -136,7 +137,6 @@ public class FileService extends IntentService {
         try {
             onAccepted(name, clientId, true, type);
             File file = new File(type == ControlFile.FILE_TYPE_MUSIC ? musicRoot : new StorageManager(this).getProfiles(), name.trim());
-            if (!file.exists()) return;
             Socket socket = getSocket(isHost);
             InputStream inputStream = new FileInputStream(file);
             OutputStream outputStream = socket.getOutputStream();

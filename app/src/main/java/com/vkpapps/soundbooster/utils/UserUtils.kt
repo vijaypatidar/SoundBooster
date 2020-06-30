@@ -1,6 +1,7 @@
 package com.vkpapps.soundbooster.utils
 
 import android.content.Context
+import android.os.Build
 import com.vkpapps.soundbooster.analitics.Logger.d
 import com.vkpapps.soundbooster.model.User
 import java.io.*
@@ -28,7 +29,7 @@ class UserUtils(val context: Context) {
         }
         // return default user
         val user = User()
-        user.name = HashUtils.getHashValue(Random.nextBytes(5))
+        user.name = Build.MODEL
         user.userId = HashUtils.getHashValue(Random.nextBytes(20))
         d(user.userId)
         setUser(user)

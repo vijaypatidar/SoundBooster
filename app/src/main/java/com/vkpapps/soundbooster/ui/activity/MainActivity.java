@@ -78,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         OnObjectCallbackListener {
     private ServerHelper serverHelper;
     private ClientHelper clientHelper;
-    private MusicPlayerHelper musicPlayer;
+    private MusicPlayerHelper musicPlayerHelper;
     private boolean isHost, initPlayer;
     private User user;
     private FileRequestReceiver requestReceiver;
@@ -119,9 +119,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     private void init() {
         miniMediaController = findViewById(R.id.miniController);
         miniMediaController.setOnClickListener(v -> navController.navigate(R.id.navigation_musicPlayer));
-        miniMediaController.setButtonOnClick(v -> onObjectCreated(new ControlPlayer(musicPlayer.isPlaying() ? ControlPlayer.ACTION_PAUSE : ControlPlayer.ACTION_RESUME, null)));
-        musicPlayer = App.Companion.getMusicPlayerHelper();
-        musicPlayer.setOnMusicPlayerHelperListener(this);
+        miniMediaController.setButtonOnClick(v -> onObjectCreated(new ControlPlayer(musicPlayerHelper.isPlaying() ? ControlPlayer.ACTION_PAUSE : ControlPlayer.ACTION_RESUME, null)));
+        musicPlayerHelper = App.Companion.getMusicPlayerHelper();
+        musicPlayerHelper.setOnMusicPlayerHelperListener(this);
         mediaChangeReceiver = new MediaChangeReceiver();
         mediaChangeReceiver.addOnMediaPlayerChangeListener(miniMediaController);
         LocalBroadcastManager.getInstance(this).registerReceiver(mediaChangeReceiver, new IntentFilter(MediaChangeReceiver.MEDIA_PLAYER_CHANGE));
@@ -202,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
     public void onHostAudioSelected(@NotNull AudioModel audioModel) {
         if (isHost) {
             serverHelper.broadcast(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
-            musicPlayer.loadAndPlay(audioModel.getName());
+            musicPlayerHelper.loadAndPlay(audioModel.getName());
         } else {
             clientHelper.write(new ControlPlayer(ControlPlayer.ACTION_PLAY, audioModel.getName()));
         }
@@ -226,7 +226,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
 
     @Override
     public void onMusicPlayerControl(@NotNull ControlPlayer controlPlayer) {
-        musicPlayer.handleControl(controlPlayer);
+        musicPlayerHelper.handleControl(controlPlayer);
     }
 
     @Override
@@ -344,6 +344,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         //prompt client when disconnect to a party to create or rejoin the party
         if (!isHost) {
             runOnUiThread(this::getChoice);
+            musicPlayerHelper.pause();
         } else if (onUsersUpdateListener != null) {
             runOnUiThread(() -> onUsersUpdateListener.onUserUpdated());
         }
@@ -426,7 +427,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         if (isHost) {
             serverHelper.broadcast(control);
             if (control instanceof ControlPlayer) {
-                musicPlayer.handleControl((ControlPlayer) control);
+                musicPlayerHelper.handleControl((ControlPlayer) control);
             }
         } else {
             clientHelper.write(control);
@@ -445,7 +446,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 } else {
                     clientHelper.shutDown();
                 }
-                musicPlayer.pause();
+                musicPlayerHelper.pause();
                 finish();
             });
             builder.setNegativeButton("No", null);

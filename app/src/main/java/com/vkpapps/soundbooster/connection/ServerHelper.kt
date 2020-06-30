@@ -6,6 +6,7 @@ import com.vkpapps.soundbooster.interfaces.OnObjectReceiveListener
 import com.vkpapps.soundbooster.model.User
 import java.io.IOException
 import java.io.Serializable
+import java.net.InetAddress
 import java.net.ServerSocket
 
 /**
@@ -26,11 +27,6 @@ class ServerHelper(private val onControlRequestListener: OnControlRequestListene
                     val commandHelper = ClientHelper(socket, onControlRequestListener, user, this)
                     commandHelper.setOnObjectReceiveListener(this)
                     commandHelper.start()
-                    try {
-                        sleep(2000)
-                    } catch (e: InterruptedException) {
-                        e.printStackTrace()
-                    }
                 } catch (e: IOException) {
                     e.printStackTrace()
                 }
