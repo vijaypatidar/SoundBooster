@@ -110,6 +110,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_github"
+            android:padding="2dp"
             android:tint="@color/colorPrimary"
             tools:ignore="ContentDescription" />
 

@@ -22,10 +22,6 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-import static com.vkpapps.soundbooster.analitics.Logger.d;
-import static com.vkpapps.soundbooster.analitics.Logger.e;
-import static com.vkpapps.soundbooster.analitics.Logger.i;
-
 /***
  * @author VIJAY PATIDAR
  */
@@ -104,7 +100,6 @@ public class FileService extends IntentService {
             final boolean isHost = intent.getBooleanExtra(IS_HOST, false);
             final boolean isLast = intent.getBooleanExtra(LAST_REQUEST, false);
             final int type = intent.getIntExtra(FILE_TYPE, ControlFile.FILE_TYPE_MUSIC);
-            d("onHandleIntent: " + action + "  " + clientId + "  " + isHost + " type " + type);
             if (ACTION_SEND.equals(action)) {
                 handleActionSend(name, clientId, isHost, isLast, type);
             } else if (ACTION_RECEIVE.equals(action)) {
@@ -115,7 +110,6 @@ public class FileService extends IntentService {
 
     private void handleActionReceive(String name, String clientId, boolean isHost, int type) {
         try {
-            d("handleActionReceive: " + name + " " + isHost);
             onAccepted(name, clientId, false, type);
             Socket socket = getSocket(isHost);
             InputStream in = socket.getInputStream();
@@ -140,10 +134,10 @@ public class FileService extends IntentService {
 
     private void handleActionSend(String name, String clientId, boolean isHost, boolean isLast, int type) {
         try {
-            d("handleActionSend: " + name + "  " + clientId + "  " + isHost);
             onAccepted(name, clientId, true, type);
-            Socket socket = getSocket(isHost);
             File file = new File(type == ControlFile.FILE_TYPE_MUSIC ? musicRoot : new StorageManager(this).getProfiles(), name.trim());
+            if (!file.exists()) return;
+            Socket socket = getSocket(isHost);
             InputStream inputStream = new FileInputStream(file);
             OutputStream outputStream = socket.getOutputStream();
             byte[] bytes = new byte[2 * 1024];
@@ -163,7 +157,6 @@ public class FileService extends IntentService {
     }
 
     private void onSuccess(String name, boolean isLast, int type) {
-        d("onSuccess:  " + name);
         Intent intent = new Intent(STATUS_SUCCESS);
         intent.putExtra(NAME, name);
         intent.putExtra(LAST_REQUEST, isLast);
@@ -172,7 +165,6 @@ public class FileService extends IntentService {
     }
 
     private void onFailed(String name, int type) {
-        e("onFailed:  " + name);
         Intent intent = new Intent(STATUS_FAILED);
         intent.putExtra(NAME, name);
         intent.putExtra(FILE_TYPE, type);
@@ -180,7 +172,6 @@ public class FileService extends IntentService {
     }
 
     private void onAccepted(String name, String clientID, boolean send, int type) {
-        i("onAccepted: " + name + "   " + send);
         Intent intent = new Intent(REQUEST_ACCEPTED);
         intent.putExtra(NAME, name);
         intent.putExtra(ACTION_SEND, send);
