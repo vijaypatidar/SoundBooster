@@ -62,6 +62,8 @@ class MiniMediaController : FrameLayout, OnMediaPlayerChangeListener {
         val file = File(imageRoot, title)
         if (file.exists()) {
             Picasso.get().load(Uri.fromFile(file)).into(audioCover)
+        } else {
+            audioCover?.setImageResource(R.drawable.ic_default_audio_icon)
         }
         if (enableVisibilityChanges) {
             visibility = View.VISIBLE

@@ -220,6 +220,7 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
         }
         if (initPlayer)
             miniMediaController.setVisibility(visible ? View.VISIBLE : View.GONE);
+
     }
 
 
@@ -318,17 +319,9 @@ public class MainActivity extends AppCompatActivity implements OnLocalSongFragme
                 if (currentFragment != null) {
                     currentFragment.refreshSong();
                 }
-//                if (isHost) {
-//                    new Thread(() -> {
-//                        try {
-//                            Thread.sleep(1500);
-//                        } catch (InterruptedException e) {
-//                            e.printStackTrace();
-//                        }
-//                        onHostAudioSelected(new AudioModel(name));
-//                    }).start();
-//                }
             }
+        } else if (type == ControlFile.FILE_TYPE_PROFILE_PIC && onUsersUpdateListener != null) {
+            onUsersUpdateListener.onUserUpdated();
         }
 
     }

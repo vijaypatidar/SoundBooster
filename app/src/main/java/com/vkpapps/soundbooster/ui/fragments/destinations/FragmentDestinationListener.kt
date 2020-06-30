@@ -35,12 +35,13 @@ class FragmentDestinationListener(private val activity: AppCompatActivity) : OnD
                 actionBar?.hide()
                 hideNavView(false)
             }
+            R.id.aboutFragment -> {
+                hideNavView(true)
+            }
             R.id.navigation_profile -> {
                 actionBar?.setBackgroundDrawable(activity.resources.getDrawable(R.color.profile_frag_background, activity.theme))
                 hideNavView(true)
             }
-
-
         }
 
         previous = destination.id

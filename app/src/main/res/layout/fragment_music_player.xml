@@ -33,8 +33,10 @@
         android:layout_above="@id/seekBar"
         android:layout_alignParentEnd="true"
         android:layout_margin="15dp"
-        android:padding="5dp"
-        android:src="@drawable/ic_download" />
+        android:foreground="?android:attr/selectableItemBackground"
+        android:padding="10dp"
+        android:src="@drawable/ic_download"
+        tools:ignore="UnusedAttribute" />
 
     <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/seekBar"
@@ -74,12 +76,13 @@
         android:paddingBottom="10dp"
         android:orientation="horizontal">
 
-        <ImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/btnPrevious"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_previous"
-            tools:ignore="ContentDescription" />
+            android:foreground="?android:attr/selectableItemBackground"
+            tools:ignore="ContentDescription,UnusedAttribute" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/cardPlay"
@@ -91,9 +94,10 @@
             android:layout_marginBottom="10dp"
             android:backgroundTint="@color/green"
             app:cardCornerRadius="30dp"
+            android:foreground="?android:attr/selectableItemBackground"
             tools:ignore="ContentDescription">
 
-            <ImageView
+            <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/btnPlay"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -102,11 +106,12 @@
                 tools:ignore="ContentDescription" />
         </androidx.cardview.widget.CardView>
 
-        <ImageView
+        <androidx.appcompat.widget.AppCompatImageView
             android:id="@+id/btnNext"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:src="@drawable/ic_next"
-            tools:ignore="ContentDescription" />
+            android:foreground="?android:attr/selectableItemBackground"
+            tools:ignore="ContentDescription,UnusedAttribute" />
     </LinearLayout>
 </RelativeLayout>

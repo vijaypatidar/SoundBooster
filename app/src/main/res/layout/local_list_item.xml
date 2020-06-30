@@ -5,7 +5,9 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_margin="2dp"
-    android:orientation="horizontal">
+    android:foreground="?android:attr/selectableItemBackground"
+    android:orientation="horizontal"
+    tools:ignore="UnusedAttribute">
 
     <androidx.cardview.widget.CardView
         android:layout_width="60dp"

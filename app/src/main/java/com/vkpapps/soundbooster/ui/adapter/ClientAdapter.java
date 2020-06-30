@@ -1,6 +1,5 @@
 package com.vkpapps.soundbooster.ui.adapter;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,9 +25,12 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
 
     private List<ClientHelper> users;
     private File profiles;
-    public ClientAdapter(List<ClientHelper> users, Context context) {
+    private View view;
+
+    public ClientAdapter(List<ClientHelper> users, View view) {
         this.users = users;
-        profiles = new StorageManager(context).getProfiles();
+        this.view = view;
+        profiles = new StorageManager(view.getContext()).getProfiles();
     }
 
     @NonNull
@@ -36,6 +38,7 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
     public MyHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.client_list_item, parent, false);
         return new MyHolder(view);
+
     }
 
     @Override
@@ -62,6 +65,15 @@ public class ClientAdapter extends RecyclerView.Adapter<ClientAdapter.MyHolder> 
             super(itemView);
             userName = itemView.findViewById(R.id.userName);
             profilePic = itemView.findViewById(R.id.profilePic);
+        }
+    }
+
+    public void notifyDataSetChangedAndHideIfNull() {
+        if (users.size() == 0) {
+            view.findViewById(R.id.emptyClient).setVisibility(View.VISIBLE);
+        } else {
+            view.findViewById(R.id.emptyClient).setVisibility(View.GONE);
+            notifyDataSetChanged();
         }
     }
 }

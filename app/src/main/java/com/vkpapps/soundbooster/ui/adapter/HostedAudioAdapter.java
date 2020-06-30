@@ -1,6 +1,5 @@
 package com.vkpapps.soundbooster.ui.adapter;
 
-import android.content.Context;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,13 +30,13 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
     private List<AudioModel> audioModels;
     private OnAudioSelectedListener onAudioSelectedListener;
     private StorageManager storageManager;
-    private Context context;
+    private View view;
 
-    public HostedAudioAdapter(List<AudioModel> audioModels, OnAudioSelectedListener onAudioSelectedListener, Context context) {
+    public HostedAudioAdapter(List<AudioModel> audioModels, OnAudioSelectedListener onAudioSelectedListener, View view) {
         this.audioModels = audioModels;
         this.onAudioSelectedListener = onAudioSelectedListener;
-        this.storageManager = new StorageManager(context);
-        this.context = context;
+        this.storageManager = new StorageManager(view.getContext());
+        this.view = view;
     }
 
     @NonNull
@@ -77,7 +76,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
             } else {
                 Logger.d("not " + audioModel.getName());
                 holder.btnDownload.setOnClickListener(v -> {
-                    holder.btnDownload.setColorFilter(context.getResources().getColor(R.color.green));
+                    holder.btnDownload.setColorFilter(v.getContext().getResources().getColor(R.color.green));
                     storageManager.download(audioModel.getName(), source -> downloaded(holder));
                 });
             }
@@ -97,7 +96,7 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
 
     @Override
     public void onClick(View v) {
-        Toast.makeText(context, "Already saved", Toast.LENGTH_SHORT).show();
+        Toast.makeText(v.getContext(), "Already saved", Toast.LENGTH_SHORT).show();
     }
 
     public interface OnAudioSelectedListener {
@@ -123,6 +122,15 @@ public class HostedAudioAdapter extends RecyclerView.Adapter<HostedAudioAdapter.
             audioTitle = itemView.findViewById(R.id.audio_title);
             audioArtist = itemView.findViewById(R.id.audio_artist);
             btnDownload = itemView.findViewById(R.id.btnDownload);
+        }
+    }
+
+    public void notifyDataSetChangedAndHideIfNull() {
+        if (audioModels.size() == 0) {
+            view.findViewById(R.id.emptyClient).setVisibility(View.VISIBLE);
+        } else {
+            view.findViewById(R.id.emptyClient).setVisibility(View.GONE);
+            notifyDataSetChanged();
         }
     }
 }

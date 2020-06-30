@@ -2,6 +2,7 @@ package com.vkpapps.soundbooster
 
 import android.app.Application
 import com.google.android.gms.ads.MobileAds
+import com.vkpapps.soundbooster.analitics.Logger
 import com.vkpapps.soundbooster.model.User
 import com.vkpapps.soundbooster.utils.MusicPlayerHelper
 import com.vkpapps.soundbooster.utils.StorageManager
@@ -22,6 +23,7 @@ class App : Application() {
             storageManager.allAudioFromDevice
         }.start()
         storageManager.deleteDir(storageManager.songDir)
+        Logger.logger = BuildConfig.DEBUG
     }
 
     companion object {

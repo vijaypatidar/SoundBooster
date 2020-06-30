@@ -25,6 +25,7 @@ class DashboardFragment : Fragment(), OnUsersUpdateListener {
     private var clientAdapter: ClientAdapter? = null
     private var onNavigationVisibilityListener: OnNavigationVisibilityListener? = null
     private var onFragmentAttachStatusListener: OnFragmentAttachStatusListener? = null
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_dashboard, container, false)
@@ -36,7 +37,7 @@ class DashboardFragment : Fragment(), OnUsersUpdateListener {
 
         //Nothing to display when user is client
         if (users == null) return
-        clientAdapter = ClientAdapter(users, view.context)
+        clientAdapter = ClientAdapter(users, view)
         val recyclerView: RecyclerView = view.findViewById(R.id.clientList)
         recyclerView.itemAnimator = DefaultItemAnimator()
         recyclerView.layoutManager = LinearLayoutManager(view.context)
@@ -47,7 +48,7 @@ class DashboardFragment : Fragment(), OnUsersUpdateListener {
             }
         }
         recyclerView.adapter = clientAdapter
-        clientAdapter?.notifyDataSetChanged()
+        clientAdapter?.notifyDataSetChangedAndHideIfNull()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -73,6 +74,6 @@ class DashboardFragment : Fragment(), OnUsersUpdateListener {
     }
 
     override fun onUserUpdated() {
-        clientAdapter?.notifyDataSetChanged()
+        clientAdapter?.notifyDataSetChangedAndHideIfNull()
     }
 }
