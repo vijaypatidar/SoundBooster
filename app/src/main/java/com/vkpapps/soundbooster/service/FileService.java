@@ -78,7 +78,7 @@ public class FileService extends IntentService {
             }
         } else {
             socket = new Socket();
-            socket.connect(new InetSocketAddress(HOST_ADDRESS, 15448), 4000);
+            socket.connect(new InetSocketAddress(HOST_ADDRESS, 15448), 1500);
         }
         return socket;
     }
