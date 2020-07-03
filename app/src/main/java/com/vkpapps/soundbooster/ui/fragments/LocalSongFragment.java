@@ -47,7 +47,7 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
         setHasOptionsMenu(true);
         storageManager = new StorageManager(getActivity());
 
-        if (PermissionUtils.checkStoragePermission(view.getContext())) {
+        if (PermissionUtils.checkStorageReadPermission(view.getContext())) {
             RecyclerView recyclerView = view.findViewById(R.id.recyclerView);
             List<AudioModel> allSong = storageManager.getAllAudioFromDevice();
             AudioAdapter audioAdapter = new AudioAdapter(allSong, this, view.getContext());
@@ -64,7 +64,7 @@ public class LocalSongFragment extends Fragment implements AudioAdapter.OnAudioS
             audioAdapter.notifyDataSetChanged();
         } else {
             Navigation.findNavController(view).popBackStack();
-            PermissionUtils.askStoragePermission(getActivity(), 101);
+            PermissionUtils.askStorageReadPermission(requireActivity(), 101);
         }
     }
 

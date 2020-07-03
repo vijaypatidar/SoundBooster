@@ -55,21 +55,6 @@ public class StorageManager {
         return context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
     }
 
-    public void deleteDir(File dir) {
-        try {
-            if (dir.isDirectory()) {
-                File[] songs = dir.listFiles();
-                if (songs != null) {
-                    for (File s : songs) {
-                        s.delete();
-                    }
-                }
-            }
-        } catch (Exception ignored) {
-
-        }
-    }
-
     public void copySong(File from, String name, OnStorageManagerListener onStorageManagerListener) {
         File to = new File(getSongDir(), name);
         //extract image from mp3
@@ -146,7 +131,7 @@ public class StorageManager {
         Logger.d("getAllAudioFromDevice: ");
         if (audioModels.size() == 0) {
 
-            if (PermissionUtils.checkStoragePermission(context)) {
+            if (PermissionUtils.checkStorageReadPermission(context)) {
                 audioModels = new ArrayList<>();
                 Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
                 String[] projection = {MediaStore.Audio.AudioColumns.DATA, MediaStore.Audio.AudioColumns.TITLE, MediaStore.Audio.AudioColumns.ALBUM, MediaStore.Audio.ArtistColumns.ARTIST};

@@ -11,14 +11,26 @@ import androidx.core.app.ActivityCompat
  */
 object PermissionUtils {
     @JvmStatic
-    fun checkStoragePermission(context: Context?): Boolean {
-        return ActivityCompat.checkSelfPermission(context!!, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+    fun checkStorageReadPermission(context: Context): Boolean {
+        return ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
     }
 
     @JvmStatic
-    fun askStoragePermission(activity: Activity?, code: Int) {
-        ActivityCompat.requestPermissions(activity!!, arrayOf(
+    fun askStorageReadPermission(activity: Activity, code: Int) {
+        ActivityCompat.requestPermissions(activity, arrayOf(
                 Manifest.permission.READ_EXTERNAL_STORAGE
+        ), code)
+    }
+
+    @JvmStatic
+    fun checkStorageWritePermission(context: Context): Boolean {
+        return ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+    }
+
+    @JvmStatic
+    fun askStorageWritePermission(activity: Activity, code: Int) {
+        ActivityCompat.requestPermissions(activity, arrayOf(
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
         ), code)
     }
 }

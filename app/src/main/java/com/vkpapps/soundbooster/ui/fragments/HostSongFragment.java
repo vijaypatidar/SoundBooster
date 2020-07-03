@@ -74,8 +74,6 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
         });
         recyclerView.setAdapter(audioAdapter);
         audioAdapter.notifyDataSetChangedAndHideIfNull();
-
-
     }
 
     @Override
@@ -85,15 +83,15 @@ public class HostSongFragment extends Fragment implements HostedAudioAdapter.OnA
 
     @Override
     public void onAudioLongSelected(AudioModel audioModel) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Save to download");
         builder.setMessage(audioModel.getName());
         builder.setPositiveButton("Save", (dialog, which) -> {
-            if (PermissionUtils.checkStoragePermission(getContext())) {
+            if (PermissionUtils.checkStorageWritePermission(requireContext())) {
                 storageManager.download(audioModel.getName(), source ->
                         Toast.makeText(getContext(), "saved to download", Toast.LENGTH_SHORT).show()
                 );
-            } else PermissionUtils.askStoragePermission(getActivity(), 102);
+            } else PermissionUtils.askStorageWritePermission(requireActivity(), 103);
         });
         builder.setNegativeButton("Cancel", null);
         builder.create().show();

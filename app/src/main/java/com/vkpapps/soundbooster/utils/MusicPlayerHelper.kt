@@ -25,7 +25,6 @@ class MusicPlayerHelper(private val context: Context) {
 
     fun loadAndPlay(name: String?) {
         if (name == null) return
-        Logger.d("loadAndPlay: $name")
         try {
             mediaPlayer.reset()
             mediaPlayer.setDataSource(File(root, name).absolutePath)
